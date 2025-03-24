@@ -87,18 +87,12 @@ module.exports = (env) => {
       }
     } : {},
     devServer: {
-      contentBase: path.resolve(__dirname, 'public'),
-      disableHostCheck: true,
+      static: {
+        directory: path.join(__dirname, 'public')
+      },
       historyApiFallback: {
         index: 'index.html',
-      },
-      proxy: {
-        '/api': {
-          target: 'https://openconceptlab.org',
-          changeOrigin: true,
-          pathRewrite: { '^/api': '' },
-        },
-      },
+      }
     },
     devtool: env.NODE_ENV == 'production' ? "source-map" : undefined,
     plugins: [

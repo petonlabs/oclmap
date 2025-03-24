@@ -1,8 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Fade from '@mui/material/Fade';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { HashRouter } from 'react-router-dom';
 import { ThemeProvider, StyledEngineProvider, createTheme, alpha } from '@mui/material/styles';
 import StylesProvider from '@mui/styles/StylesProvider';
@@ -120,9 +118,7 @@ root.render(
     <StylesProvider injectFirst>
       <StyledEngineProvider injectFirst>
         <ThemeProvider theme={v5Theme}>
-          <LocalizationProvider dateAdapter={AdapterMoment}>
             <LayoutContext subPages ={(<App />)} />
-          </LocalizationProvider>
         </ThemeProvider>
       </StyledEngineProvider>
     </StylesProvider>

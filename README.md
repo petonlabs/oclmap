@@ -18,7 +18,7 @@ Development is being coordinated by the OCL Mapper Squad, consisting of team mem
 
 ### Eslint
 ```
-docker exec -it <container_name> bash -c "eslint src/ --ext=.js*"
+docker exec -it <container_name> bash -c "eslint src --ext .jsx,.js"
 ```
 
 #### Major/minor version increase
