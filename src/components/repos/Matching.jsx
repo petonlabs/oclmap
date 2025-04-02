@@ -2,16 +2,9 @@ import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 
-import { TableVirtuoso } from 'react-virtuoso';
 import Paper from '@mui/material/Paper'
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -30,7 +23,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Checkbox from '@mui/material/Checkbox';
-import Autocomplete from '@mui/material/Autocomplete';
 import Chip from '@mui/material/Chip';
 import Menu from '@mui/material/Menu';
 import MenuList from '@mui/material/MenuList';
@@ -45,6 +37,8 @@ import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
+import { DataGrid } from '@mui/x-data-grid';
+
 import { styled } from '@mui/material/styles';
 
 import JoinRightIcon from '@mui/icons-material/JoinRight';
@@ -52,14 +46,11 @@ import DownIcon from '@mui/icons-material/ArrowDropDown';
 import UploadIcon from '@mui/icons-material/Upload';
 import MatchingIcon from '@mui/icons-material/DeviceHub';
 import EditIcon from '@mui/icons-material/EditOutlined';
-import SaveIcon from '@mui/icons-material/SaveOutlined';
-import ConfirmedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import MediumMatchIcon from '@mui/icons-material/Rule';
 import LowMatchIcon from '@mui/icons-material/DynamicForm';
 import NoMatchIcon from '@mui/icons-material/RemoveRoad';
 import DownloadIcon from '@mui/icons-material/Download';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import ListIcon from '@mui/icons-material/FormatListNumbered';
 import UnMappedIcon from '@mui/icons-material/LinkOff';
 import MappedIcon from '@mui/icons-material/Link';
@@ -68,7 +59,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import ColumnIcon from '@mui/icons-material/ViewWeekRounded';
 
 import orderBy from 'lodash/orderBy'
 import filter from 'lodash/filter'
@@ -99,8 +90,9 @@ import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
 import { highlightTexts, dropVersion } from '../../common/utils';
-import { WHITE, SURFACE_COLORS, ERROR_COLORS } from '../../common/colors';
+import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
+import { useDoubleClick } from '../common/useDoubleClick'
 import CloseIconButton from '../common/CloseIconButton';
 import SearchResults from '../search/SearchResults';
 import SearchHighlightsDialog from '../search/SearchHighlightsDialog'
@@ -108,6 +100,11 @@ import ConceptHome from '../concepts/ConceptHome'
 import ConceptChip from '../concepts/ConceptChip'
 import RepoSearchAutocomplete from './RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from './RepoVersionSearchAutocomplete'
+import ColumnMap from './ColumnMap'
+
+import './Matching.scss'
+
+
 
 const HEADERS = [
   {id: 'id', label: 'ID'},
@@ -168,7 +165,6 @@ const MATCH_TYPES = {
 }
 
 const DECISION_TABS = ['map_and_review', 'candidates', 'propose', 'search']
-const UPDATED_COLOR = ERROR_COLORS['95']
 const SearchField = ({onChange}) => {
   const [input, setInput] = React.useState('')
   const { focused } = useFormControl() || {};
@@ -281,40 +277,6 @@ const formatMappings = item => {
 }
 
 
-const HeaderAutocomplete = ({isUpdatedValue, helperText, ...rest}) => {
-  return (
-    <Autocomplete
-      autoHighlight
-      autoComplete
-      disableClearable
-      disablePortal
-      freeSolo
-      fullWidth
-      size='small'
-      getOptionLabel={option => option?.label ? option.label : (find(HEADERS, {id: option})?.label || option)}
-      isOptionEqualToValue={(option, value) => option?.id === value?.id || option?.id === value || option === value}
-      sx={{
-        '.MuiOutlinedInput-root': {
-          padding: '4px 10px'
-        },
-        '.MuiInputBase-input': {
-          padding: '0 !important',
-          fontSize: '14px',
-        },
-        '.MuiFormHelperText-root': {
-          margin: '0 !important',
-          padding: '2px 0 0 6px',
-          backgroundColor: isUpdatedValue ? UPDATED_COLOR : undefined
-        }
-      }}
-      renderInput={(params) => <TextField helperText={helperText} margin='dense' size='small' {...params} />}
-      options={HEADERS}
-      {...rest}
-    />
-  )
-}
-
-
 const MatchSummaryCard = ({id, icon, label, count, loading, color, selected, onClick, size, isLast, dividerBgColor }) => {
   const isSelected = id === selected
   const isLarge = size === 'large'
@@ -377,34 +339,6 @@ const MatchSummaryCard = ({id, icon, label, count, loading, color, selected, onC
 }
 
 
-const TableCellAction = ({ isEditing, onEdit, onSave, sx }) => {
-  return (
-    <TableCell align='center' sx={{width: '40px', padding: 0, ...sx}}>
-      {
-        isEditing ?
-          <IconButton size='small' color='primary' onClick={onSave}>
-            <SaveIcon fontSize='inherit' />
-          </IconButton> :
-        <IconButton size='small' color='primary' onClick={onEdit}>
-          <EditIcon fontSize='inherit' />
-        </IconButton>
-      }
-    </TableCell>
-  )
-}
-
-const VirtuosoTableComponents = {
-  Scroller: React.forwardRef((props, ref) => (
-    <TableContainer {...props} ref={ref} />
-  )),
-  Table: (props) => (
-    <Table {...props} stickyHeader size='small' sx={{ borderCollapse: 'separate', tableLayout: 'fixed', '.MuiTableCell-root': {fontSize: '12px'} }} />
-  ),
-  TableHead: React.forwardRef((props, ref) => <TableHead {...props} ref={ref} />),
-  TableRow,
-  TableBody: React.forwardRef((props, ref) => <TableBody {...props} ref={ref} />),
-};
-
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
   clipPath: 'inset(50%)',
@@ -453,8 +387,6 @@ const Matching = () => {
   const [decisionAnchorEl, setDecisionAnchorEl] = React.useState(null)
   const [searchText, setSearchText] = React.useState('')  // csv row search
   const [attributes, setAttributes] = React.useState(1)
-  const [hiddenColumns, setHiddenColumns] = React.useState([])
-  const [showHiddenColumns, setShowHiddenColumns] = React.useState(false)
 
 
   const [matchDialog, setMatchDialog] = React.useState(false)
@@ -462,6 +394,7 @@ const Matching = () => {
   const [showItem, setShowItem] = React.useState(false)
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
   const [alert, setAlert] = React.useState(false)
+  const [openColumnMap, setOpenColumnMap] = React.useState(false)
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -509,6 +442,39 @@ const Matching = () => {
     return _columns
   }
 
+  const getColumnsForTable = () => {
+    let cols = []
+    forEach(columns, column => {
+      const isValidColumn = isValidColumnValue(column.label)
+      if(!isValidColumn)
+        return
+      const isUpdatedValue = column.label !== column.original
+      let headerClass = 'header-valid'
+      if(isUpdatedValue)
+        headerClass = 'header-updated'
+      let widthParams = {}
+      if(columns.length < 2)
+        widthParams.flex = 1
+      else if(column.label.toLowerCase().includes('name') || column.label.toLowerCase().includes('description') || column.label.toLowerCase().includes('synonyms'))
+        widthParams.width = 300
+      else if(column.label.toLowerCase().includes('uuid') || column.label.toLowerCase().includes('external'))
+        widthParams.width = 300
+      else
+        widthParams.width = 100
+      cols.push({
+        field: column.dataKey,
+        headerName: column.label,
+        editable: true,
+        headerClassName: headerClass,
+        valueGetter: (value, _row) => {
+          return has(_row, column.dataKey + '__updated') ? _row[column.dataKey + '__updated'] : value
+        },
+        ...widthParams
+      })
+    })
+    return cols
+  }
+
   const updateColumn = (position, newValue) => {
     setColumns(prev => {
       prev[position].label = newValue
@@ -544,8 +510,6 @@ const Matching = () => {
     setDecisionAnchorEl(null)
     setSearchText('')
     setAttributes(1)
-    setHiddenColumns([])
-    setShowHiddenColumns(false)
     setShowItem(false)
     setAutoMatchUnmappedOnly(true)
     setAlert(false)
@@ -614,21 +578,11 @@ const Matching = () => {
         })
 
       setColumns(getColumns(omit(_data[0], ['__index'])))
+      if(!isResuming)
+        setOpenColumnMap(true)
     };
     reader.readAsBinaryString(file);
   };
-
-  const onHideColumn = column => {
-    setShowHiddenColumns(false)
-    setHiddenColumns([...hiddenColumns, column.original])
-    setColumns(reject(columns, {original: column.original}))
-  }
-
-  const onShowHiddenColumn = () => {
-    setShowHiddenColumns(true)
-    setHiddenColumns([])
-    setColumns(getColumns(omit(data[0], ['__index'])))
-  }
 
   const fetchRepo = (url, _repo) => {
     APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
@@ -639,140 +593,6 @@ const Matching = () => {
   const onAlgoSelect = newAlgo => {
     setAlgo(newAlgo)
     setAlgoMenuAnchorEl(null)
-  }
-
-  const fixedHeaderContent = () => {
-    const isEditing = edit?.includes(-1)
-    return columns?.length ? (
-      <TableRow>
-        <TableCell
-          sx={{
-            width: '16px',
-            padding: '0px',
-            backgroundColor: WHITE,
-          }}
-        />
-        {
-          map(columns, (column, position) => {
-            const isUpdatedValue = column.label !== column.original
-            const isValidColumn = !isEditing && isValidColumnValue(column.label)
-            return (
-              <TableCell
-                key={column.dataKey}
-                variant="head"
-                sx={{
-                  width: column.width || undefined,
-                  padding: isEditing ? '0 8px': '6px',
-                  backgroundColor: isUpdatedValue ? UPDATED_COLOR : WHITE,
-                  color: isValidColumn ? `primary.main` : 'rgb(204, 73, 77)',
-                }}
-              >
-                {
-                  isEditing ?
-                    <HeaderAutocomplete
-                      isUpdatedValue={isUpdatedValue}
-                      helperText={column.original}
-                      value={column.label}
-                      id={position.toString()}
-                      onChange={(event, value) => updateColumn(position, value?.label || value)}
-                    /> :
-                    <b style={{display: 'flex', alignItems: 'center'}}>
-                      {
-                        !isValidColumn &&
-                          <Tooltip title='Hide this column'>
-                            <IconButton size='small' color='warning' sx={{marginRight: '2px'}} onClick={() => onHideColumn(column)}>
-                              <VisibilityIcon fontSize='inherit' />
-                            </IconButton>
-                          </Tooltip>
-                      }
-                      <Tooltip title={isValidColumn ? `${column.label} is a valid attribute for matching` : `${column.label} is NOT a valid for attribute for matching`}>
-                        <span style={{display: 'flex', alignItems: 'center'}}>
-                          {column.label} {isValidColumn ? <ConfirmedIcon sx={{fontSize: '14px', marginLeft: '4px' }} color='success' /> : <CancelOutlinedIcon sx={{fontSize: '14px', marginLeft: '4px'}} color='error' />}
-                          </span>
-                </Tooltip>
-                    </b>
-                }
-              </TableCell>
-            )
-          })
-        }
-        <TableCellAction
-          isEditing={isEditing}
-          onSave={() => setEdit(without(edit, -1))}
-          onEdit={() => setEdit([...edit, -1])}
-        />
-      </TableRow>
-    ) : null;
-  }
-
-  const rowContent = (_index, _row) => {
-    const isEditing = edit?.includes(_row.__index)
-    const bgColor = _row.__index === row.__index ? 'primary.90' : WHITE
-    const defaultMatchTypeColor = 'rgba(0, 0, 0, 0.05)'
-    const state = getStateFromIndex(_row.__index)
-    return (
-      <React.Fragment>
-        <TableCell
-          data-row-id={_row.__index}
-          align='center'
-          sx={{
-            backgroundColor: defaultMatchTypeColor,
-            borderLeft: state ? '2px solid' : 'none',
-            borderColor: state ? VIEWS[state].color + '.main' : 'none',
-            borderBottom: '1px solid rgba(224, 224, 224, 1)',
-            padding: '0px',
-            verticalAlign: 'baseline',
-            color: 'rgba(0, 0, 0, 0.6)',
-            fontSize: '10px'
-          }}
-        >
-          {_row.__index + 1}
-          </TableCell>
-        {
-          map(columns, column => {
-            const defaultValue = _row[column.dataKey]
-            const value = has(_row, column.dataKey + '__updated') ? _row[column.dataKey + '__updated'] : defaultValue
-            const isUpdatedValue = defaultValue !== value
-            return (
-              <TableCell
-                  data-row-id={_row.__index}
-                sx={{
-                  cursor: 'pointer',
-                  backgroundColor: isUpdatedValue ? UPDATED_COLOR : bgColor,
-                  padding: isEditing ? '8px' : '6px',
-                  verticalAlign: 'baseline',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-                onClick={() => onCSVRowSelect(_row)}
-                key={column.dataKey}
-              >
-                {
-                  isEditing ?
-                    <TextField
-                      margin="dense"
-                      multiline
-                      size='small'
-                      fullWidth
-                      defaultValue={value}
-                      helperText={defaultValue}
-                      onChange={event => updateRow(_row.__index, column.dataKey, event.target.value)}
-                      sx={{'.MuiOutlinedInput-root': {padding: '4px 10px'}, '.MuiFormHelperText-root': {margin: 0, padding: '2px 0 0 10px', whiteSpace: 'pre-line', backgroundColor: isUpdatedValue ? UPDATED_COLOR : undefined}}}
-                    /> :
-                  <span style={{whiteSpace: 'pre-line'}}>{value}</span>
-                }
-              </TableCell>
-            )
-          })
-        }
-        <TableCellAction
-          sx={{backgroundColor: bgColor, verticalAlign: 'baseline'}}
-          isEditing={isEditing}
-          onSave={() => setEdit(without(edit, _row.__index))}
-          onEdit={() => setEdit([...edit, _row.__index])}
-        />
-      </React.Fragment>
-    );
   }
 
   const getPayloadForMatching = (rows, _repo) => {
@@ -1244,6 +1064,8 @@ const Matching = () => {
     }
   }
 
+  const doubleClickCallback = useDoubleClick(onCSVRowSelect, () => {});
+
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px'}}>
       <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
@@ -1264,6 +1086,14 @@ const Matching = () => {
               <EditIcon sx={{marginLeft: '16px'}} onClick={() => setEditName(true)} />
             }
           </Typography>
+          <ColumnMap
+            validColumns={HEADERS}
+            columns={columns}
+            open={openColumnMap}
+            onClose={() => setOpenColumnMap(false)}
+            isValid={isValidColumnValue}
+            onUpdate={updateColumn}
+          />
           <div className='col-xs-12' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px'}}>
             <Button
               component="label"
@@ -1284,6 +1114,13 @@ const Matching = () => {
                 onChange={handleFileUpload}
               />
             </Button>
+            <Tooltip title='Customise Columns'>
+              <span>
+                <IconButton size='small' disabled={Boolean(!rows?.length || loadingMatches)} onClick={() => setOpenColumnMap(true)} color='primary' sx={{border: '1px solid', borderColor: !rows?.length || loadingMatches ? 'default' : 'primary.main', margin: '0 5px'}}>
+                  <ColumnIcon fontSize='inherit' />
+                </IconButton>
+              </span>
+            </Tooltip>
             <Button
               variant='contained'
               size='small'
@@ -1310,7 +1147,7 @@ const Matching = () => {
           </div>
         </Paper>
         {
-          (Boolean(rows?.length) || selectedMatchBucket || ROW_STATES.includes(selectedRowStatus) || searchText || hiddenColumns.length > 0) &&
+          (Boolean(rows?.length) || selectedMatchBucket || ROW_STATES.includes(selectedRowStatus) || searchText) &&
             <div className='col-xs-12' style={{padding: '0', width: '100%', height: 'calc(100vh - 300px)'}}>
               <div className='col-xs-12' style={{padding: '0 12px', display: 'flex', backgroundColor: SURFACE_COLORS.main}}>
               {
@@ -1356,14 +1193,6 @@ const Matching = () => {
                   control={<Switch disabled={!showMatchSummary || selectedRowStatus === 'unmapped'} size="small" checked={selectedMatchBucket === 'very_high'} onChange={() => onMatchTypeChange('very_high')} />}
                   label={`Auto Match (${(matchTypes.very_high || 0).toLocaleString()})`}
                 />
-                    <FormControlLabel
-                      sx={{
-                        marginLeft: '10px',
-                        '.MuiFormControlLabel-label': {fontSize: '0.875rem'}
-                      }}
-                      control={<Switch checked={showHiddenColumns} disabled={hiddenColumns.length === 0} size="small" onChange={onShowHiddenColumn} />}
-                      label={`Hidden Columns (${hiddenColumns.length.toLocaleString()})`}
-                    />
                 {
                   selectedRowStatus === 'unmapped' &&
                     <Chip
@@ -1443,14 +1272,49 @@ const Matching = () => {
                 {alert.message}
               </Alert>
               </Collapse>
-              <TableVirtuoso
-                style={{borderRadius: '10px', maxHeight: showMatchSummary ? isSplitView ? 'calc(100vh - 350px)' : 'calc(100vh - 305px)' : 'calc(100vh - 245px)'}}
-                data={rows}
-                components={VirtuosoTableComponents}
-                fixedHeaderContent={fixedHeaderContent}
-                itemContent={rowContent}
-              />
-            </div>
+              <div style={{ width: '100%', height: 'calc(100vh - 291px)' }}>
+                <DataGrid
+                  resizeThrottleMs={100}
+                  onCellClick={doubleClickCallback}
+                  sx={{
+                    borderRadius: '0 0 10px 10px',
+                    '.MuiDataGrid-columnHeader': {
+                      borderRadius: 0,
+                      borderTopLeftRadius: '0 !important',
+                      '.MuiButtonBase-root': {
+                        color: 'rgba(0, 0, 0, 0.5)',
+                        '.MuiSvgIcon-root': {opacity: '1 !important'},
+                      }
+                    },
+                    '.MuiDataGrid-row .MuiDataGrid-cell': {
+                      whiteSpace: 'pre-line',
+                      padding: '4px 10px'
+                    },
+                    [`.MuiDataGrid-row[data-rowindex="${rowIndex}"]`]: {
+                      backgroundColor: 'primary.90'
+                    }
+                  }}
+                  columnHeaderHeight={40}
+                  getRowHeight={() => 'auto'}
+                  getRowId={row => row.__index}
+                  rows={rows}
+                  columns={getColumnsForTable()}
+                  pageSizeOptions={[100]}
+                  initialState={{
+                    pagination: {
+                      paginationModel: {
+                        pageSize: 100,
+                      },
+                    },
+                  }}
+                  disableRowSelectionOnClick
+                  onCellEditStop={(params, event) => {
+                    let value = params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value
+                    updateRow(params.id, params.field, value || '')
+                  }}
+                />
+              </div>
+          </div>
         }
         <Dialog
           disableEscapeKeyDown
