@@ -60,6 +60,9 @@ const ENTITY_CHIP_SIZE_MAP = {
     '.entity-type': {
       color: 'secondary.main',
     },
+    '.entity-name': {
+      color: '#000',
+    },
     '.entity-id': {
       color: '#000',
     }
@@ -92,6 +95,9 @@ const ENTITY_CHIP_SIZE_MAP = {
     },
     '.entity-type': {
       color: 'secondary.main',
+    },
+    '.entity-name': {
+      color: '#000',
     },
     '.entity-id': {
       color: '#000',
