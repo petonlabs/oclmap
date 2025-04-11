@@ -378,6 +378,7 @@ const Matching = () => {
 
   const [row, setRow] = React.useState(false)
   const [loadingMatches, setLoadingMatches] = React.useState(false)
+  const [isLoadingInDecisionView, setIsLoadingInDecisionView] = React.useState(false)
   const [edit, setEdit] = React.useState([]);
   const [selectedRowStatus, setSelectedRowStatus] = React.useState('all')
   const [selectedMatchBucket, setSelectedMatchBucket] = React.useState(false)
@@ -999,6 +1000,7 @@ const Matching = () => {
   const fetchOtherCandidates = () => {
     setAlert(false)
     if(isAnyValidColumn()) {
+      setIsLoadingInDecisionView(true)
       const payload = getPayloadForMatching([row], repo)
       APIService.concepts()
         .appendToUrl('$match/')
@@ -1012,6 +1014,7 @@ const Matching = () => {
           semantic: algo === 'llm'
         }).then(response => {
           setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == row.__index), ...response.data])
+          setIsLoadingInDecisionView(false)
           let items = get(response.data, '0.results') || []
           if(items.length > 0)
             setTimeout(() => highlightTexts(items, null, false), 100)
@@ -1023,6 +1026,7 @@ const Matching = () => {
   }
 
   const searchCandidates = () => {
+    setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
       includeMappings: true,
@@ -1034,6 +1038,7 @@ const Matching = () => {
     }).then(response => {
       let items = response.data
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
+      setIsLoadingInDecisionView(false)
       if(items.length > 0)
         setTimeout(() => highlightTexts(items, null, false), 100)
     });
@@ -1592,10 +1597,10 @@ const Matching = () => {
                     color='primary'
                     variant="contained"
                     sx={{textTransform: 'none', marginLeft: '10px'}}
-                    disabled={!repo?.id}
+                    disabled={!repo?.id || isLoadingInDecisionView}
                     onClick={fetchOtherCandidates}
                   >
-                    Fetch
+                    {isLoadingInDecisionView ? 'Loading' : 'Fetch'}
                   </Button>
                 </div>
                 <Collapse in={Boolean(alert?.message)}>
