@@ -1574,10 +1574,10 @@ const Matching = () => {
                   <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={onReviewDone} variant='contained' sx={{textTransform: 'none'}}>
                     Approve
                   </Button>
-                  <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none', marginLeft: '16px'}}>
+                  <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='outlined' sx={{textTransform: 'none', marginLeft: '16px'}}>
                     Approve and Next
                   </Button>
-                  <Button color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='contained' sx={{textTransform: 'none', marginLeft: '16px'}}>
+                  <Button color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='outlined' sx={{textTransform: 'none', marginLeft: '16px'}}>
                     Reject
                   </Button>
                 </div>
