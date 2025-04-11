@@ -395,6 +395,7 @@ const Matching = () => {
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
   const [alert, setAlert] = React.useState(false)
   const [openColumnMap, setOpenColumnMap] = React.useState(false)
+  const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -446,12 +447,12 @@ const Matching = () => {
     let cols = []
     forEach(columns, column => {
       const isValidColumn = isValidColumnValue(column.label)
-      if(!isValidColumn)
-        return
       const isUpdatedValue = column.label !== column.original
       let headerClass = 'header-valid'
       if(isUpdatedValue)
         headerClass = 'header-updated'
+      if(!isValidColumn)
+        headerClass = 'header-invalid'
       let widthParams = {}
       if(columns.length < 2)
         widthParams.flex = 1
@@ -722,25 +723,29 @@ const Matching = () => {
     let row = {}
     forEach(csvRow,  (value, key) => {
       if((value === 0 || value) && !has(csvRow, key + '__updated')) {
-        key = find(columns, {original: key.replace('__updated', '')})?.label || key
-        let newValue = value
-        let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
-        let isList = key === '__index' ? false : newValue.includes('\n')
+        const column = find(columns, {original: key.replace('__updated', '')})
+        key = column?.label || key
+        const dataKey = column?.dataKey || key
+        if(columnVisibilityModel[dataKey] !== false) {
+          let newValue = value
+          let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
+          let isList = key === '__index' ? false : newValue.includes('\n')
 
-        if(isList)
-          newValue = newValue.split('\n')
-        if(key.includes('__updated'))
-          newKey = key.replace('__updated', '')
-        if(newKey.includes('class'))
-          newKey = 'concept_class'
-        if(newKey === 'set_members')
-          newKey = 'other_map_codes'
-        if(newKey === 'same_as')
-          newKey = 'same_as_map_codes'
-        if(isList)
-          row[newKey] = [...(row[newKey] || []), ...newValue]
-        else
-          row[newKey] = newValue
+          if(isList)
+            newValue = newValue.split('\n')
+          if(key.includes('__updated'))
+            newKey = key.replace('__updated', '')
+          if(newKey.includes('class'))
+            newKey = 'concept_class'
+          if(newKey === 'set_members')
+            newKey = 'other_map_codes'
+          if(newKey === 'same_as')
+            newKey = 'same_as_map_codes'
+          if(isList)
+            row[newKey] = [...(row[newKey] || []), ...newValue]
+          else
+            row[newKey] = newValue
+        }
       }
     })
     return row
@@ -1312,6 +1317,8 @@ const Matching = () => {
                     let value = params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value
                     updateRow(params.id, params.field, value || '')
                   }}
+                  columnVisibilityModel={columnVisibilityModel}
+                  onColumnVisibilityModelChange={setColumnVisibilityModel}
                 />
               </div>
           </div>
