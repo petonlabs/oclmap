@@ -925,10 +925,15 @@ const Matching = () => {
     setDecisions(prev => ({...prev, [rowIndex]: unmap ? null : 'map'}))
   }
 
-  const onReviewDone = () => {
+  const onReviewDone = (next = false) => {
     const newRowStatuses = {...rowStatuses, reviewed: uniq([...rowStatuses.reviewed, rowIndex]), readyForReview: without(rowStatuses.readyForReview, rowIndex), unmapped: without(rowStatuses.unmapped, rowIndex)}
     setRowStatuses(newRowStatuses)
     updateMatchTypeCounts('reviewed', newRowStatuses)
+    if(next){
+      const nextRow = data[rowIndex + 1]
+      onCloseDecisions()
+      setTimeout(() => onCSVRowSelect(nextRow), 300)
+    }
   }
 
   const getConceptLabel = concept => `${concept.repo.short_code}:${concept.repo.version || concept.repo.id}:${concept.id} ${concept.display_name}`
@@ -1568,6 +1573,9 @@ const Matching = () => {
                 <div className='col-xs-12 padding-0' style={{margin: '16px 0', display: 'flex', alignItems: 'center'}}>
                   <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={onReviewDone} variant='contained' sx={{textTransform: 'none'}}>
                     Approve
+                  </Button>
+                  <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none', marginLeft: '16px'}}>
+                    Approve and Next
                   </Button>
                   <Button color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='contained' sx={{textTransform: 'none', marginLeft: '16px'}}>
                     Reject
