@@ -101,6 +101,7 @@ import ConceptChip from '../concepts/ConceptChip'
 import RepoSearchAutocomplete from './RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from './RepoVersionSearchAutocomplete'
 import ColumnMap from './ColumnMap'
+import MapButton from './MapButton'
 
 import './Matching.scss'
 
@@ -368,6 +369,7 @@ const Matching = () => {
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [algo, setAlgo] = React.useState('es')
   const [notes, setNotes] = React.useState({})
+  const [mapTypes, setMapTypes] = React.useState({})
   const [proposed, setProposed] = React.useState({})
   const [mapSelected, setMapSelected] = React.useState({})
   const [startMatchingAt, setStartMatchingAt] = React.useState(false)
@@ -403,6 +405,7 @@ const Matching = () => {
   const [repoVersion, setRepoVersion] = React.useState(false)
   const [versions, setVersions] = React.useState([])
   const [conceptCache, setConceptCache] = React.useState({})
+  const [allMapTypes, setAllMapTypes] = React.useState([])
 
   const ALGOS = [
     {id: 'es', label: 'Generic Elastic Search Matching'},
@@ -418,6 +421,14 @@ const Matching = () => {
       };
     }
   }, [decisions]);
+
+  React.useEffect(() => {
+    fetchMapTypes()
+  }, [])
+
+  const fetchMapTypes = () => {
+    APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
+  }
 
 
   const alertUser = (e) => {
@@ -497,6 +508,7 @@ const Matching = () => {
     setOtherMatchedConcepts([])
     setSearchedConcepts({})
     setNotes({})
+    setMapTypes({})
     setProposed({})
     setMapSelected({})
     setStartMatchingAt(false)
@@ -537,6 +549,7 @@ const Matching = () => {
       let _decisions = {}
       let _mapSelected = {}
       let _notes = {}
+      let _mapTypes = {}
       let _proposed = {}
       let _repo = null
       let _states = {...rowStatuses}
@@ -555,6 +568,7 @@ const Matching = () => {
           _states[state].push(index)
           _decisions[index] = data['__Decision__'] === 'None' ? undefined : data['__Decision__']
           _notes[index] = data['__Note__']
+          _mapTypes[index] = data['__Map Type__']
           _proposed[index] = data['__Proposed__'] ? JSON.parse(data['__Proposed__']) : undefined
           data = omit(data, [...reservedKeys, ...optionalReservedKeys])
         }
@@ -562,6 +576,7 @@ const Matching = () => {
       })
       if(isResuming) {
         setNotes(_notes)
+        setMapTypes(_mapTypes)
         setDecisions(_decisions)
         setMapSelected(_mapSelected)
         setRowStatuses(_states)
@@ -664,6 +679,7 @@ const Matching = () => {
                   })
                   prev.readyForReview = uniq([...prev.readyForReview, concept.row.__index])
                   setDecisions(prev => ({...prev, [concept.row.__index]: 'map'}))
+                  setMapTypes(prev => ({...prev, [concept.row.__index]: 'SAME-AS'}))
                 } else
                   prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
               })
@@ -851,6 +867,7 @@ const Matching = () => {
         '__Concept ID__': concept?.id,
         '__Concept Name__': concept?.display_name,
         '__Concept URL__': concept?.url,
+        '__Map Type__': mapTypes[index],
         '__Match Score__': concept?.search_meta?.search_score,
         '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
         '__Decision__': decisions[index] || 'None',
@@ -901,7 +918,7 @@ const Matching = () => {
     setSearchStr('')
   }
 
-  const onMap = (event, concept, unmap=false) => {
+  const onMap = (event, concept, unmap=false, mapType='SAME-AS') => {
     event.preventDefault()
     event.stopPropagation()
     _onMap(concept, unmap)
@@ -913,6 +930,7 @@ const Matching = () => {
       } else {
         prev.readyForReview = uniq([...prev.readyForReview, rowIndex])
         prev.unmapped = without(prev.unmapped, rowIndex)
+        setMapTypes({...mapTypes, [rowIndex]: mapType})
       }
       updateMatchTypeCounts(null, prev)
       return prev
@@ -1480,7 +1498,7 @@ const Matching = () => {
                       onClick={event => setDecisionAnchorEl(event.currentTarget)}
                       onDelete={event => setDecisionAnchorEl(event.currentTarget)}
                       variant='outlined'
-                      label={startCase(decisions[rowIndex] || 'none')}
+                      label={decisions[rowIndex] === 'map' ? `${startCase(decisions[rowIndex] || 'none')} (${mapTypes[rowIndex]})` : startCase(decisions[rowIndex] || 'none')}
                       color={decisions[rowIndex] === 'map' ? 'primary' : (decisions[rowIndex] === 'exclude' ? 'error' : (decisions[rowIndex] === 'propose' ? 'warning' : 'secondary'))}
                       deleteIcon={<DownIcon fontSize='inherit' />}
                     />
@@ -1701,9 +1719,7 @@ const Matching = () => {
                         renderer: concept => {
                           const isMapped = isSelectedForMap(concept)
                           return (
-                          <Button size='small' sx={{textTransform: 'none', whiteSpace: 'nowrap'}} color={isMapped ? 'error' : 'primary'} variant={isMapped ? 'outlined' : 'contained'} onClick={event => onMap(event, concept, isMapped)}>
-                            {isMapped ? 'Un-Map' : 'Map'}
-                          </Button>
+                            <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)} isMapped={isMapped} />
                         )},
                       },
                     ]}
@@ -1786,9 +1802,7 @@ const Matching = () => {
                         renderer: concept => {
                           const isMapped = isSelectedForMap(concept)
                           return (
-                          <Button size='small' sx={{textTransform: 'none', whiteSpace: 'nowrap'}} color={isMapped ? 'error' : 'primary'} variant={isMapped ? 'outlined' : 'contained'} onClick={event => onMap(event, concept, isMapped)}>
-                            {isMapped ? 'Un-Map' : 'Map'}
-                          </Button>
+                            <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, applied, mapType)} isMapped={isMapped} />
                         )},
                       },
                     ]}
