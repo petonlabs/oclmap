@@ -904,11 +904,9 @@ const Matching = () => {
       })
     setRow(csvRow)
     setDecisionTab('map_and_review')
-    const el = document.querySelector(`td[data-row-id="${csvRow.__index}"]`)
+    const el = document.querySelector(`div[data-id="${csvRow.__index}"]`)
     if(el) {
-      const rowEl = el.parentElement
-      if(rowEl)
-        rowEl.scrollIntoView({ behavior: "smooth", block: "center" })
+       el.scrollIntoView({ behavior: "smooth", block: "center" })
     }
   }
 
@@ -950,7 +948,8 @@ const Matching = () => {
     if(next){
       const nextRow = data[rowIndex + 1]
       onCloseDecisions()
-      setTimeout(() => onCSVRowSelect(nextRow), 300)
+      if(nextRow !== undefined)
+        setTimeout(() => onCSVRowSelect(nextRow), 300)
     }
   }
 
@@ -1323,7 +1322,7 @@ const Matching = () => {
                       whiteSpace: 'pre-line',
                       padding: '4px 10px'
                     },
-                    [`.MuiDataGrid-row[data-rowindex="${rowIndex}"]`]: {
+                    [`.MuiDataGrid-row[data-id="${rowIndex}"]`]: {
                       backgroundColor: 'primary.90'
                     }
                   }}
