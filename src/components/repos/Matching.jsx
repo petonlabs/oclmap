@@ -1148,7 +1148,7 @@ const Matching = () => {
                 onChange={handleFileUpload}
               />
             </Button>
-            <Tooltip title='Customise Columns'>
+            <Tooltip title='Configure Columns'>
               <span>
                 <IconButton size='small' disabled={Boolean(!rows?.length || loadingMatches)} onClick={() => setOpenColumnMap(true)} color='primary' sx={{border: '1px solid', borderColor: !rows?.length || loadingMatches ? 'default' : 'primary.main', margin: '0 5px'}}>
                   <ColumnIcon fontSize='inherit' />

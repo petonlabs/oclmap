@@ -25,12 +25,12 @@ const HeaderAutocomplete = ({headers, ...rest}) => {
       autoComplete
       disableClearable
       disablePortal
-      freeSolo
       fullWidth
       getOptionLabel={option => option?.label ? option.label : (find(headers, {id: option})?.label || option)}
       isOptionEqualToValue={(option, value) => option?.id === value?.id || option?.id === value || option === value}
       sx={{
         minWidth: '100px',
+        '.MuiButtonBase-root': {color: '#000'}
       }}
       renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
       options={headers}
@@ -50,7 +50,7 @@ const ColumnMap = ({open, onClose, validColumns, columns, isValid, onUpdate}) =>
       <DialogTitle>
         <span style={{display: 'flex', alignItems: 'center'}}>
           <ColumnIcon sx={{marginRight: '10px'}} />
-          Assign Columns
+          Configure Columns
           </span>
       </DialogTitle>
       <DialogContent>
