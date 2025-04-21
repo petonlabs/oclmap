@@ -1002,6 +1002,8 @@ const Matching = () => {
       setProposed(prev => ({...prev, [rowIndex]: undefined}))
 
     setDecisions(prev => ({...prev, [rowIndex]: newValue || undefined}))
+    if(newValue === 'propose')
+      setAlert({message: 'Proposed successfully.', duration: 2, severity: 'success'})
 
     setRowStatuses(prev => {
       prev.reviewed = without(prev.reviewed, rowIndex)
