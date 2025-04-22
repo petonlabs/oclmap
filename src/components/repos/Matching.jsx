@@ -378,6 +378,8 @@ const Matching = () => {
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_score')
 
+  const abortRef = React.useRef(false);
+
   const [row, setRow] = React.useState(false)
   const [loadingMatches, setLoadingMatches] = React.useState(false)
   const [isLoadingInDecisionView, setIsLoadingInDecisionView] = React.useState(false)
@@ -406,6 +408,7 @@ const Matching = () => {
   const [versions, setVersions] = React.useState([])
   const [conceptCache, setConceptCache] = React.useState({})
   const [allMapTypes, setAllMapTypes] = React.useState([])
+  const [random, setRandom] = React.useState(0)
 
   const ALGOS = [
     {id: 'es', label: 'Generic Elastic Search Matching'},
@@ -627,6 +630,8 @@ const Matching = () => {
 
 
   const getRowsResults = async (rows) => {
+    abortRef.current = false;
+
     const CHUNK_SIZE = algo === 'llm' ? 10 : 50; // Number of rows per batch
     const MAX_CONCURRENT_REQUESTS = 2; // Number of parallel API requests allowed
     if(autoMatchUnmappedOnly)
@@ -635,6 +640,8 @@ const Matching = () => {
 
     // Function to process a single batch
     const processBatch = async (_repo, rowBatch) => {
+      if (abortRef.current) return [];
+
       const payload = getPayloadForMatching(rowBatch, _repo)
 
       try {
@@ -660,6 +667,7 @@ const Matching = () => {
       while (queue.length > 0 || activeRequests.size > 0) {
         // Fill activeRequests up to MAX_CONCURRENT_REQUESTS
         while (queue.length > 0 && activeRequests.size < MAX_CONCURRENT_REQUESTS) {
+          if (abortRef.current) return;
           const rowBatch = queue.shift();
           const promise = processBatch(_repo, rowBatch).then((data) => {
             let matchTypes = map(data, 'results.0.search_meta.match_type')
@@ -1165,6 +1173,22 @@ const Matching = () => {
             >
               {getCandidatesButtonLabel()}
             </Button>
+            {
+              loadingMatches &&
+                <Button
+                  variant='text'
+                  size='small'
+                  color='error'
+                  sx={{textTransform: 'none', margin: '5px'}}
+                  onClick={() => {
+                    abortRef.current = true
+                    setRandom(random + 1)
+                  }}
+                  disabled={abortRef.current}
+                >
+                  {abortRef.current ? 'Aborting gracefully...' : 'Abort'}
+                </Button>
+            }
             {
               rows?.length > 0 && !loadingMatches &&
                 <Button
