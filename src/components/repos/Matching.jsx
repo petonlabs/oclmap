@@ -1186,7 +1186,7 @@ const Matching = () => {
                   }}
                   disabled={abortRef.current}
                 >
-                  {abortRef.current ? 'Aborting gracefully...' : 'Abort'}
+                  {abortRef.current ? 'Stopping gracefully...' : 'Stop Processing'}
                 </Button>
             }
             {
