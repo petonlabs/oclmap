@@ -175,9 +175,7 @@ const SearchField = ({onChange}) => {
     onChange(value)
   }
 
-  const comp = React.useMemo(() => {
-    return Boolean(focused || input)
-  }, [focused, input]);
+  const comp = React.useMemo(() => Boolean(focused || input), [focused, input]);
 
   const style = comp ? {height: '31px', paddingLeft: '7px'} : {padding: 0, height: '31px', justifyContent: 'flex-start'}
 
@@ -419,9 +417,7 @@ const Matching = () => {
   React.useEffect(() => {
     if(!isEmpty(decisions)) {
       window.addEventListener("beforeunload", alertUser);
-      return () => {
-        window.removeEventListener("beforeunload", alertUser);
-      };
+      return () => window.removeEventListener("beforeunload", alertUser);
     }
   }, [decisions]);
 
@@ -429,10 +425,7 @@ const Matching = () => {
     fetchMapTypes()
   }, [])
 
-  const fetchMapTypes = () => {
-    APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
-  }
-
+  const fetchMapTypes = () => APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
 
   const alertUser = (e) => {
     e.preventDefault();
@@ -498,9 +491,7 @@ const Matching = () => {
     })
   }
 
-  const updateRow = (index, columnKey, newValue) => {
-    setData(prevData => map(prevData, row => (row.__index === index ? {...row, [`${columnKey}__updated`]: newValue} : row)))
-  }
+  const updateRow = (index, columnKey, newValue) => setData(prevData => map(prevData, row => (row.__index === index ? {...row, [`${columnKey}__updated`]: newValue} : row)))
 
   const resetState = () => {
     setRowStatuses({reviewed: [], readyForReview: [], unmapped: []})
@@ -604,9 +595,7 @@ const Matching = () => {
     reader.readAsBinaryString(file);
   };
 
-  const fetchRepo = (url, _repo) => {
-    APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
-  }
+  const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
 
@@ -828,9 +817,7 @@ const Matching = () => {
     return 'Auto Match'
   }
 
-  const onMatchTypeChange = bucket => {
-    setSelectedMatchBucket(prev => prev === bucket ? false : bucket)
-  }
+  const onMatchTypeChange = bucket => setSelectedMatchBucket(prev => prev === bucket ? false : bucket)
 
   const getRows = () => {
     let rows = data?.length ? [...data] : []
@@ -1088,11 +1075,8 @@ const Matching = () => {
   }
 
   const getConcept = concept => concept?.url ? conceptCache[concept.url] || concept : concept
-  const onProposedUpdate = event => {
-    setProposed(prev => {
-      return {...prev, [rowIndex]: {...(prev[rowIndex] || {}), [event.target.id]: event.target.value}}
-    })
-  }
+
+  const onProposedUpdate = event => setProposed(prev => ({...prev, [rowIndex]: {...(prev[rowIndex] || {}), [event.target.id]: event.target.value}}))
 
   const onCandidatesOrderChange = (property, order) => {
     setCandidatesOrderBy(property)
@@ -1366,10 +1350,7 @@ const Matching = () => {
                     },
                   }}
                   disableRowSelectionOnClick
-                  onCellEditStop={(params, event) => {
-                    let value = params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value
-                    updateRow(params.id, params.field, value || '')
-                  }}
+                  onCellEditStop={(params, event) => updateRow(params.id, params.field, params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value || '')}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
                 />
@@ -1741,11 +1722,9 @@ const Matching = () => {
                         sortable: false,
                         id: 'map-control',
                         labelKey: '',
-                        renderer: concept => {
-                          const isMapped = isSelectedForMap(concept)
-                          return (
-                            <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)} isMapped={isMapped} />
-                        )},
+                        renderer: concept => (
+                          <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)} isMapped={isSelectedForMap(concept)} />
+                        ),
                       },
                     ]}
                   />
@@ -1824,11 +1803,9 @@ const Matching = () => {
                         sortable: false,
                         id: 'map-control',
                         labelKey: '',
-                        renderer: concept => {
-                          const isMapped = isSelectedForMap(concept)
-                          return (
-                            <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, applied, mapType)} isMapped={isMapped} />
-                        )},
+                        renderer: concept => (
+                          <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, applied, mapType)} isMapped={isSelectedForMap(concept)} />
+                        ),
                       },
                     ]}
                   />
