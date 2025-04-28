@@ -536,7 +536,7 @@ const Matching = () => {
       const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
       let _data = []
 
-      const reservedKeys = ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__']
+      const reservedKeys = ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__']
       const optionalReservedKeys = ['__Concept Name__']
       let columns = keys(jsonData[0])
       let isResuming = every(reservedKeys, key => columns.includes(key))
