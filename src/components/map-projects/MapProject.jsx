@@ -98,12 +98,12 @@ import SearchResults from '../search/SearchResults';
 import SearchHighlightsDialog from '../search/SearchHighlightsDialog'
 import ConceptHome from '../concepts/ConceptHome'
 import ConceptChip from '../concepts/ConceptChip'
-import RepoSearchAutocomplete from './RepoSearchAutocomplete'
-import RepoVersionSearchAutocomplete from './RepoVersionSearchAutocomplete'
+import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
+import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import ColumnMap from './ColumnMap'
 import MapButton from './MapButton'
 
-import './Matching.scss'
+import './MapProject.scss'
 
 
 
@@ -351,7 +351,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const Matching = () => {
+const MapProject = () => {
   const { toggles } = React.useContext(OperationsContext);
   // project state
   const [name, setName] = React.useState('')
@@ -594,6 +594,7 @@ const Matching = () => {
     };
     reader.readAsBinaryString(file);
   };
+
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
 
@@ -1857,4 +1858,4 @@ const Matching = () => {
   )
 }
 
-export default Matching;
+export default MapProject;

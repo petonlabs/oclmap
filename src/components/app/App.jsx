@@ -17,7 +17,8 @@ import Header from './Header';
 import OIDLoginCallback from '../users/OIDLoginCallback';
 import { OperationsContext } from './LayoutContext';
 import Alert from '../common/Alert';
-import Matching from '../repos/Matching'
+import MapProject from '../map-projects/MapProject'
+import MapProjects from '../map-projects/MapProjects'
 
 const AuthenticationRequiredRoute = ({component: Component, ...rest}) => (
   <Route
@@ -70,7 +71,9 @@ const App = props => {
           <main className='content'>
             <Switch>
               <Route exact path="/oidc/login" component={OIDLoginCallback} />
-              <AuthenticationRequiredRoute exact path='/' component={Matching} />
+              <AuthenticationRequiredRoute exact path='/' component={MapProjects} />
+              <AuthenticationRequiredRoute exact path='/map-projects' component={MapProjects} />
+              <AuthenticationRequiredRoute exact path='/map-projects/new' component={MapProject} />
               <Route exact path='/403' component={Error403} />
               <Route component={Error404} />
             </Switch>
