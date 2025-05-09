@@ -1807,9 +1807,12 @@ const MapProject = () => {
                         sortable: false,
                         id: 'map-control',
                         labelKey: '',
-                        renderer: concept => (
-                          <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, concept, applied, mapType)} isMapped={isSelectedForMap(concept)} />
-                        ),
+                        renderer: concept => {
+                          const isMapped = isSelectedForMap(concept)
+                          return (
+                            <MapButton options={allMapTypes} selected={isMapped ? mapTypes[rowIndex] : null} onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)} isMapped={isMapped} />
+                          )
+                        },
                       },
                     ]}
                   />
