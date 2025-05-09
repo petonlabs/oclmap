@@ -1685,7 +1685,7 @@ const MapProject = () => {
                     orderBy={candidatesOrderBy}
                     order={candidatesOrder}
                     onOrderByChange={onCandidatesOrderChange}
-                    resultContainerStyle={{height: decisionTab === 'candidates' ? (showItem ? '200px' : 'calc(100vh - 200px)') : 'auto'}}
+                    resultContainerStyle={{height: decisionTab === 'candidates' ? (showItem ? '200px' : 'calc(100vh - 300px)') : 'auto'}}
                     onShowItemSelect={item => {
                       setShowItem(item)
                       setTimeout(() => {
@@ -1788,7 +1788,7 @@ const MapProject = () => {
                     noPagination
                     noSorting
                     noToolbar
-                    resultContainerStyle={{height: decisionTab === 'search' ? (showItem ? '200px' : 'calc(100vh - 200px)') : 'auto'}}
+                    resultContainerStyle={{height: decisionTab === 'search' ? (showItem ? '200px' : 'calc(100vh - 300px)') : 'auto'}}
                     onShowItemSelect={item => {
                       setShowItem(item)
                       setTimeout(() => {
