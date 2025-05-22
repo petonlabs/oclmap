@@ -74,6 +74,7 @@ const App = props => {
               <AuthenticationRequiredRoute exact path='/' component={MapProjects} />
               <AuthenticationRequiredRoute exact path='/map-projects' component={MapProjects} />
               <AuthenticationRequiredRoute exact path='/map-projects/new' component={MapProject} />
+              <AuthenticationRequiredRoute exact path='/:ownerType/:owner/map-projects/:projectId/edit' component={MapProject} />
               <Route exact path='/403' component={Error403} />
               <Route component={Error404} />
             </Switch>

@@ -1,6 +1,7 @@
 import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
+import { useParams, useHistory } from 'react-router-dom'
 
 import Paper from '@mui/material/Paper'
 import Button from '@mui/material/Button';
@@ -60,6 +61,8 @@ import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
 import ColumnIcon from '@mui/icons-material/ViewWeekRounded';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import orderBy from 'lodash/orderBy'
 import filter from 'lodash/filter'
@@ -89,7 +92,7 @@ import findIndex from 'lodash/findIndex'
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -102,6 +105,7 @@ import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import ColumnMap from './ColumnMap'
 import MapButton from './MapButton'
+import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 
 import './MapProject.scss'
 
@@ -352,8 +356,13 @@ const VisuallyHiddenInput = styled('input')({
 
 
 const MapProject = () => {
-  const { toggles } = React.useContext(OperationsContext);
+  const { toggles, setAlert: baseSetAlert } = React.useContext(OperationsContext);
+  const user = getCurrentUser()
+  const params = useParams()
+  const history = useHistory()
+
   // project state
+  const [project, setProject] = React.useState(null)
   const [name, setName] = React.useState('')
   const [file, setFile] = React.useState(false)
   const [data, setData] = React.useState(false)
@@ -407,6 +416,7 @@ const MapProject = () => {
   const [conceptCache, setConceptCache] = React.useState({})
   const [allMapTypes, setAllMapTypes] = React.useState([])
   const [random, setRandom] = React.useState(0)
+  const [deleteProject, setDeleteProject] = React.useState(false)
 
   const ALGOS = [
     {id: 'es', label: 'Generic Elastic Search Matching'},
@@ -423,7 +433,30 @@ const MapProject = () => {
 
   React.useEffect(() => {
     fetchMapTypes()
+    if(params.projectId && params.owner) {
+      fetchAndSetProject()
+    }
   }, [])
+
+  const fetchAndSetProject = () => {
+    let url = ['', params.ownerType, params.owner, 'map-projects', params.projectId, ''].join('/')
+    APIService.new().overrideURL(url).get().then(response => {
+      if(response.data?.file_url) {
+        fetch(response.data.file_url).then(res => res.text()).then(csvText => {
+          const workbook = XLSX.read(csvText, { type: "string" });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
+          setProjectFromData(data)
+          setTimeout(() => {
+            setFile(getFileObjectFromRows(response.data.input_file_name))
+          }, 500)
+        })
+      }
+      setName(response.data?.name)
+      setProject(response.data)
+    })
+  }
 
   const fetchMapTypes = () => APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
 
@@ -533,13 +566,18 @@ const MapProject = () => {
       const workbook = XLSX.read(e.target.result, { type: 'binary', raw: true, cellText: true, codepage: 65001 });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' });
+      setProjectFromData(XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' }))
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const setProjectFromData = jsonData => {
       let _data = []
 
       const reservedKeys = ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__']
       const optionalReservedKeys = ['__Concept Name__']
       let columns = keys(jsonData[0])
-      let isResuming = every(reservedKeys, key => columns.includes(key))
+      let isResuming = params?.projectId || every(reservedKeys, key => columns.includes(key))
       let _decisions = {}
       let _mapSelected = {}
       let _notes = {}
@@ -591,10 +629,42 @@ const MapProject = () => {
       setColumns(getColumns(omit(_data[0], ['__index'])))
       if(!isResuming)
         setOpenColumnMap(true)
-    };
-    reader.readAsBinaryString(file);
-  };
+  }
 
+
+  const onSave = () => {
+    const f = getFileObjectFromRows()
+    const selected = map(mapSelected, (data, i) => {
+      return {
+        url: data?.url,
+        repoURL: data?.repo?.version_url || data?.repo?.url,
+        mapType: mapTypes[i],
+        state: VIEWS[getStateFromIndex(parseInt(i))].label,
+        decision: decisions[i] || 'None',
+        note: notes[i] || undefined,
+        proposed: isEmpty(proposed[i]) ? undefined : JSON.stringify(proposed[i]),
+        rowIndex: i
+      }
+    })
+    const formData = new FormData();
+    formData.append('file', f);
+    formData.append('matches', JSON.stringify(selected))
+    formData.append('name', name || f.name)
+    let service = APIService.users(user.username).appendToUrl('map-projects/')
+    if(project?.id)
+      service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
+    else
+      service = service.post(formData, null, {"Content-Type": "multipart/form-data"})
+
+    service.then(response => {
+      if(response?.data?.id) {
+        setProject(response.data)
+        if(response.data.url)
+          history.push(response.data.url + 'edit')
+        baseSetAlert({severity: 'success', message: 'Succesffully Saved.', duration: 2000})
+      }
+    })
+  }
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
 
@@ -852,35 +922,62 @@ const MapProject = () => {
   }
 
   const onDownloadClick = () => {
-    const rows = map(data, row => {
-      const index = row.__index
-      const rowState = getStateFromIndex(index)
-      const rowStateLabel = VIEWS[rowState].label
-      let concept = mapSelected[index]
-      let _repo = concept?.repo
-      let newRow = {
-        ...row,
-        '__Concept ID__': concept?.id,
-        '__Concept Name__': concept?.display_name,
-        '__Concept URL__': concept?.url,
-        '__Map Type__': mapTypes[index],
-        '__Match Score__': concept?.search_meta?.search_score,
-        '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
-        '__Decision__': decisions[index] || 'None',
-        '__Note__': notes[index] || null,
-        '__State__': rowStateLabel,
-        '__Proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
-        '__Repo Version__': _repo?.version || _repo?.id,
-        '__Repo ID__': _repo?.short_code || _repo?.id,
-        '__Repo URL__': _repo?.version_url || _repo?.url
-      }
-      delete newRow.__index
-      return newRow
-    })
-    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = getWorkbook()
+    XLSX.writeFile(workbook, `${name || 'Matched'}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
+  }
+
+  const getFileObjectFromRows = name => {
+    const workbook = getWorkbook()
+    const wbout = XLSX.write(workbook, {
+      bookType: 'csv',  // or 'xlsx' if needed
+      type: 'array',    // get it as an ArrayBuffer
+      compression: true
+    });
+    const blob = new Blob([wbout], { type: 'text/csv;charset=utf-8;' });
+    return new File([blob], name || file.name, {type: 'text/csv'})
+  }
+
+  const getWorkbook = () => {
+    const worksheet = XLSX.utils.json_to_sheet(getRowsForDownload());
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
-    XLSX.writeFile(workbook, `${name || 'Matched'}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
+    return workbook
+  }
+
+  const getRowsForDownload = () => {
+      return map(data, row => {
+        const index = row.__index
+        const rowState = getStateFromIndex(index)
+        const rowStateLabel = VIEWS[rowState].label
+        let concept = mapSelected[index]
+        let _repo = concept?.repo
+        let newRow = {}
+        forEach(row, (value, key) => {
+          const column = find(columns, {dataKey: key})
+          if(column?.label)
+            newRow[column.label] = value
+          else
+            newRow[key] = value
+        })
+        newRow = {
+          ...newRow,
+          '__Concept ID__': concept?.id,
+          '__Concept Name__': concept?.display_name,
+          '__Concept URL__': concept?.url,
+          '__Map Type__': mapTypes[index],
+          '__Match Score__': concept?.search_meta?.search_score,
+          '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
+          '__Decision__': decisions[index] || 'None',
+          '__Note__': notes[index] || null,
+          '__State__': rowStateLabel,
+          '__Proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
+          '__Repo Version__': _repo?.version || _repo?.id,
+          '__Repo ID__': _repo?.short_code || _repo?.id,
+          '__Repo URL__': _repo?.version_url || _repo?.url
+        }
+        delete newRow.__index
+        return newRow
+    })
   }
 
   const onCSVRowSelect = csvRow => {
@@ -1069,6 +1166,11 @@ const MapProject = () => {
   const rows = getRows()
 
   const getTitle = () => {
+    if(project?.id && project.name)
+      return <span style={{display: 'flex', alignItems: 'center'}}>
+               <EditIcon sx={{marginRight: '8px'}} />
+               {project.name}
+             </span>
     let title = 'Mapping Project'
     if(!editName && name)
       title += ` - ${name}`
@@ -1093,8 +1195,10 @@ const MapProject = () => {
 
   const doubleClickCallback = useDoubleClick(onCSVRowSelect, () => {});
 
+  const lastSavedText = project?.updated_at ? moment(project.updated_at).fromNow() : false
+
   return (
-    <div className='col-xs-12 padding-0' style={{borderRadius: '10px'}}>
+    <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
         <Paper component="div" className='col-xs-12' sx={{backgroundColor: 'surface.main', boxShadow: 'none', padding: '4px 16px 8px 16px', borderRadius: '10px 10px 0 0'}}>
           <Typography component='span' sx={{fontSize: '28px', color: 'surface.dark', fontWeight: 600, display: 'flex', alignItems: 'center'}}>
@@ -1110,7 +1214,15 @@ const MapProject = () => {
                   onChange={event => setName(event.target.value || '')}
                   onBlur={() => setEditName(false)}
                 /> :
-              <EditIcon sx={{marginLeft: '16px'}} onClick={() => setEditName(true)} />
+              (
+                project?.id && project.name ?
+                  null :
+                  <Tooltip title='Set Project Name' placement='right'>
+                    <IconButton color='primary' sx={{marginLeft: '16px'}} onClick={() => setEditName(true)}>
+                      <EditIcon fontSize='inherit' />
+                    </IconButton>
+                  </Tooltip>
+              )
             }
           </Typography>
           <ColumnMap
@@ -1121,7 +1233,8 @@ const MapProject = () => {
             isValid={isValidColumnValue}
             onUpdate={updateColumn}
           />
-          <div className='col-xs-12' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px'}}>
+          <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+            <span>
             <Button
               component="label"
               role={undefined}
@@ -1131,6 +1244,7 @@ const MapProject = () => {
               sx={{textTransform: 'none', margin: '5px'}}
               startIcon={<JoinRightIcon />}
               endIcon={<UploadIcon />}
+              disabled={Boolean(project?.id && project.input_file_name)}
             >
               {
                 file?.name ? file.name : "Upload file"
@@ -1174,8 +1288,11 @@ const MapProject = () => {
                   {abortRef.current ? 'Stopping gracefully...' : 'Stop Processing'}
                 </Button>
             }
+            </span>
             {
               rows?.length > 0 && !loadingMatches &&
+                <span>
+                  <div>
                 <Button
                   variant='contained'
                   color='secondary'
@@ -1186,6 +1303,38 @@ const MapProject = () => {
                 >
                   Download
                 </Button>
+                  <Button
+                    variant='contained'
+                    color='primary'
+                    size='small'
+                    sx={{textTransform: 'none', margin: '5px'}}
+                    endIcon={<SaveIcon />}
+                    onClick={onSave}
+                    disabled={isEmpty(decisions)}
+                  >
+                    Save
+                  </Button>
+                    {
+                      project?.id &&
+                        <Button
+                          variant='contained'
+                          color='error'
+                          size='small'
+                          sx={{textTransform: 'none', margin: '5px'}}
+                          endIcon={<DeleteIcon />}
+                          onClick={() => setDeleteProject(true)}
+                        >
+                          Delete
+                        </Button>
+                    }
+                  </div>
+                  {
+                    lastSavedText &&
+                      <div style={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.6)', textAlign: 'right', margin: '0 5px'}}>
+                        last saved {lastSavedText}
+                      </div>
+                  }
+                  </span>
             }
           </div>
         </Paper>
@@ -1315,7 +1464,7 @@ const MapProject = () => {
                 {alert.message}
               </Alert>
               </Collapse>
-              <div style={{ width: '100%', height: 'calc(100vh - 291px)' }}>
+              <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 308px)' : 'calc(100vh - 291px)' }}>
                 <DataGrid
                   resizeThrottleMs={100}
                   onCellClick={doubleClickCallback}
@@ -1596,7 +1745,7 @@ const MapProject = () => {
                   />
                 </div>
                 <div className='col-xs-12 padding-0' style={{margin: '16px 0', display: 'flex', alignItems: 'center'}}>
-                  <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={onReviewDone} variant='contained' sx={{textTransform: 'none'}}>
+                  <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(false)} variant='contained' sx={{textTransform: 'none'}}>
                     Approve
                   </Button>
                   <Button disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='outlined' sx={{textTransform: 'none', marginLeft: '16px'}}>
@@ -1608,7 +1757,7 @@ const MapProject = () => {
                 </div>
               </div>
           }
-                    {
+          {
             decisionTab === 'candidates' && isSplitView &&
               <div className='col-xs-12 padding-0' style={{margin: '12px 0'}}>
                 <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', margin: '16px 0'}}>
@@ -1857,6 +2006,11 @@ const MapProject = () => {
           </MenuItem>
         ))}
       </Menu>
+      {
+        deleteProject && project?.id &&
+          <MapProjectDeleteConfirmDialog open={deleteProject} onClose={() => setDeleteProject(false)} project={project} />
+      }
+
     </div>
   )
 }
