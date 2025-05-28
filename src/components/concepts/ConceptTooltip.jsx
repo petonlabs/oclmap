@@ -75,7 +75,7 @@ const TooltipTitle = ({ concept, owner, repo }) => {
             }}
           />
           <DotSeparator margin='0 8px' />
-    <ConceptCell noId concept={{...entity, display_name: entity.id}} />
+    <ConceptCell noId concept={{...entity, display_name: entity?.id}} />
         </span>
       </div>
       <div style={{width: '100%', fontSize: '14px', marginTop: '6px'}}>
