@@ -66,7 +66,7 @@ const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading
     }
     </div>
     {
-      currentUserHasAccess() && repo?.version === 'HEAD' && has(repo, 'source_type') && !loading &&
+      false && currentUserHasAccess() && repo?.version === 'HEAD' && has(repo, 'source_type') && !loading &&
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
         <span style={{display: 'flex', alignItems: 'center'}} />
             <span>

@@ -31,7 +31,7 @@ const MapProjects = () => {
 
   const fetchOrgProjects = () => APIService.users(user.username).appendToUrl('orgs/map-projects/?verbose=true').get().then(handleProjectsResponse)
 
-  const handleProjectsResponse = response => setProjects(prev => [...prev, ...response.data])
+  const handleProjectsResponse = response => setProjects(prev => [...prev, ...(response?.data || [])])
 
 
   React.useEffect(() => {
@@ -120,8 +120,8 @@ const MapProjects = () => {
                     </TableCell>
                     <TableCell align='right'>
                       <span style={{display: 'flex', alignItems: 'center'}}>
-                        <Button size='small' color='primary' variant='contained' sx={{textTransform: 'none'}} href={`#${project.url}edit`}>
-                          Edit
+                        <Button size='small' color='primary' variant='contained' sx={{textTransform: 'none'}} href={`#${project.url}`}>
+                          Open
                         </Button>
                         <Button size='small' color='error' variant='text' sx={{marginLeft: '8px', textTransform: 'none'}} onClick={() => setDeleteProject(project)}>
                           Delete

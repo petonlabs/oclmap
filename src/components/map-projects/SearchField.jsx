@@ -1,0 +1,39 @@
+import React from 'react'
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
+import { useFormControl } from '@mui/material/FormControl';
+
+const SearchField = ({onChange}) => {
+  const [input, setInput] = React.useState('')
+  const { focused } = useFormControl() || {};
+  const _onChange = event => {
+    const value = event.target.value
+    setInput(value)
+    onChange(value)
+  }
+
+  const comp = React.useMemo(() => Boolean(focused || input), [focused, input]);
+
+  const style = comp ? {height: '31px', paddingLeft: '7px'} : {padding: 0, height: '31px', justifyContent: 'flex-start'}
+
+  return <OutlinedInput
+           color='primary'
+           value={input}
+           onChange={_onChange}
+           startAdornment={
+             <InputAdornment position="start">
+               <SearchIcon color={comp || !focused ? 'primary' : undefined} fontSize='small' />
+             </InputAdornment>
+           }
+           sx={{
+             ...style,
+             width: comp ? '200px' : '20px',
+             '.MuiOutlinedInput-notchedOutline': comp ? {borderColor: 'primary.main'} : {display: 'none'},
+             '.MuiInputBase-input': comp ? {marginLeft: '-4px'} : {marginLeft: '-30px'}
+           }}
+           size='small'
+         />
+}
+
+export default SearchField;
