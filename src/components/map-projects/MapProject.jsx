@@ -402,7 +402,7 @@ const MapProject = () => {
         setConfigure(false)
         setProject(response.data)
         if(response.data.url)
-          history.push(response.data.url + 'edit')
+          history.push(response.data.url)
         baseSetAlert({severity: 'success', message: 'Succesffully Saved.', duration: 2000})
       }
     })
