@@ -7,6 +7,7 @@ import TableCell from '@mui/material/TableCell'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import Switch from '@mui/material/Switch'
+import ListItemText from '@mui/material/ListItemText'
 import ValidIcon from '@mui/icons-material/CheckCircleOutline';
 import InvalidIcon from '@mui/icons-material/CancelOutlined';
 import find from 'lodash/find';
@@ -19,7 +20,6 @@ const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
     <Autocomplete
       autoHighlight
       autoComplete
-      disableClearable
       disablePortal
       blurOnSelect
       fullWidth
@@ -31,6 +31,19 @@ const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
       }}
       renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
       options={headers}
+      renderOption={
+        (props, option) => {
+          return (
+            <ListItemText
+              {...props}
+              sx={{...props.sx, flexDirection: 'column', alignItems: 'flex-start !important'}}
+              key={option?.id || 'unknown'}
+              primary={option?.label || ''}
+              secondary={option?.description || ''}
+            />
+          )
+        }
+      }
       {...rest}
     />
   )
