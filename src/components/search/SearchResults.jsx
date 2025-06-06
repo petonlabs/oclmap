@@ -195,7 +195,8 @@ const SearchResults = props => {
     selectedToShowItem: props.selectedToShow,
     size: props.resultSize,
     excludedColumns: props.excludedColumns,
-    extraColumns: props.extraColumns
+    extraColumns: props.extraColumns,
+    renderer: props.renderer
   }
   const noCardDisplay = props.resource !== 'concepts' || props.noCardDisplay
 

@@ -55,7 +55,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
             size='small'
             color={color || (isMapped ? 'error' : 'primary')}
             variant={variant || "contained"}
-            sx={{textTransform: 'none', whiteSpace: 'nowrap', minWidth: '92px'}}
+            sx={{textTransform: 'none', whiteSpace: 'nowrap', minWidth: '92px', ...sx}}
             onClick={event => onClick(event, !isMapped, mapType)}
             startIcon={isMapped ? <UnmapIcon fontSize='inherit' /> : <MapIcon fontSize='inherit' />}
           >

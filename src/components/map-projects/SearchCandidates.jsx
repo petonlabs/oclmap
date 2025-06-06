@@ -7,7 +7,7 @@ import orderBy from 'lodash/orderBy'
 import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
 import Mappings from './Mappings'
-import MapButton from './MapButton'
+import Concept from './Concept'
 
 const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap}) => {
   return (
@@ -49,7 +49,8 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
               borderRadius: '10px 10px 0 0',
             }
           }}
-          noCardDisplay
+          renderer={props => <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />}
+          display='card'
           nested
           results={{
             results: orderBy(concepts || [], 'search_meta.search_score', 'desc'),
@@ -74,12 +75,6 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
               labelKey: 'mapping.same_as_mappings',
               renderer: item => <Mappings item={item} />,
             },
-            {
-              sortable: false,
-              id: 'map-control',
-              labelKey: '',
-              renderer: concept => <MapButton simple onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)} isMapped={isSelectedForMap(concept)} />
-            }
           ]}
         />
       </div>

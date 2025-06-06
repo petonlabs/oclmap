@@ -4,6 +4,7 @@ import ListItemText from '@mui/material/ListItemText'
 import has from 'lodash/has'
 import MapButton from './MapButton'
 import { URIToParentParams } from '../../common/utils'
+import Score from './Score'
 
 const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
@@ -54,6 +55,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                   }
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
                 />
+                <Score concept={targetConcept} />
               </div>
             </div>
           </>
