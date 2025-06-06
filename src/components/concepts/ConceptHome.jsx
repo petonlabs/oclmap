@@ -171,7 +171,7 @@ const ConceptHome = props => {
             !edit &&
               <>
                 <div className='col-xs-12 padding-0'>
-                  <ConceptHeader concept={concept} onClose={props.onClose} repoURL={getRepoURL()} onEdit={onEdit} repo={repo} nested={props.nested} loading={loading} />
+                  <ConceptHeader concept={concept} onClose={props.onClose} repoURL={getRepoURL()} onEdit={onEdit} repo={repo} nested={props.nested} loading={loading} onMap={props.onMap} isSelectedForMap={props.isSelectedForMap} />
                 </div>
                 <ConceptTabs tab={tab} onTabChange={(event, newTab) => setTab(newTab)} loading={loading} />
                 {

@@ -1422,14 +1422,14 @@ const MapProject = () => {
       >
         {
           ALGOS.map(_algo => (
-          <MenuItem
-            key={_algo.id}
-            disabled={_algo.disabled}
-            selected={_algo.id === algo}
-            onClick={() => onAlgoSelect(_algo.id)}
-          >
-            {_algo.label}
-          </MenuItem>
+            <MenuItem
+              key={_algo.id}
+              disabled={_algo.disabled}
+              selected={_algo.id === algo}
+              onClick={() => onAlgoSelect(_algo.id)}
+            >
+              {_algo.label}
+            </MenuItem>
           ))
         }
       </Menu>
@@ -1456,11 +1456,18 @@ const MapProject = () => {
             <ConceptHome
               style={{borderRadius: 0}}
               detailsStyle={{height: 'calc(100vh - 550px)'}}
-              source={repo} repo={repo} url={showItem.url} concept={showItem} onClose={() => setShowItem(false)} nested />
+              source={repo}
+              repo={repoVersion}
+              url={showItem.url}
+              concept={showItem}
+              onClose={() => setShowItem(false)}
+              onMap={onMap}
+              isSelectedForMap={isSelectedForMap}
+            />
           </Dialog>
       }
     </div>
-)
+  )
 }
 
 export default MapProject;

@@ -10,8 +10,9 @@ import { toOwnerURI, currentUserHasAccess } from '../../common/utils';
 import Breadcrumbs from '../common/Breadcrumbs'
 import { BLACK } from '../../common/colors'
 import ConceptManagementList from './ConceptManagementList'
+import MapButton from '../map-projects/MapButton'
 
-const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading}) => {
+const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading, onMap, isSelectedForMap}) => {
   const { t } = useTranslation()
   const [menu, setMenu] = React.useState(false)
   const [menuAnchorEl, setMenuAnchorEl] = React.useState(false)
@@ -60,9 +61,20 @@ const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading
     {
       !concept?.id ?
         <Skeleton variant='text' sx={{fontSize: '22px', width: '150px'}} />:
+      <span style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
       <Typography sx={{fontSize: '22px', color: BLACK}} className='searchable'>
       {concept.display_name}
       </Typography>
+        {
+          onMap &&
+            <MapButton
+              simple
+              onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
+              isMapped={isSelectedForMap(concept)}
+              sx={{marginLeft: '8px'}}
+            />
+        }
+      </span>
     }
     </div>
     {
