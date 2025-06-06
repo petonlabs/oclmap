@@ -72,7 +72,7 @@ import SearchHighlightsDialog from '../search/SearchHighlightsDialog'
 import ConceptHome from '../concepts/ConceptHome'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
-import { HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
+import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
 import Controls from './Controls'
@@ -149,6 +149,8 @@ const MapProject = () => {
   const [random, setRandom] = React.useState(0)
   const [deleteProject, setDeleteProject] = React.useState(false)
 
+  const headers = algo === 'llm' ? SEMANTIC_SEARCH_HEADERS : HEADERS
+
   const ALGOS = [
     {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
     {id: 'llm', label: 'Semantic Search (all-MiniLM-L6-v2)', description: "Vector based search powered by MiniLM", disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
@@ -178,6 +180,13 @@ const MapProject = () => {
           const sheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
           setProjectFromData(data)
+          if(response?.data?.target_repo_url) {
+            APIService.new().overrideURL(response.data.target_repo_url).get().then(res => {
+              setRepo(res.data)
+              fetchVersions(res.data.url, res.data.version)
+            })
+          }
+          setAlgo(response?.data?.matching_algorithm || algo)
           if (response?.data.columns?.length > 0) {
             setColumns(omit(response.data.columns, ['hidden']))
             let colVisibility = {}
@@ -246,7 +255,7 @@ const MapProject = () => {
       else if(column.label.toLowerCase().includes('uuid') || column.label.toLowerCase().includes('external'))
         widthParams.width = 300
       else
-        widthParams.width = 100
+        widthParams.width = 150
       cols.push({
         field: column.dataKey,
         headerName: column.label,
@@ -263,7 +272,7 @@ const MapProject = () => {
 
   const updateColumn = (position, newValue) => {
     let cols = {...columns}
-    cols[position].label = newValue
+    cols[position].label = newValue || ''
     setColumns(cols)
   }
 
@@ -391,6 +400,8 @@ const MapProject = () => {
     formData.append('name', name || f.name)
     formData.append('description', description)
     formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false}))))
+    formData.append('target_repo_url', repoVersion.version_url)
+    formData.append('matching_algorithm', algo)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
@@ -585,7 +596,7 @@ const MapProject = () => {
       return false
     if(value.toLowerCase().includes('class'))
       return true
-    if(find(HEADERS, val => val.label.toLowerCase() === value.toLowerCase()))
+    if(find(headers, val => val.label.toLowerCase() === value.toLowerCase()))
       return true
     return false
   }
@@ -766,6 +777,7 @@ const MapProject = () => {
         prev.readyForReview = uniq([...prev.readyForReview, rowIndex])
         prev.unmapped = without(prev.unmapped, rowIndex)
         setMapTypes({...mapTypes, [rowIndex]: mapType})
+        setTimeout(() => highlightTexts([concept], null, false), 100)
       }
       updateMatchTypeCounts(null, prev)
       return prev
@@ -957,7 +969,7 @@ const MapProject = () => {
                   algo={algo}
                   onAlgoSelect={onAlgoSelect}
                   algos={ALGOS}
-                  validColumns={HEADERS}
+                  validColumns={headers}
                   columns={columns}
                   isValidColumnValue={isValidColumnValue}
                   updateColumn={updateColumn}
@@ -1270,7 +1282,7 @@ const MapProject = () => {
                 algo={algo}
                 onAlgoSelect={onAlgoSelect}
                 algos={ALGOS}
-                validColumns={HEADERS}
+                validColumns={headers}
                 columns={columns}
                 isValidColumnValue={isValidColumnValue}
                 updateColumn={updateColumn}
