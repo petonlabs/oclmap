@@ -192,11 +192,11 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         color='primary'
         size='small'
         sx={{textTransform: 'none', margin: '20px 5px 5px 0px'}}
-        endIcon={<SaveIcon />}
+        startIcon={<SaveIcon />}
         onClick={onSave}
         disabled={!name || !file?.name || !owner}
       >
-        Save
+        Save & Close
       </Button>
         </div>
     </div>
