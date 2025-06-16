@@ -13,7 +13,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0'}}>
         <Typography component='div' sx={{display: 'inline-block', color: 'surface.dark', fontWeight: 600, marginRight: '24px', fontSize: '14px'}}>Mapping</Typography>
-      <div>
+      <div style={{maxWidth: '40%'}}>
         <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Source Code</Typography>
         <div className='col-xs-12 padding-0'>
           <ListItemText
@@ -41,7 +41,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Relationship</Typography>
               <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, targetConcept, !applied, mapType)} isMapped sx={{marginTop: '6px'}} />
             </div>
-            <div style={{marginLeft: '24px'}}>
+            <div style={{marginLeft: '24px', maxWidth: '40%'}}>
               <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Target Code</Typography>
               <div className='col-xs-12 padding-0'>
                 <ListItemText

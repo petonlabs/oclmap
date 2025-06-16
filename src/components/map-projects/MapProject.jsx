@@ -776,7 +776,7 @@ const MapProject = () => {
     setSearchStr('')
   }
 
-  const onMap = (event, concept, unmap=false, mapType='SAME-AS') => {
+  const onMap = (event, concept, unmap=false, mapType='SAME-AS', closeConcept=false) => {
     event.preventDefault()
     event.stopPropagation()
     _onMap(concept, unmap)
@@ -792,6 +792,8 @@ const MapProject = () => {
         setTimeout(() => highlightTexts([concept], null, false), 100)
       }
       updateMatchTypeCounts(null, prev)
+      if(closeConcept)
+        setShowItem(false)
       return prev
     })
     return false
@@ -954,7 +956,10 @@ const MapProject = () => {
 
   const isConfigureInSplitView = configure && file?.name
   const columnsForTable = getColumnsForTable()
-  const targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex]) : false
+  let targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex]) : false
+  const targetConceptFromCandidate = find(otherMatchedConcepts[rowIndex]?.results, {url: targetConcept?.url})
+  if(targetConceptFromCandidate)
+    targetConcept.search_meta = targetConceptFromCandidate.search_meta
 
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
