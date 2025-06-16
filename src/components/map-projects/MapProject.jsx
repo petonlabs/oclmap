@@ -260,7 +260,7 @@ const MapProject = () => {
         editable: true,
         headerClassName: headerClass,
         renderHeader: () => {
-          if(isUpdatedValue) {
+          if(isUpdatedValue && isValidColumn) {
             return <div>
                      <div>{column.original}</div>
                      <div><Chip color='warning' variant='outlined' size='small' label={column.label} sx={{fontSize: '12px', margin: '2px 0'}} /></div>
@@ -1223,6 +1223,7 @@ const MapProject = () => {
                     },
                   }}
                   disableRowSelectionOnClick
+                  isCellEditable={false}
                   onCellEditStop={(params, event) => updateRow(params.id, params.field, params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value || '')}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
