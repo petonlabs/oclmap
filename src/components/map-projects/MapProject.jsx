@@ -108,7 +108,7 @@ const MapProject = () => {
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
-  const [algo, setAlgo] = React.useState('es')
+  const [algo, setAlgo] = React.useState('llm')
   const [notes, setNotes] = React.useState({})
   const [mapTypes, setMapTypes] = React.useState({})
   const [proposed, setProposed] = React.useState({})
@@ -259,7 +259,7 @@ const MapProject = () => {
         headerName: column.label,
         editable: true,
         headerClassName: headerClass,
-        renderHeader: (params) => {
+        renderHeader: () => {
           if(isUpdatedValue) {
             return <div>
                      <div>{column.original}</div>
