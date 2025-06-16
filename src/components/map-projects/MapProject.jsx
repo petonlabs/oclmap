@@ -243,8 +243,6 @@ const MapProject = () => {
       const isValidColumn = isValidColumnValue(column.label)
       const isUpdatedValue = column.label !== column.original
       let headerClass = 'header-valid'
-      if(isUpdatedValue)
-        headerClass = 'header-updated'
       if(!isValidColumn)
         headerClass = 'header-invalid'
       let widthParams = {}
@@ -261,6 +259,14 @@ const MapProject = () => {
         headerName: column.label,
         editable: true,
         headerClassName: headerClass,
+        renderHeader: (params) => {
+          if(isUpdatedValue) {
+            return <div>
+                     <div>{column.original}</div>
+                     <div><Chip color='warning' variant='outlined' size='small' label={column.label} sx={{fontSize: '12px', margin: '2px 0'}} /></div>
+                   </div>
+          }
+        },
         renderCell: (params) => {
           if(parseInt(idx) === 0) {
             let val = has(params.row, column.dataKey + '__updated') ? params?.row[column.dataKey + '__updated'] : params.value
@@ -1198,7 +1204,7 @@ const MapProject = () => {
                       backgroundColor: 'primary.90'
                     }
                   }}
-                  columnHeaderHeight={40}
+                  columnHeaderHeight={64}
                   getRowHeight={() => 'auto'}
                   getRowId={row => row.__index}
                   rows={rows}
