@@ -1001,14 +1001,19 @@ const MapProject = () => {
                   columnVisibilityModel={columnVisibilityModel}
                   setColumnVisibilityModel={setColumnVisibilityModel}
                   onSave={onSave}
-                  sx={{}}
                 />
               </div>
           }
           <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', justifyContent: 'space-between'}}>
             {
               !(configure && !file?.name) &&
-                <span>
+                <span style={{display: 'flex', alignItems: 'center'}}>
+                  {
+                    name &&
+                      <span style={{fontWeight: 'bold', fontSize: '18px', maxWidth: '200px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: '8px'}}>
+                        {name}
+                      </span>
+                  }
                   <Tooltip title='Configure Mapping Project'>
                     <IconButton color={configure ? 'primary' : 'secondary'} onClick={() => setConfigure(!configure)} sx={{textTransform: 'none', margin: '5px 5px 5px 0'}}>
                       <SettingsIcon fontSize='inherit' />
