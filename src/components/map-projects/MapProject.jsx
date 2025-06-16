@@ -108,6 +108,7 @@ const MapProject = () => {
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
+  const [searchResponse, setSearchResponse] = React.useState({});
   const [algo, setAlgo] = React.useState('llm')
   const [notes, setNotes] = React.useState({})
   const [mapTypes, setMapTypes] = React.useState({})
@@ -303,6 +304,7 @@ const MapProject = () => {
     setMatchedConcepts([])
     setOtherMatchedConcepts([])
     setSearchedConcepts({})
+    setSearchResponse({})
     setNotes({})
     setMapTypes({})
     setProposed({})
@@ -918,7 +920,8 @@ const MapProject = () => {
     }
   }
 
-  const searchCandidates = () => {
+  const searchCandidates = (event, page, pageSize) => {
+    console.log(params)
     setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
@@ -926,11 +929,13 @@ const MapProject = () => {
       mappingBrief: true,
       mapTypes: 'SAME-AS,SAME AS,SAME_AS',
       verbose: true,
-      limit: 5,
-      q: searchStr
+      limit: pageSize || 5,
+      q: searchStr,
+      page: page || 1,
     }).then(response => {
       let items = response.data
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
+      setSearchResponse(response)
       setIsLoadingInDecisionView(false)
       if(items.length > 0)
         setTimeout(() => highlightTexts(items, null, false), 100)
@@ -1418,12 +1423,14 @@ const MapProject = () => {
                       repo={repo}
                       repoVersion={repoVersion}
                       concepts={searchedConcepts[rowIndex]}
+                      response={searchResponse}
                       setShowItem={setShowItem}
                       showItem={showItem}
                       isSelectedForMap={isSelectedForMap}
                       onMap={onMap}
                       searchStr={searchStr}
                       setSearchStr={setSearchStr}
+                      onSearch={searchCandidates}
                     />
                 }
               </div>

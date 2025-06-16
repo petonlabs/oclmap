@@ -242,7 +242,7 @@ const SearchResults = props => {
           {
           !props.noPagination &&
               <TablePagination
-                rowsPerPageOptions={[10, 25, 50, 100]}
+                rowsPerPageOptions={props.rowsPerPageOptions || [10, 25, 50, 100]}
                 component="div"
                 count={props.results?.total || 0}
                 rowsPerPage={rowsPerPage || 25}

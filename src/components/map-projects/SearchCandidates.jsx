@@ -2,18 +2,29 @@ import React from 'react'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button';
 
-import orderBy from 'lodash/orderBy'
+import max from 'lodash/max'
 
 import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
 
-const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap}) => {
+const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch}) => {
+      let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
+  const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
+
+  const onKeyPress = event => {
+    if(event.key === 'Enter') {
+      if(searchStr)
+        candidates(event)
+    }
+  }
+
   return (
     <div className='col-xs-12 padding-0'>
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', margin: '16px 0'}}>
         <TextField
+          autoFocus
           label='Search'
           sx={{width: 'calc(100% - 90px)'}}
           required
@@ -21,6 +32,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           value={searchStr}
           onChange={event => setSearchStr(event.target.value || '')}
           size='small'
+          onKeyDown={onKeyPress}
         />
         <Button
           color='primary'
@@ -52,15 +64,12 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           renderer={props => <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />}
           display='card'
           nested
-          results={{
-            results: orderBy(concepts || [], 'search_meta.search_score', 'desc'),
-            total: concepts?.length
-          }}
+          results={results}
           resource='concepts'
-          noPagination
           noSorting
           noToolbar
-          resultContainerStyle={{height: 'calc(100vh - 560px)'}}
+          rowsPerPageOptions={-1}
+          resultContainerStyle={{height: 'calc(100vh - 582px)'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {
@@ -68,6 +77,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
             }, 100)
           }}
           selectedToShow={showItem}
+          onPageChange={(page, pageSize) => onSearch(null, page, pageSize)}
           extraColumns={[
             {
               sortable: false,
