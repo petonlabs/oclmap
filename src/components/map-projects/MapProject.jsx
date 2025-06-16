@@ -239,7 +239,7 @@ const MapProject = () => {
 
   const getColumnsForTable = () => {
     let cols = []
-    forEach(columns, column => {
+    forEach(columns, (column, idx) => {
       const isValidColumn = isValidColumnValue(column.label)
       const isUpdatedValue = column.label !== column.original
       let headerClass = 'header-valid'
@@ -261,9 +261,21 @@ const MapProject = () => {
         headerName: column.label,
         editable: true,
         headerClassName: headerClass,
-        valueGetter: (value, _row) => {
-          return has(_row, column.dataKey + '__updated') ? _row[column.dataKey + '__updated'] : value
+        renderCell: (params) => {
+          if(parseInt(idx) === 0) {
+            let val = has(params.row, column.dataKey + '__updated') ? params?.row[column.dataKey + '__updated'] : params.value
+            const _state = VIEWS[getStateFromIndex(params.row.__index)]
+            return <span style={{display: 'flex'}}>
+                     <Tooltip title={_state.label}>
+                       <Typography component='span' sx={{marginRight: '8px', color: _state.color + '.main'}}>
+                         {_state.icon}
+                       </Typography>
+                     </Tooltip>
+                     <span>{val}</span>
+                   </span>
+          }
         },
+        valueGetter: (value, _row) => has(_row, column.dataKey + '__updated') ? _row[column.dataKey + '__updated'] : value,
         ...widthParams
       })
     })
