@@ -257,7 +257,6 @@ const MapProject = () => {
       cols.push({
         field: column.dataKey,
         headerName: column.label,
-        editable: true,
         headerClassName: headerClass,
         renderHeader: () => {
           if(isUpdatedValue && isValidColumn) {
@@ -1223,7 +1222,6 @@ const MapProject = () => {
                     },
                   }}
                   disableRowSelectionOnClick
-                  isCellEditable={false}
                   onCellEditStop={(params, event) => updateRow(params.id, params.field, params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value || '')}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
