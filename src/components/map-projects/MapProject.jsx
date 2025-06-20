@@ -1357,7 +1357,7 @@ const MapProject = () => {
                   value={notes[rowIndex]}
                   onChange={event => setNotes({...notes, [rowIndex]: event.target.value || ''})}
                 />
-                <div className='col-xs-12 padding-0' style={{margin: '0 0 8px 78px', display: 'flex', alignItems: 'center'}}>
+                <div className='col-xs-12' style={{padding: '0 0 8px 78px'}}>
                   <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none'}}>
                     Approve and Next
                   </Button>
