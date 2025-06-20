@@ -19,7 +19,7 @@ const MatchSummaryCard = ({id, icon, label, count, loading, color, selected, onC
   return (
     <div style={{display: 'flex', alignItems: 'center'}}>
       <div className='col-xs-2' style={{padding: '0px 3px', minWidth: '160px', width: 'auto', marginRight: 0 }}>
-        <Card variant={isSelected ? undefined : 'outlined'} sx={{borderColor: color + '.main', cursor: isDisabled ? 'not-allowed' : 'pointer', backgroundColor: isSelected ? 'rgba(72,54,255, 0.1)' : WHITE, opacity: isDisabled ? 0.5 : 1}} onClick={isDisabled ? undefined : onClick}>
+        <Card variant='outlined' sx={{borderColor: isSelected ? color + '.main' : 'grey.main', cursor: isDisabled ? 'not-allowed' : 'pointer', backgroundColor: isSelected ? 'rgba(72,54,255, 0.1)' : WHITE, opacity: isDisabled ? 0.5 : 1}} onClick={isDisabled ? undefined : onClick}>
           <CardContent sx={{padding: '0px !important'}}>
             <ListItem sx={{padding: '2px 8px'}}>
               <ListItemAvatar sx={{minWidth: 'auto'}}>
