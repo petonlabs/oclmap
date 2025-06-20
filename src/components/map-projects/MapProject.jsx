@@ -1356,13 +1356,13 @@ const MapProject = () => {
                   onChange={event => setNotes({...notes, [rowIndex]: event.target.value || ''})}
                 />
                 <div className='col-xs-12' style={{padding: '0 0 8px 78px'}}>
-                  <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none'}}>
+                  <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex) || decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none'}}>
                     Approve and Next
                   </Button>
-                  <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex)} color='primary' onClick={() => onReviewDone(false)} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
+                  <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex) || decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='primary' onClick={() => onReviewDone(false)} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
                     Approve
                   </Button>
-                  <Button size='small' color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
+                  <Button size='small' disabled={decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
                     Reject
                   </Button>
                 </div>
