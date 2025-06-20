@@ -9,7 +9,22 @@ const ReviewNote = ({value, onChange}) => {
         Review
       </Typography>
       <div style={{display: 'flex', alignItems: 'center', width: 'calc(100% - 80px)'}}>
-        <TextField fullWidth multiline maxRows={4} value={value || ''} onChange={onChange} />
+        <TextField
+          fullWidth
+          multiline
+          maxRows={4}
+          value={value || ''}
+          onChange={onChange}
+          sx={{
+            '.MuiInputBase-root': {
+              fontSize: '14px',
+              padding: '4px 8px',
+              '.MuiInputBase-inputMultiline': {
+                height: '20px'
+              }
+            }
+          }}
+        />
       </div>
     </div>
   )
