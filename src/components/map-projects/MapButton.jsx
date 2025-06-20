@@ -47,6 +47,11 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
 
     setOpen(false);
   };
+
+  React.useEffect(() => {
+    setMapType(selected || 'SAME-AS')
+  }, [selected])
+
   return (
     <React.Fragment>
       {
