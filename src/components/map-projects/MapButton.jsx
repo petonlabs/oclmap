@@ -14,7 +14,7 @@ import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple}) => {
+const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly}) => {
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [mapType, setMapType] = React.useState(selected || 'SAME-AS');
@@ -61,34 +61,52 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
           >
             {isMapped ? 'Un-Map' : 'Map'}
           </Button> :
-
-        <ButtonGroup
-          size='small'
-          variant={variant || (isMapped ? "outlined": "contained")}
-          ref={anchorRef}
-          aria-label="Button group with a nested menu"
-          color={color || (isMapped ? 'error' : 'primary')}
-          sx={sx}
-        >
-          <Button
+        (
+          mapOnly && isMapped ?
+            <Button
+              size="small"
+              aria-controls={open ? 'split-button-menu' : undefined}
+              aria-expanded={open ? 'true' : undefined}
+              aria-label="select merge strategy"
+              aria-haspopup="menu"
+              onClick={handleToggle}
+              color='primary'
+              variant="contained"
+              sx={{textTransform: 'none', whiteSpace: 'nowrap', ...sx}}
+              startIcon={<MapIcon fontSize='inherit' />}
+              endIcon={<ArrowDropDownIcon fontSize='inherit' />}
+              ref={anchorRef}
+            >
+              {mapType}
+            </Button> :
+          <ButtonGroup
             size='small'
-            sx={{textTransform: 'none', whiteSpace: 'nowrap'}}
-            onClick={event => onClick(event, !isMapped, mapType)}
-            startIcon={isMapped ? <UnmapIcon fontSize='inherit' /> : <MapIcon fontSize='inherit' />}
+            variant={variant || (isMapped ? "outlined": "contained")}
+            ref={anchorRef}
+            aria-label="Button group with a nested menu"
+            color={color || (isMapped ? 'error' : 'primary')}
+            sx={sx}
           >
-            {mapType}
-          </Button>
-          <Button
-            size="small"
-            aria-controls={open ? 'split-button-menu' : undefined}
-            aria-expanded={open ? 'true' : undefined}
-            aria-label="select merge strategy"
-            aria-haspopup="menu"
-            onClick={handleToggle}
-          >
-            <ArrowDropDownIcon />
-          </Button>
-        </ButtonGroup>
+            <Button
+              size='small'
+              sx={{textTransform: 'none', whiteSpace: 'nowrap'}}
+              onClick={event => onClick(event, !isMapped, mapType)}
+              startIcon={isMapped ? <UnmapIcon fontSize='inherit' /> : <MapIcon fontSize='inherit' />}
+            >
+              {mapType}
+            </Button>
+            <Button
+              size="small"
+              aria-controls={open ? 'split-button-menu' : undefined}
+              aria-expanded={open ? 'true' : undefined}
+              aria-label="select merge strategy"
+              aria-haspopup="menu"
+              onClick={handleToggle}
+            >
+              <ArrowDropDownIcon />
+            </Button>
+          </ButtonGroup>
+        )
       }
       <Popper
         sx={{
