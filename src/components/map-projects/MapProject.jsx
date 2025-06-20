@@ -863,7 +863,7 @@ const MapProject = () => {
       if(selected?.id) {
         let comment = `Rejected ${getConceptLabel(selected)}`
         if(notes[rowIndex])
-          comment += '\n' + comment
+          comment = notes[rowIndex] + '\n' + comment
         setNotes({...notes, [rowIndex]: comment})
       }
     }
