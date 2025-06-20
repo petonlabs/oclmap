@@ -86,7 +86,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         value={description}
         onChange={event => setDescription(event.target.value || '')}
         multiline
-        rows={3}
+        maxRows={3}
       />
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
