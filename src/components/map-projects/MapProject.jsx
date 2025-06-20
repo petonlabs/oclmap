@@ -1323,7 +1323,6 @@ const MapProject = () => {
                 columnVisibilityModel={columnVisibilityModel}
                 setColumnVisibilityModel={setColumnVisibilityModel}
                 onSave={onSave}
-                sx={{}}
               />
             </div> :
           (
