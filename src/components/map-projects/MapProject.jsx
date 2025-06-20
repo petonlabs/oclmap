@@ -816,7 +816,7 @@ const MapProject = () => {
     setRowStatuses(newRowStatuses)
     updateMatchTypeCounts('reviewed', newRowStatuses)
     if(next){
-      const nextRow = data[rowIndex + 1]
+      const nextRow = data[selectedRowStatus === 'all' ? rowIndex + 1 : find(rowStatuses[selectedRowStatus], idx => idx > rowIndex)]
       if(nextRow !== undefined)
         setTimeout(() => onCSVRowSelect(nextRow), 300)
     }
