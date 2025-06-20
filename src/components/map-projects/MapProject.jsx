@@ -257,7 +257,7 @@ const MapProject = () => {
         widthParams.width = 150
       cols.push({
         field: column.dataKey,
-        headerName: column.label,
+        headerName: column.label || column.original,
         headerClassName: headerClass,
         renderHeader: () => {
           if(isUpdatedValue && isValidColumn) {
