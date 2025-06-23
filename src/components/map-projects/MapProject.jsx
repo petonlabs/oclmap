@@ -850,7 +850,7 @@ const MapProject = () => {
   const onDecisionTabChange = (event, newValue) => {
     setShowItem(false)
     setDecisionTab(newValue)
-    if(newValue === 'candidates' && repo?.id) {
+    if(newValue === 'candidates' && repo?.id && !find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results?.length) {
       fetchOtherCandidates()
     }
   }
@@ -890,7 +890,7 @@ const MapProject = () => {
 
   }
 
-  const fetchOtherCandidates = _row => {
+  const fetchOtherCandidates = (_row, offset=0) => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
@@ -905,9 +905,17 @@ const MapProject = () => {
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
           limit: 5,
+          offset: offset || 0,
           semantic: algo === 'llm'
         }).then(response => {
-          setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...response.data])
+          if(offset === 0)
+            setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...response.data])
+          else {
+            const newMatches = [...otherMatchedConcepts]
+            const index = findIndex(newMatches, match => match.row.__index === __row.__index)
+            newMatches[index].results = [...newMatches[index].results, ...(response.data[0].results || [])]
+            setOtherMatchedConcepts(newMatches)
+          }
           setIsLoadingInDecisionView(false)
           let items = get(response.data, '0.results') || []
           if(items.length > 0)
@@ -917,6 +925,11 @@ const MapProject = () => {
       setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
       setTimeout(() => setAlert(false), 6000)
     }
+  }
+
+  const onFetchMoreCandidates = () => {
+    const currentResults = find(otherMatchedConcepts, matched => matched.row.__index === rowIndex)?.results?.length || 0
+    fetchOtherCandidates(null, currentResults)
   }
 
   const searchCandidates = (event, page, pageSize) => {
@@ -1411,6 +1424,7 @@ const MapProject = () => {
                       isSelectedForMap={isSelectedForMap}
                       onMap={onMap}
                       isLoading={isLoadingInDecisionView}
+                      onFetchMore={onFetchMoreCandidates}
                     />
                 }
                 {
