@@ -8,13 +8,14 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
+import ListSubheader from '@mui/material/ListSubheader';
 
 
 import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly}) => {
+const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly, usedMapTypes}) => {
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [mapType, setMapType] = React.useState(selected || 'SAME-AS');
@@ -51,6 +52,10 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
   React.useEffect(() => {
     setMapType(selected || 'SAME-AS')
   }, [selected])
+
+  const usedOptions = options?.filter(option => usedMapTypes?.includes(option))
+  const recommendedOptions = options?.filter(option => !usedMapTypes?.includes(option) && ['SAME-AS', 'BROADER-THAN', 'NARROWER-THAN'].includes(option))
+  const otherOptions = options?.filter(option => !usedOptions?.includes(option) && !recommendedOptions.includes(option))
 
   return (
     <React.Fragment>
@@ -133,16 +138,58 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
           >
             <Paper>
               <ClickAwayListener onClickAway={handleClose}>
-                <MenuList id="split-button-menu" autoFocusItem sx={{maxHeight: '400px', overflow: 'auto'}}>
-                  {options.map(option => (
-                    <MenuItem
-                      key={option}
-                      selected={option === mapType}
-                      onClick={event => handleMenuItemClick(event, option)}
-                    >
-                      {option}
-                    </MenuItem>
-                  ))}
+                <MenuList id="split-button-menu" autoFocusItem sx={{maxHeight: '400px', overflow: 'auto', paddingTop: 0, paddingBottom: 0}}>
+                  {
+                    usedOptions.length > 0 &&
+                      <>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Frequently Used</ListSubheader>
+                        {
+                          usedOptions.map(option => (
+                            <MenuItem
+                              key={option}
+                              selected={option === mapType}
+                              onClick={event => handleMenuItemClick(event, option)}
+                            >
+                              {option}
+                            </MenuItem>
+                          ))
+                        }
+                      </>
+                  }
+                  {
+                    recommendedOptions.length > 0 &&
+                      <>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Recommended</ListSubheader>
+                        {
+                          recommendedOptions.map(option => (
+                            <MenuItem
+                              key={option}
+                              selected={option === mapType}
+                              onClick={event => handleMenuItemClick(event, option)}
+                            >
+                              {option}
+                            </MenuItem>
+                          ))
+                        }
+                      </>
+                  }
+                  {
+                    otherOptions.length > 0 &&
+                      <>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Rest</ListSubheader>
+                        {
+                          otherOptions.map(option => (
+                            <MenuItem
+                              key={option}
+                              selected={option === mapType}
+                              onClick={event => handleMenuItemClick(event, option)}
+                            >
+                              {option}
+                            </MenuItem>
+                          ))
+                        }
+                      </>
+                  }
                 </MenuList>
               </ClickAwayListener>
             </Paper>

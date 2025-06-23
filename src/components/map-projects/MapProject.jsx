@@ -398,7 +398,6 @@ const MapProject = () => {
     setColumns(getColumns(omit(_data[0], ['__index'])))
   }
 
-
   const onSave = () => {
     const f = getFileObjectFromRows()
     const selected = map(mapSelected, (data, i) => {
@@ -933,7 +932,6 @@ const MapProject = () => {
   }
 
   const searchCandidates = (event, page, pageSize) => {
-    console.log(params)
     setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
