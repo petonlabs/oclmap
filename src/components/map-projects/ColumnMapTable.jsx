@@ -16,6 +16,20 @@ import omit from 'lodash/omit';
 
 
 const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
+  const getOptionLabel = option => {
+    if(option?.label)
+      return option.label
+    const header = find(headers, {id: option})
+    if(header?.label)
+      return header.label
+    if(isValid) {
+      if(option?.toLowerCase().includes('class')) {
+        return find(headers, {id: 'concept_class'})?.label
+      }
+      return option
+    }
+    return ''
+  }
   return (
     <Autocomplete
       autoHighlight
@@ -23,7 +37,7 @@ const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
       disablePortal
       blurOnSelect
       fullWidth
-      getOptionLabel={option => option?.label ? option.label : find(headers, {id: option})?.label || (isValid ? option : '')}
+      getOptionLabel={getOptionLabel}
       isOptionEqualToValue={(option, value) => option?.id === value?.id || option?.id === value || option === value}
       sx={{
         minWidth: '100px',

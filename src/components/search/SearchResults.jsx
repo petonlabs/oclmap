@@ -81,8 +81,8 @@ const SearchResults = props => {
   const { t } = useTranslation()
   const history = useHistory()
   const [display, setDisplay] = React.useState(props.display || 'table')
-  const [cardDisplayAnimation, setCardDisplayAnimation] = React.useState('animation-disappear')
-  const [tableDisplayAnimation, setTableDisplayAnimation] = React.useState('animation-appear')
+  const [cardDisplayAnimation, setCardDisplayAnimation] = React.useState('')
+  const [tableDisplayAnimation, setTableDisplayAnimation] = React.useState('')
   const [selected, setSelected] = React.useState(props.selected || []);
   const page = props.results?.page;
   const rowsPerPage = props.results?.pageSize;

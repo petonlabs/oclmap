@@ -62,7 +62,7 @@ const Breadcrumbs = ({owner, ownerType, repo, repoVersion, repoURL, concept, map
                   },
                   '.repo-version-label': {
                     display: 'inline-block',
-                    maxWidth: '75px',
+                    maxWidth: '90px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     fontSize: '14px',

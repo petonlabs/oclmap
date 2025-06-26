@@ -126,7 +126,7 @@ const MapProject = () => {
   const [loadingMatches, setLoadingMatches] = React.useState(false)
   const [isLoadingInDecisionView, setIsLoadingInDecisionView] = React.useState(false)
   const [edit, setEdit] = React.useState([]);
-  const [configure, setConfigure] = React.useState(true);
+  const [configure, setConfigure] = React.useState(!params.projectId);
   const [selectedRowStatus, setSelectedRowStatus] = React.useState('all')
   const [selectedMatchBucket, setSelectedMatchBucket] = React.useState(false)
   const [decisionTab, setDecisionTab] = React.useState('candidates')
@@ -183,13 +183,17 @@ const MapProject = () => {
           setProjectFromData(data)
           if(response?.data?.target_repo_url) {
             APIService.new().overrideURL(response.data.target_repo_url).get().then(res => {
-              setRepo(res.data)
-              fetchVersions(res.data.url, res.data.version)
+              setRepo(res.data || {})
+              fetchVersions(res.data?.url, res.data?.version)
             })
           }
           setAlgo(response?.data?.matching_algorithm || algo)
           if (response?.data.columns?.length > 0) {
-            setColumns(omit(response.data.columns, ['hidden']))
+            setColumns(response.data.columns.map(col => {
+              let _col = {...omit(col, ['hidden'])}
+              _col.dataKey = _col.label || _col.dataKey
+              return _col
+            }))
             let colVisibility = {}
             response.data.columns.forEach(col => {
               if(col.hidden)
@@ -242,7 +246,6 @@ const MapProject = () => {
     let cols = []
     forEach(columns, (column, idx) => {
       const isValidColumn = isValidColumnValue(column.label)
-      const isUpdatedValue = column.label !== column.original
       let headerClass = 'header-valid'
       if(!isValidColumn)
         headerClass = 'header-invalid'
@@ -260,7 +263,7 @@ const MapProject = () => {
         headerName: column.label || column.original,
         headerClassName: headerClass,
         renderHeader: () => {
-          if(isUpdatedValue && isValidColumn) {
+          if(isValidColumn) {
             return <div>
                      <div>{column.original}</div>
                      <div><Chip color='warning' variant='outlined' size='small' label={column.label} sx={{fontSize: '12px', margin: '2px 0'}} /></div>
@@ -418,7 +421,8 @@ const MapProject = () => {
     formData.append('name', name || f.name)
     formData.append('description', description)
     formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false}))))
-    formData.append('target_repo_url', repoVersion.version_url)
+    if(repoVersion?.version_url)
+      formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
@@ -981,6 +985,11 @@ const MapProject = () => {
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
 
+  const labelDisplayedRows = ({ from, to, count }) => {
+    return `${from.toLocaleString()}–${to.toLocaleString()} of ${count?.toLocaleString()}`;
+  };
+
+
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
@@ -1024,7 +1033,7 @@ const MapProject = () => {
                 <span style={{display: 'flex', alignItems: 'center'}}>
                   {
                     name &&
-                      <span style={{fontWeight: 'bold', fontSize: '18px', maxWidth: '200px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: '8px'}}>
+                      <span style={{fontWeight: 'bold', fontSize: '18px', maxWidth: isSplitView ? '300px' : '500px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: '8px'}}>
                         {name}
                       </span>
                   }
@@ -1234,6 +1243,11 @@ const MapProject = () => {
                       paginationModel: {
                         pageSize: 100,
                       },
+                    },
+                  }}
+                  localeText={{
+                    MuiTablePagination: {
+                      labelDisplayedRows,
                     },
                   }}
                   disableRowSelectionOnClick

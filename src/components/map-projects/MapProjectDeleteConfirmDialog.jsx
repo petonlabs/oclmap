@@ -26,8 +26,8 @@ const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle onClose={onClose}>
+    <Dialog open={open} onClose={() => onClose()}>
+      <DialogTitle onClose={() => onClose()}>
         Delete Map Project - {project.name}
       </DialogTitle>
       <DialogContent sx={{paddingTop: '20px !important'}}>
