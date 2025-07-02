@@ -1,25 +1,97 @@
 import React from 'react'
 import times from 'lodash/times'
 import get from 'lodash/get'
+import { find, forEach} from 'lodash'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
-const Propose = ({onChange, proposed, onSubmit}) => {
+const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
   const [attributes, setAttributes] = React.useState(1)
+  const repoLabel = `${repo?.short_code || repo?.id}:${repo?.version || repo.id}`
+
+ const getStateFromRow = () => {
+    let _state = {id: '', name: '', attributes: []}
+   forEach(row, (value, key) => {
+     if(!key.startsWith('__')) {
+       const col = find(columns, {dataKey: key})
+       if(col?.label) {
+         if(['id', 'name'].includes(col.label.toLowerCase()))
+           _state[col.label.toLowerCase()] = value
+         else
+           _state.attributes.push({name: col.label, value: value})
+       } else {
+         _state.attributes.push({name: key, value: value})
+       }
+     }
+    })
+   return _state
+  }
+
+  const [state, setState] = React.useState({})
+
+  const _onChange = event => {
+    event.persist()
+    let newState;
+    if(event.target.id.includes('attributes.')) {
+      const idParts = event.target.id.split('.')
+      const attributeIndex = parseInt(idParts[1])
+      const attributeType = idParts[2]
+      const newAttributes = [...state.attributes]
+      newAttributes[attributeIndex][attributeType] = event.target.value
+      newState = {...state, attributes: newAttributes}
+      console.log(newState)
+      setState(newState)
+    } else {
+      newState = {...state, [event.target.id]: event.target.value}
+      setState(newState)
+    }
+    onChange(newState)
+  }
+
+  React.useEffect(() => {
+    const stateFromRow = getStateFromRow()
+    let _attributes = proposed?.attributes?.length ? [...proposed.attributes] || [] : [...stateFromRow.attributes] || []
+    let _proposed = {...proposed}
+    _proposed.attributes = [...(proposed.attributes || [])]
+    forEach(_proposed, (value, key) => {
+      if(key.includes('attributes.')) {
+        let parts = key.split('.')
+        _proposed.attributes[parseInt(parts[1])][parts[2]] = value
+        delete _proposed[key]
+      }
+    })
+    setState({
+      ..._proposed,
+      source: proposed?.source || repoLabel || '',
+      id: proposed?.id || stateFromRow?.id || '',
+      name: proposed?.name || stateFromRow?.name || '',
+      attributes: _attributes,
+      map_type: proposed?.map_type || 'SAME-AS',
+      note: proposed?.note || ''
+    })
+    setAttributes(_attributes?.length && _attributes.length > 0 ? _attributes.length : 1)
+  }, [row])
+
+  const _onSubmit = event => {
+    event.persist()
+    onSubmit(event, state)
+  }
+
   return (
     <div className='col-xs-12 padding-0' style={{margin: '12px 0'}}>
       <div className='col-xs-12 padding-0'>
-        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Target Source' value={proposed?.source || ''} onChange={onChange}/>
-        <TextField id='id' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Concept ID' value={proposed?.id || ''} onChange={onChange}/>
-        <TextField id='name' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Name' value={proposed?.name || ''} onChange={onChange}/>
+        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Target Source' value={state.source} onChange={_onChange}/>
+        <TextField id='id' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Concept ID' value={state?.id || ''} onChange={_onChange}/>
+        <TextField id='name' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Name' value={state?.name || ''} onChange={_onChange}/>
+        <TextField id='map_type' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Map Type' value={state?.map_type || 'SAME-AS'} onChange={_onChange}/>
         <Typography sx={{fontWeight: 'bold', margin: '10px 10px 4px'}}>Attributes</Typography>
         {
           times(attributes, i => {
             return (
               <div className='col-xs-12 padding-0' key={i}>
-                <TextField id={`attributes.${i}.name`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Name' value={get(proposed, `attributes.${i}.name`) || ''} onChange={onChange}/>
-                <TextField id={`attributes.${i}.value`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Value' value={get(proposed, `attributes.${i}.value`) || ''} onChange={onChange}/>
+                <TextField id={`attributes.${i}.name`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Name' value={get(state, `attributes.${i}.name`) || ''} onChange={_onChange}/>
+                <TextField id={`attributes.${i}.value`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Value' value={get(state, `attributes.${i}.value`) || ''} onChange={_onChange}/>
               </div>
             )
           })
@@ -35,12 +107,12 @@ const Propose = ({onChange, proposed, onSubmit}) => {
           label="Proposal note"
           multiline
           rows={5}
-          value={proposed?.note || ''}
-          onChange={onChange}
+          value={state?.note || ''}
+          onChange={_onChange}
         />
       </div>
       <div className='col-xs-12 padding-0' style={{margin: '16px 0', display: 'flex', alignItems: 'center'}}>
-        <Button color='primary' onClick={onSubmit} variant='contained' sx={{textTransform: 'none'}}>
+        <Button color='primary' onClick={_onSubmit} variant='contained' sx={{textTransform: 'none'}}>
           Propose
         </Button>
       </div>

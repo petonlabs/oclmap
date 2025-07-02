@@ -297,8 +297,6 @@ const MapProject = () => {
     setColumns(cols)
   }
 
-  const updateRow = (index, columnKey, newValue) => setData(prevData => map(prevData, row => (row.__index === index ? {...row, [`${columnKey}__updated`]: newValue} : row)))
-
   const resetState = () => {
     setRowStatuses({reviewed: [], readyForReview: [], unmapped: []})
     setDecisions({})
@@ -962,7 +960,7 @@ const MapProject = () => {
 
   const getConcept = concept => concept?.url ? conceptCache[concept.url] || concept : concept
 
-  const onProposedUpdate = event => setProposed(prev => ({...prev, [rowIndex]: {...(prev[rowIndex] || {}), [event.target.id]: event.target.value}}))
+  const onProposedUpdate = proposedState => setProposed(prev => ({...prev, [rowIndex]: {...proposedState}}))
 
   const onCandidatesOrderChange = (property, order) => {
     setCandidatesOrderBy(property)
@@ -1250,8 +1248,6 @@ const MapProject = () => {
                       labelDisplayedRows,
                     },
                   }}
-                  disableRowSelectionOnClick
-                  onCellEditStop={(params, event) => updateRow(params.id, params.field, params?.reason === "enterKeyDown" ? event?.target?.value : event?.target?.value || params.value || '')}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
                 />
@@ -1367,6 +1363,7 @@ const MapProject = () => {
                   mapTypes={mapTypes}
                   allMapTypes={allMapTypes}
                   onMap={onMap}
+                  proposed={proposed[rowIndex]}
                 />
                 <Divider sx={{width: '100%'}} />
                 <DecisionSelector
@@ -1417,7 +1414,14 @@ const MapProject = () => {
                     <Propose
                       onChange={onProposedUpdate}
                       proposed={proposed[rowIndex]}
-                      onSubmit={event => onDecisionChange(event, 'propose')}
+                      onSubmit={(event, state) => {
+                        if(state)
+                          setProposed(prev => ({...prev, [rowIndex]: {...state}}))
+                        onDecisionChange(event, 'propose')
+                      }}
+                      repo={repoVersion || repo}
+                      row={row}
+                      columns={columns}
                     />
                 }
                 {

@@ -3,15 +3,22 @@ import Typography from '@mui/material/Typography'
 import ListItemText from '@mui/material/ListItemText'
 import has from 'lodash/has'
 import values from 'lodash/values'
+import isEmpty from 'lodash/isEmpty'
+import find from 'lodash/find'
 import compact from 'lodash/compact'
 import MapButton from './MapButton'
 import { URIToParentParams } from '../../common/utils'
 import Score from './Score'
 
-const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap}) => {
+const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
   const hasClass = has(row, 'Class') || has(row, 'Concept Class')
   const hasDatatype = has(row, 'Datatype') || has(row, 'datatype')
+  const getFieldFromProposed = field => {
+    return find(proposed?.attributes, attr => attr?.name?.toLowerCase()?.includes(field))?.value || ''
+  }
+
+
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between'}}>
       <div style={{maxWidth: '45%'}}>
@@ -57,6 +64,31 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
                 />
                 <Score concept={targetConcept} />
+              </div>
+            </div>
+          </>
+      }
+      {
+        !targetConcept?.url && !isEmpty(proposed) &&
+          <>
+            <div style={{marginLeft: '8px'}}>
+              <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Relationship</Typography>
+              <Typography component='div' sx={{}}>{proposed?.map_type || '-'}</Typography>
+            </div>
+            <div style={{marginLeft: '24px', maxWidth: '45%'}}>
+              <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Target Code</Typography>
+              <div className='col-xs-12 padding-0'>
+                <ListItemText
+                  className='searchable'
+                  primary={`${proposed?.source || ''}:${proposed?.id || ''} ${proposed?.name || ''}`}
+                  secondary={
+                    <span className='searchable' style={{fontSize: '12px'}}>
+                      Class: <i>{getFieldFromProposed('class')}</i>,
+                      Datatype: <i>{getFieldFromProposed('datatype')}</i>
+                    </span>
+                  }
+                  sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
+                />
               </div>
             </div>
           </>
