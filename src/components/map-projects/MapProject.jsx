@@ -59,6 +59,8 @@ import pickBy from 'lodash/pickBy'
 import every from 'lodash/every'
 import isEmpty from 'lodash/isEmpty'
 import findIndex from 'lodash/findIndex'
+import isString from 'lodash/isString'
+import isNaN from 'lodash/isNaN'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -140,6 +142,7 @@ const MapProject = () => {
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
+  const [columnWidth, setColumnWidth] = React.useState({})
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -195,11 +198,21 @@ const MapProject = () => {
               return _col
             }))
             let colVisibility = {}
+            let colWidth = {}
             response.data.columns.forEach(col => {
               if(col.hidden)
                 colVisibility[col.dataKey] = false
+              if(col.width) {
+                if(isString(col.width)) {
+                  let _width = parseInt(col.width.replace('px'))
+                  if(!isNaN(_width))
+                    col.width = _width
+                }
+                colWidth[col.dataKey] = col.width
+              }
             })
             setColumnVisibilityModel(colVisibility)
+            setColumnWidth(colWidth)
           }
           setTimeout(() => {
             let _file = getFileObjectFromRows(response.data.input_file_name)
@@ -252,6 +265,8 @@ const MapProject = () => {
       let widthParams = {}
       if(columns.length < 2)
         widthParams.flex = 1
+      if (columnWidth[column.dataKey])
+        widthParams.width = columnWidth[column.dataKey]
       else if(column.label.toLowerCase().includes('name') || column.label.toLowerCase().includes('description') || column.label.toLowerCase().includes('synonyms'))
         widthParams.width = 300
       else if(column.label.toLowerCase().includes('uuid') || column.label.toLowerCase().includes('external'))
@@ -418,7 +433,7 @@ const MapProject = () => {
     formData.append('matches', JSON.stringify(selected))
     formData.append('name', name || f.name)
     formData.append('description', description)
-    formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false}))))
+    formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined}))))
     if(repoVersion?.version_url)
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
@@ -1231,6 +1246,7 @@ const MapProject = () => {
                     }
                   }}
                   columnHeaderHeight={64}
+                  onColumnWidthChange={(params) => params?.colDef?.field ? setColumnWidth({...columnWidth, [params?.colDef?.field]: params.width}) : null}
                   getRowHeight={() => 'auto'}
                   getRowId={row => row.__index}
                   rows={rows}
