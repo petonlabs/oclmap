@@ -74,6 +74,7 @@ import SearchHighlightsDialog from '../search/SearchHighlightsDialog'
 import ConceptHome from '../concepts/ConceptHome'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
+import DraggablePaperComponent from '../common/DraggablePaperComponent'
 import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
@@ -1520,6 +1521,8 @@ const MapProject = () => {
       {
         showItem?.id &&
           <Dialog
+            PaperComponent={DraggablePaperComponent}
+            aria-labelledby="draggable-dialog-title"
             disableEscapeKeyDown
             open
             onClose={() => setShowItem(false)}

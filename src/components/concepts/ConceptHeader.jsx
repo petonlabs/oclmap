@@ -33,7 +33,7 @@ const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading
   }
 
   return (
-    <React.Fragment>
+    <div className='col-xs-12 padding-0' style={{cursor: 'move'}} id='draggable-dialog-title'>
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
         <span style={{width: 'calc(100% - 40px)'}}>
           {
@@ -89,7 +89,7 @@ const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading
             </span>
       </div>
         }
-    </React.Fragment>
+    </div>
   )
 }
 
