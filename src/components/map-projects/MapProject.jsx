@@ -1,6 +1,8 @@
 import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
+import Split from 'react-split';
+
 import { useParams, useHistory } from 'react-router-dom'
 
 import Paper from '@mui/material/Paper'
@@ -89,6 +91,7 @@ import Candidates from './Candidates'
 import SearchCandidates from './SearchCandidates'
 
 import './MapProject.scss'
+import '../common/ResizablePanel.scss'
 
 const MapProject = () => {
   const { toggles, setAlert: baseSetAlert } = React.useContext(OperationsContext);
@@ -1008,17 +1011,32 @@ const MapProject = () => {
 
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
-      <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
-        <Paper component="div" className='col-xs-12' sx={{backgroundColor: 'surface.main', boxShadow: 'none', padding: '4px 16px 8px 16px', borderRadius: '10px 10px 0 0', ...((isConfigureInSplitView || !configure) ? {} : {height: 'calc(100vh - 125px) !important', overflow: 'auto'})}}>
-          {
-            configure && !file?.name &&
-              <div className='col-xs-8 padding-0'>
-                <ConfigurationForm
-                  project={project}
-                  handleFileUpload={handleFileUpload}
-                  file={file}
-                  owner={owner}
-                  setOwner={setOwner}
+      <Split
+        sizes={isSplitView ? [50, 50] : [100, 0]} // initial % widths
+        minSize={isSplitView ? 200 : 1000}
+        expandToMin={false}
+        gutterSize={isSplitView ? 6 : 0}
+        snapOffset={0}
+        direction="horizontal"
+        cursor="col-resize"
+      style={{ display: 'flex', height: 'calc(100vh - 100px)' }}
+      gutter={() => {
+        const gutter = document.createElement('div');
+        gutter.className = 'gutter';
+        return gutter;
+      }}
+      >
+        <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
+          <Paper component="div" className='col-xs-12' sx={{backgroundColor: 'surface.main', boxShadow: 'none', padding: '4px 16px 8px 16px', borderRadius: '10px 10px 0 0', minWidth: '665px', ...((isConfigureInSplitView || !configure) ? {} : {height: 'calc(100vh - 125px) !important', overflow: 'auto'})}}>
+            {
+              configure && !file?.name &&
+                <div className='col-xs-8 padding-0'>
+                  <ConfigurationForm
+                    project={project}
+                    handleFileUpload={handleFileUpload}
+                    file={file}
+                    owner={owner}
+                    setOwner={setOwner}
                   name={name}
                   setName={setName}
                   description={description}
@@ -1102,7 +1120,7 @@ const MapProject = () => {
         </Paper>
         {
           (Boolean(rows?.length) || selectedMatchBucket || ROW_STATES.includes(selectedRowStatus) || searchText) &&
-            <div className='col-xs-12' style={{padding: '0', width: '100%', height: 'calc(100vh - 170px)'}}>
+            <div className='col-xs-12' style={{padding: '0', width: '100%', height: 'calc(100vh - 170px)', minWidth: '665px'}}>
               <div className='col-xs-12' style={{padding: '0 12px', display: 'flex', backgroundColor: SURFACE_COLORS.main, overflowX: 'auto'}}>
                 {
                   map(VIEWS, (state, view) => {
@@ -1331,7 +1349,7 @@ const MapProject = () => {
           </DialogActions>
         </Dialog>
       </Paper>
-      <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0 split-appear' : 'col-xs-6 padding-0'} sx={{width: isSplitView ? 'calc(50% - 16px) !important' : 0, marginLeft: '16px', boxShadow: 'none', p: 0, backgroundColor: WHITE, borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', opacity: isSplitView ? 1 : 0, height: 'calc(100vh - 100px) !important', overflow: 'auto'}}>
+      <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0 split-appear' : 'col-xs-6 padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: WHITE, borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', opacity: isSplitView ? 1 : 0, height: 'calc(100vh - 100px) !important', overflow: 'auto'}}>
         {
           configure && file?.name ?
             <div className='col-xs-12'>
@@ -1490,7 +1508,8 @@ const MapProject = () => {
             </>
           )
         }
-      </Paper>
+    </Paper>
+    </Split>
       <Menu
         id="matching-algo"
         anchorEl={algoMenuAnchorEl}

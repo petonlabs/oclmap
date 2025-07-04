@@ -1,0 +1,19 @@
+.gutter {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: col-resize;
+    position: relative;
+    border-radius: 10px;
+    margin: 8px 2px;
+}
+
+.gutter::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 30px;
+    background-color: #888;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+}

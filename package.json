@@ -26,6 +26,7 @@
     "react-hotjar": "^5.5.0",
     "react-i18next": "^12.1.5",
     "react-router-dom": "^5.3.4",
+    "react-split": "^2.0.14",
     "stacktrace-js": "^2.0.2",
     "xlsx": "^0.18.5"
   },
