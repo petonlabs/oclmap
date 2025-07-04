@@ -484,6 +484,8 @@ const MapProject = () => {
     const MAX_CONCURRENT_REQUESTS = 2; // Number of parallel API requests allowed
     if(autoMatchUnmappedOnly)
       rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
+    else
+      rows = filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
     const rowChunks = chunk(rows, CHUNK_SIZE);
 
     // Function to process a single batch
@@ -1303,7 +1305,7 @@ const MapProject = () => {
             <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
             <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '10px'}} />
             <FormControlLabel sx={{marginTop: '8px'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
-            {!autoMatchUnmappedOnly && <FormHelperText sx={{marginTop: '-4px'}}>This will override existing matches</FormHelperText>}
+            {!autoMatchUnmappedOnly && <FormHelperText sx={{marginTop: '-4px'}}>This will not affect Approved Matches but will override other existing matches</FormHelperText>}
           </DialogContent>
           <DialogActions sx={{padding: '16px'}}>
             <Button

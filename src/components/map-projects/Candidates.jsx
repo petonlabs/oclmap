@@ -16,8 +16,9 @@ import SearchResults from '../search/SearchResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, canFetchMore}) => {
   const results = {total: onFetchMore ? candidates.length : 1, results: candidates || []}
+
   return candidates.length > 0 ? (
     <ul>
       <ListSubheader sx={{position: 'initial', lineHeight: '28px', padding: '2px 8px', background: 'rgba(0, 0, 0, 0.1)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px'}}>
@@ -68,7 +69,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         ]}
       />
       {
-        onFetchMore && candidates?.length > 0 &&
+        onFetchMore && canFetchMore &&
           <div className='col-xs-12' style={{textAlign: 'right', margin: '16px 0'}}>
             <Button size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
             Fetch More
@@ -81,6 +82,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore}) => {
   const concepts = find(candidates, c => c.row.__index === rowIndex )?.results || []
+  const canFetchMore = concepts?.length > 0
   const recommended = filter(concepts, concept => concept?.search_meta?.match_type === 'very_high')
   const available = filter(concepts, concept => concept?.search_meta?.match_type !== 'very_high')
   let props = {
@@ -127,10 +129,10 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
           subheader={<li />}
         >
           <li>
-            <CandidateList {...props} candidates={recommended} header='Recommended Candidates' />
+            <CandidateList {...props} candidates={recommended} header='Recommended Candidates' canFetchMore={canFetchMore && !available?.length} onFetchMore={onFetchMore} />
           </li>
           <li>
-            <CandidateList {...props} candidates={available} header='Available Candidates' onFetchMore={onFetchMore} />
+            <CandidateList {...props} candidates={available} header='Available Candidates' canFetchMore={canFetchMore} onFetchMore={onFetchMore} />
           </li>
         </List>
       </div>

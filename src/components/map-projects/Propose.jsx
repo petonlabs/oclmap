@@ -53,7 +53,7 @@ const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
     const stateFromRow = getStateFromRow()
     let _attributes = proposed?.attributes?.length ? [...proposed.attributes] || [] : [...stateFromRow.attributes] || []
     let _proposed = {...proposed}
-    _proposed.attributes = [...(proposed.attributes || [])]
+    _proposed.attributes = [...(proposed?.attributes || [])]
     forEach(_proposed, (value, key) => {
       if(key.includes('attributes.')) {
         let parts = key.split('.')
