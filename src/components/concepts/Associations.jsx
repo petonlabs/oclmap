@@ -99,6 +99,7 @@ const AssociationRow = ({mappings, id, mapType, isSelf, isIndirect, hide}) => {
                 size='small'
                 variant='outlined'
                 color='default'
+                sx={{color: 'rgba(0, 0, 0, 0.87)'}}
                 label={
                   <span>
                     <span>{mapType}</span>
