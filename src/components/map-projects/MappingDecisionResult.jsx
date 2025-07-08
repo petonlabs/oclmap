@@ -5,12 +5,13 @@ import has from 'lodash/has'
 import values from 'lodash/values'
 import isEmpty from 'lodash/isEmpty'
 import find from 'lodash/find'
+import get from 'lodash/get'
 import compact from 'lodash/compact'
 import MapButton from './MapButton'
 import { URIToParentParams } from '../../common/utils'
 import Score from './Score'
 
-const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed}) => {
+const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
   const hasClass = has(row, 'Class') || has(row, 'Concept Class')
   const hasDatatype = has(row, 'Datatype') || has(row, 'datatype')
@@ -18,6 +19,15 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
     return find(proposed?.attributes, attr => attr?.name?.toLowerCase()?.includes(field))?.value || ''
   }
 
+  const getValue = field => {
+    const col = find(columns, col => col?.label?.toLowerCase() == field.toLowerCase())
+    let val
+    if(col?.dataKey)
+      val = row[col.dataKey]
+    if(!val)
+      val = get(row, field) || get(row, field.toLowerCase())
+    return val
+  }
 
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between'}}>
@@ -25,16 +35,16 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
         <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Source Code</Typography>
         <div className='col-xs-12 padding-0'>
           <ListItemText
-            primary={row?.Name || row?.name || '-'}
+            primary={getValue('Name')}
             secondary={
               <span style={{fontSize: '12px'}}>
                 {
                 hasClass &&
-                    <>Class: <i>{row.Class || row['Concept Class']}</i>,</>
+                    <>Class: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i>,</>
                 }
                 {
                   hasDatatype &&
-                    <>Datatype: <i>{row.Datatype}</i></>
+                    <>Datatype: <i>{getValue('Property: Datatype') || getValue('datatype')}</i></>
                 }
               </span>
             }

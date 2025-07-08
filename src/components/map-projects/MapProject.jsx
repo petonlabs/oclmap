@@ -1401,6 +1401,7 @@ const MapProject = () => {
                   allMapTypes={allMapTypes}
                   onMap={onMap}
                   proposed={proposed[rowIndex]}
+                  columns={columns}
                 />
                 <Divider sx={{width: '100%'}} />
                 <DecisionSelector

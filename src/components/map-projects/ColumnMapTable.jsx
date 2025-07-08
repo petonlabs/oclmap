@@ -85,7 +85,7 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
             const isHidden = columnVisibilityModel[column.dataKey] === false
             return (
               <TableRow key={column.original}>
-                <TableCell>
+              <TableCell sx={{width: '50%'}}>
                   <span style={{display: 'flex', alignItems: 'center'}}>
                     {
                       isValidColumn ?
