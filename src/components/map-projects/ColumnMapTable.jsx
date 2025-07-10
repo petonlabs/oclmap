@@ -13,6 +13,7 @@ import InvalidIcon from '@mui/icons-material/CancelOutlined';
 import find from 'lodash/find';
 import map from 'lodash/map';
 import omit from 'lodash/omit';
+import get from 'lodash/get'
 
 
 const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
@@ -63,10 +64,44 @@ const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
   )
 }
 
-const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumnVisibilityModel, columnVisibilityModel}) => {
+
+const TargetSourceAutoComplete = ({sources, possibleValue, selected, onChange, ...rest}) => {
+  React.useEffect(() => {
+    if(possibleValue && !selected) {
+      const possibleSource = find(sources, source => {
+        let matched = source.id.toLowerCase().match(possibleValue.toLowerCase())
+        if(!matched)
+          matched = source.id.toLowerCase().replace('-', '').replace(' ', '').replace('_', '').match(possibleValue.toLowerCase().replace('-', '').replace(' ', '').replace('_', ''))
+        return Boolean(matched)
+      })
+      if(possibleSource?.url)
+        onChange(possibleSource?.url)
+    }
+  }, [])
+  return <Autocomplete
+            autoHighlight
+            autoComplete
+            disablePortal
+            blurOnSelect
+            fullWidth
+            getOptionLabel={option => option.id || ''}
+            isOptionEqualToValue={(option, value) => option?.url === value}
+            sx={{
+              minWidth: '100px',
+              '.MuiButtonBase-root': {color: '#000'}
+            }}
+            renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
+           options={sources}
+           value={selected ? find(sources, {url: selected}) || '' : ''}
+           onChange={(event, val) => onChange(val?.url)}
+            {...rest}
+          />
+}
+
+const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumnVisibilityModel, columnVisibilityModel, mappedSources, targetSourcesFromRows}) => {
   const [random, setRandom] = React.useState(0)
-  const onValChange = (position, value) => {
-    onUpdate(position, value)
+  const onValChange = (position, value, key) => {
+    onUpdate(position, value, key)
     setRandom(random + 1)
   }
   return (
@@ -96,6 +131,7 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                   </span>
                 </TableCell>
                 <TableCell>
+                  <>
                   <HeaderAutocomplete
                     headers={validColumns}
                     value={column.label}
@@ -103,6 +139,43 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                     isValid={isValidColumn}
                     onChange={(event, value) => onValChange(position, value?.label || value)}
                   />
+                    {
+                      'Mapping: List' === column.label &&
+                        <div>
+                          {
+                            map(targetSourcesFromRows[column.dataKey], (target, index) => {
+                              return (
+                                <div key={index} style={{display: 'flex', alignItems: 'center'}}>
+                                  <span style={{marginRight: '8px', textTransform: 'uppercase'}}>
+                                    {target}:
+                                  </span>
+                                  <TargetSourceAutoComplete
+                                    sources={mappedSources}
+                                    possibleValue={target}
+                                    selected={get(column.targetSource, target)}
+                                    onChange={value => onValChange(position, {...column.targetSource, [target]: value}, 'targetSource')}
+                                  />
+                                </div>
+                              )
+                            })
+                          }
+                        </div>
+                    }
+                    {
+                      'Mapping: Code' === column.label &&
+                        <div style={{display: 'flex', alignItems: 'center'}}>
+                          <span style={{marginRight: '8px', textTransform: 'uppercase'}}>
+                            {targetSourcesFromRows[column.dataKey]}:
+                          </span>
+                          <TargetSourceAutoComplete
+                            sources={mappedSources}
+                            possibleValue={targetSourcesFromRows[column.dataKey]}
+                            selected={get(column.targetSource, targetSourcesFromRows[column.dataKey])}
+                            onChange={value => onValChange(position, {...column.targetSource, [targetSourcesFromRows[column.dataKey]]: value}, 'targetSource')}
+                          />
+                        </div>
+                    }
+              </>
                 </TableCell>
                 <TableCell>
                   <Switch size="small" checked={!isHidden} onChange={() => setColumnVisibilityModel(isHidden ? omit(columnVisibilityModel, [column.dataKey]) : {...columnVisibilityModel, [column.dataKey]: false})}/>

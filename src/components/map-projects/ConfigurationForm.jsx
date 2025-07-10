@@ -36,7 +36,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -183,6 +183,8 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               onUpdate={updateColumn}
               columnVisibilityModel={columnVisibilityModel}
               setColumnVisibilityModel={setColumnVisibilityModel}
+              mappedSources={mappedSources}
+              targetSourcesFromRows={targetSourcesFromRows}
             />
           </>
       }

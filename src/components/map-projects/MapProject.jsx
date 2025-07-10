@@ -55,6 +55,8 @@ import sum from 'lodash/sum'
 import omit from 'lodash/omit'
 import reject from 'lodash/reject'
 import uniq from 'lodash/uniq'
+import compact from 'lodash/compact'
+import flatten from 'lodash/flatten'
 import debounce from 'lodash/debounce'
 import keys from 'lodash/keys'
 import pickBy from 'lodash/pickBy'
@@ -151,11 +153,15 @@ const MapProject = () => {
   // repo state
   const [repo, setRepo] = React.useState(false)
   const [repoVersion, setRepoVersion] = React.useState(false)
+  const [mappedSources, setMappedSources] = React.useState([])
   const [versions, setVersions] = React.useState([])
   const [conceptCache, setConceptCache] = React.useState({})
   const [allMapTypes, setAllMapTypes] = React.useState([])
   const [random, setRandom] = React.useState(0)
   const [deleteProject, setDeleteProject] = React.useState(false)
+
+
+  const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
   const headers = algo === 'llm' ? SEMANTIC_SEARCH_HEADERS : HEADERS
 
@@ -196,11 +202,9 @@ const MapProject = () => {
           }
           setAlgo(response?.data?.matching_algorithm || algo)
           if (response?.data.columns?.length > 0) {
-            setColumns(response.data.columns.map(col => {
-              let _col = {...omit(col, ['hidden'])}
-              _col.dataKey = _col.label || _col.dataKey
-              return _col
-            }))
+            const _columns = response.data.columns.map(col => ({...omit(col, ['hidden'])}))
+            setColumns(_columns)
+            setTargetSourcesFromRows(getTargetSourcesFromRows(_columns, data))
             let colVisibility = {}
             let colWidth = {}
             response.data.columns.forEach(col => {
@@ -310,10 +314,43 @@ const MapProject = () => {
     return cols
   }
 
-  const updateColumn = (position, newValue) => {
+  const getTargetSourcesFromRows = (cols, _data) => {
+    let sources = {};
+    let __data = _data || data
+    filter(cols, {label: 'Mapping: List'})?.forEach(col => {
+      let values = map(__data, row => row[col.dataKey].split(',').map(source => get(source?.trim()?.split(':'), '0')))
+      sources[col.dataKey] = uniq(compact(flatten(values)))
+    })
+    filter(cols, {label: 'Mapping: Code'})?.forEach(col => {
+      sources[col.dataKey] = col.dataKey.toLowerCase().replace('_code', '')
+    })
+    return sources
+  }
+
+  const getMapConfigs = () => {
+    let configs = []
+    forEach(filter(columns, col => ['Mapping: Code', 'Mapping: List'].includes(col?.label)), col => {
+      const isList = col.label === 'Mapping: List'
+      let config = {
+        type: isList ? 'mapping-list' : 'mapping-code',
+        input_column: col.dataKey,
+      }
+      if(isList)
+        config.target_urls = col.targetSource
+      else
+        config.target_source_url = get(values(col.targetSource), '0')
+      if((isList && !isEmpty(config.target_urls)) || (!isList && config.target_source_url))
+        configs.push(config)
+    })
+    return configs
+  }
+
+  const updateColumn = (position, newValue, key) => {
     let cols = {...columns}
-    cols[position].label = newValue || ''
+    cols[position][key || 'label'] = newValue || ''
     setColumns(cols)
+    if(key !== 'targetSource')
+      setTargetSourcesFromRows(getTargetSourcesFromRows(cols))
   }
 
   const resetState = () => {
@@ -343,7 +380,6 @@ const MapProject = () => {
     setAutoMatchUnmappedOnly(true)
     setAlert(false)
   }
-
 
   const handleFileUpload = event => {
     resetState()
@@ -415,7 +451,8 @@ const MapProject = () => {
         return prev
       })
 
-    setColumns(getColumns(omit(_data[0], ['__index'])))
+    let cols = getColumns(omit(_data[0], ['__index']))
+    setColumns(cols)
   }
 
   const onSave = () => {
@@ -460,6 +497,14 @@ const MapProject = () => {
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
 
+  const fetchMappedSources = url => APIService.new().overrideURL(url).appendToUrl('mapped-sources/?excludeSelf=false&brief=true').get().then(response => setMappedSources(response?.data || []))
+
+  const onRepoVersionChange = version => {
+    setRepoVersion(version)
+    if(version?.version_url)
+      fetchMappedSources(version.version_url)
+  }
+
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
 
   const onAlgoSelect = newAlgo => {
@@ -477,6 +522,7 @@ const MapProject = () => {
         'source_version': repoVersion?.id || _repo.version || _repo.id,
         'source': _repo.short_code || _repo.id
       },
+      map_config: getMapConfigs()
     }
   }
 
@@ -576,14 +622,14 @@ const MapProject = () => {
       setVersions(_versions)
       if(_selectedVersion) {
         const _version = find(_versions, {id: _selectedVersion})
-        setRepoVersion(_version)
+        onRepoVersionChange(_version)
       }
       else if(_versions?.length === 1)
-        setRepoVersion(_versions[0])
+        onRepoVersionChange(_versions[0])
       else {
         let releasedVersion = find(_versions, {released: true})
         if(releasedVersion)
-          setRepoVersion(releasedVersion)
+          onRepoVersionChange(releasedVersion)
       }
     })
   }
@@ -595,6 +641,7 @@ const MapProject = () => {
     } else {
       setVersions([])
       setRepoVersion(false)
+      setMappedSources([])
     }
   }
 
@@ -609,6 +656,8 @@ const MapProject = () => {
           let newValue = value
           let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
           let isList = key === '__index' ? false : newValue.includes('\n')
+          if(['Mapping: Code', 'Mapping: List'].includes(column?.label))
+            newKey = column.dataKey
 
           if(isList)
             newValue = newValue.split('\n')
@@ -616,6 +665,8 @@ const MapProject = () => {
             newKey = key.replace('__updated', '')
           if(newKey.includes('class'))
             newKey = 'concept_class'
+          if(newKey.includes('datatype'))
+            newKey = 'datatype'
           if(newKey === 'set_members')
             newKey = 'other_map_codes'
           if(newKey === 'same_as')
@@ -745,16 +796,8 @@ const MapProject = () => {
       const rowStateLabel = VIEWS[rowState].label
       let concept = mapSelected[index]
       let _repo = concept?.repo
-      let newRow = {}
-      forEach(row, (value, key) => {
-        const column = find(columns, {dataKey: key})
-        if(column?.label)
-          newRow[column.label] = value
-        else
-          newRow[key] = value
-      })
-      newRow = {
-        ...newRow,
+      let newRow = {
+        ...row,
         '__Concept ID__': concept?.id,
         '__Concept Name__': concept?.display_name,
         '__Concept URL__': concept?.url,
@@ -909,7 +952,6 @@ const MapProject = () => {
       updateMatchTypeCounts(null, prev)
       return prev
     })
-
   }
 
   const fetchOtherCandidates = (_row, offset=0) => {
@@ -1037,29 +1079,31 @@ const MapProject = () => {
                     file={file}
                     owner={owner}
                     setOwner={setOwner}
-                  name={name}
-                  setName={setName}
-                  description={description}
-                  setDescription={setDescription}
-                  repo={repo}
-                  onRepoChange={onRepoChange}
-                  repoVersion={repoVersion}
-                  setRepoVersion={setRepoVersion}
-                  versions={versions}
-                  algo={algo}
-                  onAlgoSelect={onAlgoSelect}
-                  algos={ALGOS}
-                  validColumns={headers}
-                  columns={columns}
-                  isValidColumnValue={isValidColumnValue}
-                  updateColumn={updateColumn}
-                  configure={configure}
-                  setConfigure={setConfigure}
-                  columnVisibilityModel={columnVisibilityModel}
-                  setColumnVisibilityModel={setColumnVisibilityModel}
-                  onSave={onSave}
-                />
-              </div>
+                    name={name}
+                    setName={setName}
+                    description={description}
+                    setDescription={setDescription}
+                    repo={repo}
+                    onRepoChange={onRepoChange}
+                    repoVersion={repoVersion}
+                    setRepoVersion={onRepoVersionChange}
+                    mappedSources={mappedSources}
+                    targetSourcesFromRows={targetSourcesFromRows}
+                    versions={versions}
+                    algo={algo}
+                    onAlgoSelect={onAlgoSelect}
+                    algos={ALGOS}
+                    validColumns={headers}
+                    columns={columns}
+                    isValidColumnValue={isValidColumnValue}
+                    updateColumn={updateColumn}
+                    configure={configure}
+                    setConfigure={setConfigure}
+                    columnVisibilityModel={columnVisibilityModel}
+                    setColumnVisibilityModel={setColumnVisibilityModel}
+                    onSave={onSave}
+                  />
+                </div>
           }
           <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', justifyContent: 'space-between'}}>
             {
@@ -1322,7 +1366,7 @@ const MapProject = () => {
               {ALGOS.find(_algo => _algo.id === algo).label}
             </Button>
             <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
-            <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '10px'}} />
+            <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
             <FormControlLabel sx={{marginTop: '8px'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
             {!autoMatchUnmappedOnly && <FormHelperText sx={{marginTop: '-4px'}}>This will not affect Approved Matches but will override other existing matches</FormHelperText>}
           </DialogContent>
@@ -1366,7 +1410,9 @@ const MapProject = () => {
                 repo={repo}
                 onRepoChange={onRepoChange}
                 repoVersion={repoVersion}
-                setRepoVersion={setRepoVersion}
+                setRepoVersion={onRepoVersionChange}
+                mappedSources={mappedSources}
+                targetSourcesFromRows={targetSourcesFromRows}
                 versions={versions}
                 algo={algo}
                 onAlgoSelect={onAlgoSelect}

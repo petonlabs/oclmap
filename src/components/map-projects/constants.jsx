@@ -13,8 +13,8 @@ const COMMON_HEADERS = [
   {id: 'description', label: 'Description', description: 'Basic string search on concept descriptions'},
   {id: 'concept_class', label: 'Property: Class', description: 'String matching on concept class (e.g. diagnosis, symptom)'},
   {id: 'datatype', label: 'Property: Datatype', description: 'String matching on concept datatype (e.g. numeric, coded)'},
-  {id: 'same_as_map_codes', label: 'Same As Codes', description: 'Matches the SAME-AS concept ID'},
-  {id: 'other_map_codes', label: 'Concept Set', description: 'Matches Concept Set ID'},
+  {id: 'mapping_code', label: 'Mapping: Code', description: 'Matches the target repo concept ID'},
+  {id: 'mapping_list', label: 'Mapping: List', description: 'Matches the target repo concept ID or when an input row and a concept in the target repo share a common mapping'},
 ]
 
 export const HEADERS = [
