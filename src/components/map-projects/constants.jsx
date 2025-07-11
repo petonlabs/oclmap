@@ -78,4 +78,4 @@ export const MATCH_TYPES = {
   },
 }
 
-export const DECISION_TABS = ['candidates', 'propose', 'search']
+export const DECISION_TABS = ['candidates', 'propose', 'search', 'discuss']

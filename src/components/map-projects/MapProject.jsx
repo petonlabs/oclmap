@@ -91,9 +91,19 @@ import ReviewNote from './ReviewNote'
 import Propose from './Propose'
 import Candidates from './Candidates'
 import SearchCandidates from './SearchCandidates'
+import Discuss from './Discuss'
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
+
+
+// const LOG = {
+//   action: '',
+//   user: '',
+//   description: '',
+//   extras: {},
+//   created_at: ''
+// }
 
 const MapProject = () => {
   const { toggles, setAlert: baseSetAlert } = React.useContext(OperationsContext);
@@ -149,6 +159,7 @@ const MapProject = () => {
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
+  const [logs, setLogs] = React.useState({})
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -187,6 +198,9 @@ const MapProject = () => {
   const fetchAndSetProject = () => {
     let url = ['', params.ownerType, params.owner, 'map-projects', params.projectId, ''].join('/')
     APIService.new().overrideURL(url).get().then(response => {
+      if(response.data.url) {
+        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => setLogs(response.data.logs || []))
+      }
       if(response.data?.file_url) {
         fetch(response.data.file_url).then(res => res.text()).then(csvText => {
           const workbook = XLSX.read(csvText, { type: "string" });
@@ -491,8 +505,14 @@ const MapProject = () => {
         if(response.data.url)
           history.push(response.data.url)
         baseSetAlert({severity: 'success', message: 'Succesffully Saved.', duration: 2000})
+        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: logs}).then(() => {})
       }
     })
+  }
+
+  const log = (data, index) => {
+    let idx = index === undefined ? rowIndex : index
+    setLogs(prev => ({...prev, [idx]: [{...data, created_at: moment().toDate(), user: user.username || user.id}, ...(prev[idx] || [])]}))
   }
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
@@ -581,13 +601,15 @@ const MapProject = () => {
             setRowStatuses(prev => {
               forEach(data, concept => {
                 if(get(concept, 'results.0.search_meta.match_type') === 'very_high') {
+                  let _concept = {...concept.results[0], repo: {..._repo, version: repoVersion?.id || _repo.version, version_url: repoVersion?.version_url || _repo.version_url}}
                   setMapSelected(_prev => {
-                    _prev[concept.row.__index] = {...concept.results[0], repo: {..._repo, version: repoVersion?.id || _repo.version, version_url: repoVersion?.version_url || _repo.version_url}}
+                    _prev[concept.row.__index] = _concept
                     return _prev
                   })
                   prev.readyForReview = uniq([...prev.readyForReview, concept.row.__index])
                   setDecisions(prev => ({...prev, [concept.row.__index]: 'map'}))
                   setMapTypes(prev => ({...prev, [concept.row.__index]: 'SAME-AS'}))
+                  log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: 'SAME-AS'}}, concept.row.__index)
                 } else
                   prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
               })
@@ -610,7 +632,6 @@ const MapProject = () => {
         prev.readyForReview = []
       return prev
     })
-
     await processWithConcurrency(repo);
     setEndMatchingAt(moment())
     setLoadingMatches(false)
@@ -851,7 +872,7 @@ const MapProject = () => {
   const onMap = (event, concept, unmap=false, mapType='SAME-AS', closeConcept=false) => {
     event.preventDefault()
     event.stopPropagation()
-    _onMap(concept, unmap)
+    _onMap(concept, unmap, mapType)
     setRowStatuses(prev => {
       prev.reviewed = without(prev.reviewed, rowIndex)
       if(unmap) {
@@ -871,9 +892,12 @@ const MapProject = () => {
     return false
   }
 
-  const _onMap = (concept, unmap=false) => {
+  const _onMap = (concept, unmap=false, mapType='SAME-AS') => {
     setMapSelected(prev => ({...prev, [rowIndex]: unmap ? null : {...concept, repo: {...repo, version: repoVersion?.id || repo.version, version_url: repoVersion?.version_url || repo.version_url}}}))
     setDecisions(prev => ({...prev, [rowIndex]: unmap ? null : 'map'}))
+    if(concept?.url)
+      log({action: unmap ? 'unmapped' : 'mapped', extras: {object_url: concept?.url, map_type: mapType, name: getConceptLabel(concept)}})
+
   }
 
   const onReviewDone = (next = false) => {
@@ -884,6 +908,7 @@ const MapProject = () => {
       const nextRow = data[selectedRowStatus === 'all' ? rowIndex + 1 : find(rowStatuses[selectedRowStatus], idx => idx > rowIndex)]
       if(nextRow !== undefined)
         setTimeout(() => onCSVRowSelect(nextRow), 300)
+      log({'action': 'approved'})
     }
   }
 
@@ -921,14 +946,21 @@ const MapProject = () => {
   }
 
   const onDecisionChange = (event, newValue) => {
+    let logged = false
     if(newValue === 'rejected') {
       let selected = mapSelected[rowIndex]
       selected = getConcept(selected) || selected
       if(selected?.id) {
-        let comment = `Rejected ${getConceptLabel(selected)}`
+        let conceptLabel = getConceptLabel(selected)
+        let comment = `Rejected ${conceptLabel}`
         if(notes[rowIndex])
           comment = notes[rowIndex] + '\n' + comment
         setNotes({...notes, [rowIndex]: comment})
+        log({action: newValue, description: comment, extras: {object_url: selected?.url, name: conceptLabel}})
+        logged = true
+      } else {
+        log({action: newValue})
+        logged = true
       }
     }
     if(newValue !== 'map')
@@ -937,8 +969,11 @@ const MapProject = () => {
       setProposed(prev => ({...prev, [rowIndex]: undefined}))
 
     setDecisions(prev => ({...prev, [rowIndex]: newValue || undefined}))
-    if(newValue === 'propose')
+    if(newValue === 'propose') {
       setAlert({message: 'Proposed successfully.', duration: 2, severity: 'success'})
+      log({action: 'proposed'})
+        logged = true
+    }
 
     setRowStatuses(prev => {
       prev.reviewed = without(prev.reviewed, rowIndex)
@@ -952,6 +987,8 @@ const MapProject = () => {
       updateMatchTypeCounts(null, prev)
       return prev
     })
+    if(newValue !== 'map' && !logged)
+      log({action: newValue || 'decision_changed', description: 'Desicion Changed to None', extras: newValue ? {} : {decision: 'None'}})
   }
 
   const fetchOtherCandidates = (_row, offset=0) => {
@@ -1544,6 +1581,10 @@ const MapProject = () => {
                       setSearchStr={setSearchStr}
                       onSearch={searchCandidates}
                     />
+                }
+                {
+                  decisionTab === 'discuss' && isSplitView &&
+                    <Discuss logs={logs[rowIndex]} onAdd={comment => comment ? log({action: 'commented', description: comment}) : null} />
                 }
               </div>
               <SearchHighlightsDialog

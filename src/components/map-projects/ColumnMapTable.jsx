@@ -14,6 +14,7 @@ import find from 'lodash/find';
 import map from 'lodash/map';
 import omit from 'lodash/omit';
 import get from 'lodash/get'
+import orderBy from 'lodash/orderBy'
 
 
 const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
@@ -91,7 +92,7 @@ const TargetSourceAutoComplete = ({sources, possibleValue, selected, onChange, .
               '.MuiButtonBase-root': {color: '#000'}
             }}
             renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
-           options={sources}
+           options={orderBy(sources, 'id')}
            value={selected ? find(sources, {url: selected}) || '' : ''}
            onChange={(event, val) => onChange(val?.url)}
             {...rest}
@@ -146,7 +147,7 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                             map(targetSourcesFromRows[column.dataKey], (target, index) => {
                               return (
                                 <div key={index} style={{display: 'flex', alignItems: 'center'}}>
-                                  <span style={{marginRight: '8px', textTransform: 'uppercase'}}>
+                                  <span style={{marginRight: '8px'}}>
                                     {target}:
                                   </span>
                                   <TargetSourceAutoComplete
@@ -164,7 +165,7 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                     {
                       'Mapping: Code' === column.label &&
                         <div style={{display: 'flex', alignItems: 'center'}}>
-                          <span style={{marginRight: '8px', textTransform: 'uppercase'}}>
+                          <span style={{marginRight: '8px'}}>
                             {targetSourcesFromRows[column.dataKey]}:
                           </span>
                           <TargetSourceAutoComplete
