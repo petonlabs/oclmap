@@ -2,6 +2,7 @@ import React from 'react'
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useFormControl } from '@mui/material/FormControl';
 
 const SearchField = ({onChange}) => {
@@ -25,6 +26,19 @@ const SearchField = ({onChange}) => {
              <InputAdornment position="start">
                <SearchIcon color={comp || !focused ? 'primary' : undefined} fontSize='small' />
              </InputAdornment>
+           }
+           endAdornment={
+             input ?
+             <InputAdornment position="end">
+               <ClearIcon
+                 fontSize='small'
+                 sx={{cursor: 'pointer'}}
+                 onClick={() => {
+                 setInput('')
+                 onChange('')
+               }}
+               />
+             </InputAdornment> : undefined
            }
            sx={{
              ...style,

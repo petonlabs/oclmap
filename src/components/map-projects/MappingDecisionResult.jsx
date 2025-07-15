@@ -174,7 +174,6 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                     <span className='searchable' style={{fontSize: '12px'}}>
                       Class: <i>{getFieldFromProposed('class')}</i>,
                       Datatype: <i>{getFieldFromProposed('datatype')}</i>
-
                     </span>
                   }
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
