@@ -6,6 +6,9 @@ import values from 'lodash/values'
 import isEmpty from 'lodash/isEmpty'
 import find from 'lodash/find'
 import get from 'lodash/get'
+import filter from 'lodash/filter'
+import keys from 'lodash/keys'
+import forEach from 'lodash/forEach'
 import compact from 'lodash/compact'
 import MapButton from './MapButton'
 import { URIToParentParams } from '../../common/utils'
@@ -21,6 +24,10 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
 
   const getValue = field => {
     const col = find(columns, col => col?.label?.toLowerCase() == field.toLowerCase())
+    return getValueFromColumn(col, field)
+  }
+
+  const getValueFromColumn = (col, field) => {
     let val
     if(col?.dataKey)
       val = row[col.dataKey]
@@ -29,13 +36,77 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
     return val
   }
 
+  const getLeftTitle = () => {
+    let title = ''
+    const id = getValue('ID')
+    const name = getValue('name')
+    if(id)
+      title = `${id}:`
+    if(name)
+      title += name
+    return title
+  }
+
+  const getLeftMappings = () => {
+    let mappedCodes = {}
+    filter(columns, col => col?.label?.toLowerCase() == 'Mapping: Code'.toLowerCase()).forEach(col => {
+      const key = get(keys(col.targetSource), '0') || col.dataKey
+      const value = getValueFromColumn(col, '')
+      if(value && key) {
+        if(!mappedCodes[key])
+          mappedCodes[key] = []
+        mappedCodes[key].push(value)
+      }
+    })
+    const mappings = getValue('Mapping: List')
+    if(mappings) {
+      mappings.split(',').forEach(combo => {
+        let parts = combo.split(':')
+        const value = get(parts, '1')
+        const key = get(parts, '0')
+        if(value && key) {
+          if(!mappedCodes[key])
+            mappedCodes[key] = []
+          mappedCodes[key].push(value)
+        }
+      })
+    }
+    let mappedValues = []
+    forEach(mappedCodes, (code, source) => {
+      mappedValues.push(`${source}:${code.join(",")}`)
+    })
+
+    return mappedValues.join(', ')
+  }
+
+  const getRightMappings = () => {
+    const { mappings } = targetConcept
+    if(mappings?.length) {
+      let mappedCodes = {}
+      forEach(mappings, mapping => {
+        if(!mappedCodes[mapping.cascade_target_source_name])
+          mappedCodes[mapping.cascade_target_source_name] = []
+        mappedCodes[mapping.cascade_target_source_name].push(mapping.cascade_target_concept_code)
+      })
+      let mappedValues = []
+      forEach(mappedCodes, (code, source) => {
+        mappedValues.push(`${source}:${code.join(",")}`)
+      })
+
+      return mappedValues.join(', ')
+    }
+  }
+
+  const leftMappings = getLeftMappings()
+  const rightMappings = getRightMappings()
+
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between'}}>
       <div style={{maxWidth: '45%'}}>
         <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Source Code</Typography>
         <div className='col-xs-12 padding-0'>
           <ListItemText
-            primary={getValue('Name')}
+            primary={getLeftTitle()}
             secondary={
               <span style={{fontSize: '12px'}}>
                 {
@@ -45,6 +116,10 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                 {
                   hasDatatype &&
                     <>Datatype: <i>{getValue('Property: Datatype') || getValue('datatype')}</i></>
+                }
+                {
+                  leftMappings &&
+                    <><br/>Mappings: <i>{leftMappings}</i></>
                 }
               </span>
             }
@@ -69,6 +144,10 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                     <span className='searchable' style={{fontSize: '12px'}}>
                       Class: <i>{targetConcept.concept_class}</i>,
                       Datatype: <i>{targetConcept.datatype}</i>
+                      {
+                        rightMappings &&
+                          <><br/>Mappings: <i>{rightMappings}</i></>
+                      }
                     </span>
                   }
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
@@ -95,6 +174,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                     <span className='searchable' style={{fontSize: '12px'}}>
                       Class: <i>{getFieldFromProposed('class')}</i>,
                       Datatype: <i>{getFieldFromProposed('datatype')}</i>
+
                     </span>
                   }
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
