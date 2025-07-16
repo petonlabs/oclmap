@@ -504,7 +504,7 @@ const MapProject = () => {
         setProject(response.data)
         if(response.data.url)
           history.push(response.data.url)
-        baseSetAlert({severity: 'success', message: 'Succesffully Saved.', duration: 2000})
+        baseSetAlert({severity: 'success', message: 'Successfully Saved.', duration: 2000})
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: logs}).then(() => {})
       }
     })
