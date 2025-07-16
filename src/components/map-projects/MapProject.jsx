@@ -37,6 +37,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
+import ClearIcon from '@mui/icons-material/Clear';
 
 import orderBy from 'lodash/orderBy'
 import filter from 'lodash/filter'
@@ -160,6 +161,7 @@ const MapProject = () => {
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
   const [logs, setLogs] = React.useState({})
+  const [filterModel, setFilterModel] = React.useState({ items: [] });
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -301,8 +303,26 @@ const MapProject = () => {
         headerClassName: headerClass,
         renderHeader: () => {
           if(isValidColumn) {
+            const isFiltered = filterModel.items.some((item) => item.field === column.dataKey && item.value);
             return <div>
-                     <div>{column.original}</div>
+                     <div>
+                       <span style={{ flexGrow: 1 }}>{column.original}</span>
+                       {
+                       isFiltered &&
+                           <Tooltip title="Clear Filter">
+                             <IconButton
+                               size="small"
+                               onClick={(e) => {
+                                 e.stopPropagation(); // prevent sorting on click
+                                 const updatedItems = filterModel.items.filter((item) => item.field !== column.dataKey);
+                                 setFilterModel({ ...filterModel, items: updatedItems });
+                               }}
+                             >
+                               <ClearIcon fontSize="small" />
+                             </IconButton>
+                           </Tooltip>
+                       }
+                     </div>
                      <div><Chip color='warning' variant='outlined' size='small' label={column.label} sx={{fontSize: '12px', margin: '2px 0'}} /></div>
                    </div>
           }
@@ -1327,6 +1347,8 @@ const MapProject = () => {
               </Collapse>
               <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 259px)' : 'calc(100vh - 250px)' }}>
                 <DataGrid
+                  onFilterModelChange={(model) => setFilterModel(model)}
+                  filterModel={filterModel}
                   resizeThrottleMs={100}
                   onCellClick={doubleClickCallback}
                   sx={{
