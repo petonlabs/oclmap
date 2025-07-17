@@ -162,6 +162,7 @@ const MapProject = () => {
   const [columnWidth, setColumnWidth] = React.useState({})
   const [logs, setLogs] = React.useState({})
   const [filterModel, setFilterModel] = React.useState({ items: [] });
+  const [retired, setRetired] = React.useState(false)
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -248,6 +249,7 @@ const MapProject = () => {
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
+      setRetired(Boolean(response.data?.include_retired))
       setProject(response.data)
       setConfigure(false)
     })
@@ -512,6 +514,7 @@ const MapProject = () => {
     if(repoVersion?.version_url)
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
+    formData.append('include_retired', retired)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
@@ -1022,6 +1025,7 @@ const MapProject = () => {
         .post(payload, null, null, {
           includeSearchMeta: true,
           includeMappings: true,
+          includeRetired: retired,
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
@@ -1053,7 +1057,7 @@ const MapProject = () => {
     fetchOtherCandidates(null, currentResults)
   }
 
-  const searchCandidates = (event, page, pageSize) => {
+  const searchCandidates = (event, page, pageSize, includeRetired) => {
     setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
@@ -1064,6 +1068,7 @@ const MapProject = () => {
       limit: pageSize || 5,
       q: searchStr,
       page: page || 1,
+      includeRetired: includeRetired === undefined ? retired : includeRetired
     }).then(response => {
       let items = response.data
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
@@ -1159,6 +1164,8 @@ const MapProject = () => {
                     columnVisibilityModel={columnVisibilityModel}
                     setColumnVisibilityModel={setColumnVisibilityModel}
                     onSave={onSave}
+                    retired={retired}
+                    setRetired={setRetired}
                   />
                 </div>
           }
@@ -1485,6 +1492,8 @@ const MapProject = () => {
                 columnVisibilityModel={columnVisibilityModel}
                 setColumnVisibilityModel={setColumnVisibilityModel}
                 onSave={onSave}
+                retired={retired}
+                setRetired={setRetired}
               />
             </div> :
           (
