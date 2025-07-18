@@ -984,7 +984,7 @@ const MapProject = () => {
         if(notes[rowIndex])
           comment = notes[rowIndex] + '\n' + comment
         setNotes({...notes, [rowIndex]: comment})
-        log({action: newValue, description: comment, extras: {object_url: selected?.url, name: conceptLabel}})
+        log({action: newValue, description: comment, extras: {object_url: selected?.url, name: conceptLabel, mapType: mapTypes[rowIndex] || undefined}})
         logged = true
       } else {
         log({action: newValue})

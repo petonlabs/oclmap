@@ -25,8 +25,12 @@ import orderBy from 'lodash/orderBy'
 const Discuss = ({ logs, onAdd }) => {
   const [comment, setComment] = React.useState('')
   const getTitle = log => {
-    if(['mapped', 'unmapped', 'auto-matched'].includes(log.action)) {
-      return `${startCase(log.action)}: ${log.extras.name} (${log.extras.map_type || log.extras.mapType})`
+    if(['mapped', 'unmapped', 'auto-matched', 'rejected'].includes(log.action)) {
+      let description = `${startCase(log.action)}: ${log.extras.name}`
+      if(log?.extras?.map_type || log?.extras?.mapType) {
+        description += ` (${log.extras.map_type || log.extras.mapType})`
+      }
+      return description
     }
     if(['commented'].includes(log.action)) {
       return <b>{log.description}</b>
