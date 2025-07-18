@@ -73,7 +73,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
     }
     let mappedValues = []
     forEach(mappedCodes, (code, source) => {
-      mappedValues.push(`${source}:${code.join(",")}`)
+      forEach(code, c => mappedValues.push(`${source}:${c}`))
     })
 
     return mappedValues.join(', ')
@@ -90,7 +90,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
       })
       let mappedValues = []
       forEach(mappedCodes, (code, source) => {
-        mappedValues.push(`${source}:${code.join(",")}`)
+        forEach(code, c => mappedValues.push(`${source}:${c}`))
       })
 
       return mappedValues.join(', ')
