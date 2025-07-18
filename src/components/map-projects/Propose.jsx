@@ -81,7 +81,7 @@ const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
   return (
     <div className='col-xs-12 padding-0' style={{margin: '12px 0'}}>
       <div className='col-xs-12 padding-0'>
-        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Target Source' value={state.source} onChange={_onChange}/>
+        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Target Source' value={state.source || ''} onChange={_onChange}/>
         <TextField id='id' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Concept ID' value={state?.id || ''} onChange={_onChange}/>
         <TextField id='name' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Name' value={state?.name || ''} onChange={_onChange}/>
         <TextField id='map_type' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Map Type' value={state?.map_type || 'SAME-AS'} onChange={_onChange}/>
