@@ -27,6 +27,7 @@ const SearchField = ({onChange}) => {
                <SearchIcon color={comp || !focused ? 'primary' : undefined} fontSize='small' />
              </InputAdornment>
            }
+           inputProps={{ inputMode: 'text', autoComplete: 'off', spellCheck: 'false' }}
            endAdornment={
              input ?
              <InputAdornment position="end">
