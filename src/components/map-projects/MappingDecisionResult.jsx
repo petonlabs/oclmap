@@ -101,7 +101,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
   const rightMappings = getRightMappings()
 
   return (
-    <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between'}}>
+    <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between', height: '150px'}}>
       <div style={{maxWidth: '45%'}}>
         <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Source Code</Typography>
         <div className='col-xs-12 padding-0'>
@@ -123,7 +123,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                 }
               </span>
             }
-            sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
+            sx={{height: '100px', overflow: 'auto', marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
           />
         </div>
       </div>
@@ -150,7 +150,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                       }
                     </span>
                   }
-                  sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
+                  sx={{height: '100px', overflow: 'auto', marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
                 />
                 <Score concept={targetConcept} />
               </div>
