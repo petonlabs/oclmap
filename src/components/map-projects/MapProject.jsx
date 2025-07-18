@@ -127,6 +127,8 @@ const MapProject = () => {
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
+  const [facets, setFacets] = React.useState({});
+  const [appliedFacets, setAppliedFacets] = React.useState({});
   const [searchResponse, setSearchResponse] = React.useState({});
   const [algo, setAlgo] = React.useState('llm')
   const [notes, setNotes] = React.useState({})
@@ -397,6 +399,7 @@ const MapProject = () => {
     setMatchedConcepts([])
     setOtherMatchedConcepts([])
     setSearchedConcepts({})
+    setFacets({})
     setSearchResponse({})
     setNotes({})
     setMapTypes({})
@@ -873,7 +876,7 @@ const MapProject = () => {
       .overrideURL(url)
       .get(null, null, {includeMappings: true, mappingBrief: true, mapTypes: 'SAME-AS,SAME AS,SAME_AS', verbose: true})
       .then(response => {
-        const res = {...response.data, search_meta: {...matched.search_meta}, repo: {...matched.repo}}
+        const res = {...response?.data, search_meta: {...matched.search_meta}, repo: {...matched.repo}}
         setConceptCache({...conceptCache, [url]: res})
       })
     setRow(csvRow)
@@ -966,6 +969,8 @@ const MapProject = () => {
     if(newValue === 'candidates' && repo?.id && !find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results?.length) {
       fetchOtherCandidates()
     }
+    if(newValue === 'search' && isEmpty(facets[rowIndex]))
+      getFacets()
   }
 
   const onDecisionChange = (event, newValue) => {
@@ -1034,11 +1039,11 @@ const MapProject = () => {
           semantic: algo === 'llm'
         }).then(response => {
           if(offset === 0)
-            setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...response.data])
+            setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...(response?.data || [])])
           else {
             const newMatches = [...otherMatchedConcepts]
             const index = findIndex(newMatches, match => match.row.__index === __row.__index)
-            newMatches[index].results = [...newMatches[index].results, ...(response.data[0].results || [])]
+            newMatches[index].results = [...newMatches[index].results, ...(response?.data[0]?.results || [])]
             setOtherMatchedConcepts(newMatches)
           }
           setIsLoadingInDecisionView(false)
@@ -1057,7 +1062,7 @@ const MapProject = () => {
     fetchOtherCandidates(null, currentResults)
   }
 
-  const searchCandidates = (event, page, pageSize, includeRetired) => {
+  const searchCandidates = (event, page, pageSize, includeRetired, appliedFilters) => {
     setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
@@ -1068,15 +1073,42 @@ const MapProject = () => {
       limit: pageSize || 5,
       q: searchStr,
       page: page || 1,
-      includeRetired: includeRetired === undefined ? retired : includeRetired
+      includeRetired: includeRetired === undefined ? retired : includeRetired,
+      ...getFacetQueryParam(appliedFilters || appliedFacets[rowIndex])
     }).then(response => {
       let items = response.data
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
       setSearchResponse(response)
       setIsLoadingInDecisionView(false)
+      if(!page || page == 1)
+        getFacets()
       if(items.length > 0)
         setTimeout(() => highlightTexts(items, null, false), 100)
     });
+  }
+
+  const getFacets = () => {
+    APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
+      q: searchStr,
+      includeRetired: retired,
+      facetsOnly: true
+    }).then(response => {
+      setFacets({...facets, [row.__index]: response?.data?.facets?.fields || {}})
+    })
+  }
+
+  const getFacetQueryParam = filters => {
+    const queryParam = {}
+    forEach(
+      filters, (value, field) => {
+        queryParam[field] = keys(pickBy(value, Boolean)).join(',')
+      }
+    )
+
+    if(queryParam?.retired === 'true,false' || queryParam?.retired === 'false,true')
+      queryParam['includeRetired'] = true
+
+    return queryParam
   }
 
 
@@ -1107,6 +1139,11 @@ const MapProject = () => {
   const targetConceptFromCandidate = find(otherMatchedConcepts[rowIndex]?.results, {url: targetConcept?.url})
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
+  else if(!targetConcept?.search_meta?.search_score) {
+    let meta = find(searchedConcepts[rowIndex], {url: targetConcept?.url})?.search_meta
+    if(meta?.search_score)
+      targetConcept.search_meta = meta
+  }
 
   const labelDisplayedRows = ({ from, to, count }) => {
     return `${from.toLocaleString()}–${to.toLocaleString()} of ${count?.toLocaleString()}`;
@@ -1123,14 +1160,14 @@ const MapProject = () => {
         snapOffset={0}
         direction="horizontal"
         cursor="col-resize"
-      style={{ display: 'flex', height: 'calc(100vh - 100px)' }}
-      gutter={() => {
+        style={{ display: 'flex', height: 'calc(100vh - 100px)' }}
+        gutter={() => {
         const gutter = document.createElement('div');
         gutter.className = 'gutter';
         return gutter;
       }}
       >
-        <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
+        <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important', overflow: 'auto'}}>
           <Paper component="div" className='col-xs-12' sx={{backgroundColor: 'surface.main', boxShadow: 'none', padding: '4px 16px 8px 16px', borderRadius: '10px 10px 0 0', minWidth: '665px', ...((isConfigureInSplitView || !configure) ? {} : {height: 'calc(100vh - 125px) !important', overflow: 'auto'})}}>
             {
               configure && !file?.name &&
@@ -1611,6 +1648,12 @@ const MapProject = () => {
                       searchStr={searchStr}
                       setSearchStr={setSearchStr}
                       onSearch={searchCandidates}
+                      facets={facets[rowIndex]}
+                      appliedFacets={appliedFacets[rowIndex]}
+                      setAppliedFacets={(filters) => {
+                        setAppliedFacets({...appliedFacets, [rowIndex]: filters})
+                        searchCandidates(null, null, null, null, filters)
+                      }}
                     />
                 }
                 {

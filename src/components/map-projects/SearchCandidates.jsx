@@ -1,15 +1,22 @@
 import React from 'react'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button';
-
+import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import max from 'lodash/max'
+import isEmpty from 'lodash/isEmpty'
+import values from 'lodash/values'
+import flatten from 'lodash/flatten'
 
 import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
+import SearchFilters from '../search/SearchFilters'
 import Mappings from './Mappings'
 import Concept from './Concept'
 
-const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch}) => {
+const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets}) => {
+  const [openFilters, setOpenFilters] = React.useState(openFilters)
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
 
@@ -23,6 +30,11 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
   return (
     <div className='col-xs-12 padding-0'>
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', margin: '16px 0'}}>
+        <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} style={{marginRight: '4px'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+          <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
+    <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
+    </Badge>
+        </IconButton>
         <TextField
           autoFocus
           label='Search'
@@ -44,7 +56,18 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           Search
         </Button>
       </div>
-      <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center'}}>
+      <div className='col-xs-12 padding-0' style={{display: 'flex'}}>
+        {
+          !isEmpty(facets) &&
+            <div className='col-xs-5 padding-0' style={openFilters ? {borderRight: '1px solid lightgray', height: 'calc(100vh - 585px)', overflow: 'auto'} : {width: 0, display: 'none'}}>
+          <SearchFilters
+            resource='concepts'
+            filters={facets}
+            appliedFilters={appliedFacets || {}}
+            onChange={setAppliedFacets}
+            />
+          </div>
+        }
         <SearchResults
           id={rowIndex}
           resultSize='small'
@@ -68,8 +91,8 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           resource='concepts'
           noSorting
           noToolbar
-          rowsPerPageOptions={-1}
-          resultContainerStyle={{height: 'calc(100vh - 582px)'}}
+          rowsPerPageOptions={[]}
+          resultContainerStyle={{height: 'calc(100vh - 630px)'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {

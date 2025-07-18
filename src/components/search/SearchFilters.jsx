@@ -123,7 +123,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
 
   return (
     <div className='col-xs-12 padding-0'>
-      <div className='col-xs-12' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, padding: '14px 0 0 0'}}>
+      <div className='col-xs-12' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, padding: 0}}>
         <span>
           <b>{t('search.filters')}</b>
         </span>
@@ -147,7 +147,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
                   padding: '2px 0 4px 0',
                 }}
               >
-            <ListSubheader sx={{p: 0, fontWeight: 'bold', background: bgColor, lineHeight: '30px'}}>{startCase(field)}</ListSubheader>
+            <ListSubheader sx={{p: 0, fontWeight: 'bold', background: bgColor, lineHeight: '30px', fontSize: '11px'}}>{startCase(field)}</ListSubheader>
                 {
                   getFieldFilters(field, fieldFilters).map(value => {
                     const labelId = `checkbox-list-label-${value[0]}`;
@@ -155,7 +155,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
 
                     return (
                       <ListItemButton key={key} onClick={handleToggle(field, value)} sx={{p: '0 12px 0 4px'}} disabled={value[3] === true}>
-                        <ListItemIcon sx={{minWidth: '25px'}}>
+                        <ListItemIcon sx={{minWidth: '14px', '.MuiSvgIcon-root': {fontSize: '16px'}}}>
                           <Checkbox
                             size="small"
                             edge="start"
@@ -163,10 +163,10 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
                             tabIndex={-1}
                             disableRipple
                             inputProps={{ 'aria-labelledby': labelId }}
-                            style={{padding: '4px 8px'}}
+                            style={{padding: '2px 0 2px 6px'}}
                           />
                         </ListItemIcon>
-                        <ListItemText id={labelId} primary={formattedName(field, value[0]) || 'None'} primaryTypographyProps={{style: {fontSize: '0.875rem'}}} style={{margin: 0}} />
+                        <ListItemText id={labelId} primary={formattedName(field, value[0]) || 'None'} primaryTypographyProps={{style: {fontSize: '0.8rem'}}} style={{margin: 0}} />
                         <span style={{fontSize: '0.7rem'}}>{value[1].toLocaleString()}</span>
                       </ListItemButton>
                     );
@@ -174,7 +174,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
               </List>
               {
                 shouldShowExpand &&
-                  <Button size='small' onClick={() => toggleExpanded(field)} style={{textTransform: 'none'}} color='secondary' startIcon={isExpanded ? <UpIcon fontSize='inherit'/> : <DownIcon fontSize='inherit'/>}>
+                  <Button size='small' onClick={() => toggleExpanded(field)} style={{textTransform: 'none', fontSize: '10px'}} color='secondary' startIcon={isExpanded ? <UpIcon fontSize='inherit'/> : <DownIcon fontSize='inherit'/>}>
                     {isExpanded ? t('common.hide') : `${t('common.show')} ${fieldFilters.length - 4} ${t('common.more').toLowerCase()}`}
                   </Button>
               }
