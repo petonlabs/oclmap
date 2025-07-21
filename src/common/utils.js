@@ -984,9 +984,11 @@ const getHighlightedTexts = items => {
 }
 
 
-export const highlightTexts = (items, texts, unmark=false) => {
+export const highlightTexts = (items, texts, unmark=false, additionalTexts) => {
   const markInstance = new Mark(document.querySelectorAll('.searchable'))
-  const _texts = texts || getHighlightedTexts(items)
+  let _texts = texts || getHighlightedTexts(items)
+  if(additionalTexts)
+    _texts = [..._texts, ...additionalTexts]
   const options = {
     element: "span",
     className: "highlight-search-results",

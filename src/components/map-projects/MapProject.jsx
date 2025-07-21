@@ -66,6 +66,7 @@ import isEmpty from 'lodash/isEmpty'
 import findIndex from 'lodash/findIndex'
 import isString from 'lodash/isString'
 import isNaN from 'lodash/isNaN'
+import isArray from 'lodash/isArray'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -1048,8 +1049,10 @@ const MapProject = () => {
           }
           setIsLoadingInDecisionView(false)
           let items = get(response.data, '0.results') || []
-          if(items.length > 0)
-            setTimeout(() => highlightTexts(items, null, false), 100)
+          if(items.length > 0){
+            const synonyms = get(payload, 'rows.0.synonyms')
+            setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
+          }
         });
     } else {
       setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
