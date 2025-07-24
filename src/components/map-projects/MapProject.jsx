@@ -1653,6 +1653,7 @@ const MapProject = () => {
                       onSearch={searchCandidates}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
+                      isLoading={isLoadingInDecisionView}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         searchCandidates(null, null, null, null, filters)

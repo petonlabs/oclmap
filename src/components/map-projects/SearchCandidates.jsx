@@ -3,6 +3,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button';
 import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import max from 'lodash/max'
 import isEmpty from 'lodash/isEmpty'
@@ -15,7 +16,7 @@ import SearchFilters from '../search/SearchFilters'
 import Mappings from './Mappings'
 import Concept from './Concept'
 
-const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets}) => {
+const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets, isLoading}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
@@ -84,13 +85,19 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
               borderRadius: '10px 10px 0 0',
             }
           }}
-          renderer={props => <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />}
+          renderer={
+            props =>
+            isLoading ?
+              <Skeleton height={58} /> :
+            <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />
+          }
           display='card'
           nested
           results={results}
           resource='concepts'
           noSorting
           noToolbar
+          isLoading={isLoading}
           rowsPerPageOptions={[]}
           resultContainerStyle={{height: 'calc(100vh - 630px)'}}
           onShowItemSelect={item => {
