@@ -15,6 +15,7 @@ import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
+import IncludeRetired from './IncludeRetired'
 
 const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, canFetchMore}) => {
   const results = {total: onFetchMore ? candidates.length : 1, results: candidates || []}
@@ -80,7 +81,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ) : null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired}) => {
   const concepts = find(candidates, c => c.row.__index === rowIndex )?.results || []
   const canFetchMore = concepts?.length > 0
   const recommended = filter(concepts, concept => concept?.search_meta?.match_type === 'very_high')
@@ -117,6 +118,10 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
         </Alert>
       </Collapse>
       <div className='col-xs-12 padding-0'>
+        <div className='col-xs-12 padding-0'>
+    <IncludeRetired checked={retired} onChange={setRetired} sx={{float: 'right'}} />
+    </div>
+
         <List
           sx={{
             marginTop: '4px',

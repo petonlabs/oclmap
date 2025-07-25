@@ -2,7 +2,7 @@ import React from 'react'
 import Chip from '@mui/material/Chip'
 import { MATCH_TYPES } from './constants'
 
-const Score = ({concept, setShowHighlights}) => {
+const Score = ({concept, setShowHighlights, sx}) => {
   return (
     <Chip
       size='small'
@@ -16,6 +16,7 @@ const Score = ({concept, setShowHighlights}) => {
       } : undefined}
       disabled={!concept?.search_meta?.search_score}
       variant='outlined'
+      sx={sx}
     />
   )
 }

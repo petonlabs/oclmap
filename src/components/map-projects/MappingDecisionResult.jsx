@@ -10,8 +10,9 @@ import filter from 'lodash/filter'
 import keys from 'lodash/keys'
 import forEach from 'lodash/forEach'
 import compact from 'lodash/compact'
-import MapButton from './MapButton'
 import { URIToParentParams } from '../../common/utils'
+import Retired from '../common/Retired'
+import MapButton from './MapButton'
 import Score from './Score'
 
 const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns}) => {
@@ -139,20 +140,36 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <div className='col-xs-12 padding-0'>
                 <ListItemText
                   className='searchable'
-                  primary={`${parentParams.repo}:${targetConcept.id} ${targetConcept.display_name || ''}`}
-                  secondary={
-                    <span className='searchable' style={{fontSize: '12px'}}>
-                      Class: <i>{targetConcept.concept_class}</i>,
-                      Datatype: <i>{targetConcept.datatype}</i>
+                  primary={
+                    <span>
+                    <span>
+                      {`${parentParams.repo}:${targetConcept.id} ${targetConcept.display_name || ''}`}
+                    </span>
                       {
-                        rightMappings &&
-                          <><br/>Mappings: <i>{rightMappings}</i></>
+                        targetConcept.retired &&
+                          <Retired size='small' style={{margin: '0 12px'}} />
                       }
                     </span>
                   }
+                  secondary={
+                    <>
+                      <div>
+                      <span className='searchable' style={{fontSize: '12px'}}>
+                        Class: <i>{targetConcept.concept_class}</i>,
+                        Datatype: <i>{targetConcept.datatype}</i>
+                        {
+                          rightMappings &&
+                            <><br/>Mappings: <i>{rightMappings}</i></>
+                        }
+                    </span>
+                      </div>
+                      <div>
+                    <Score concept={targetConcept} sx={{marginTop: '4px'}} />
+                    </div>
+                    </>
+                  }
                   sx={{height: '100px', overflow: 'auto', marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
                 />
-                <Score concept={targetConcept} />
               </div>
             </div>
           </>

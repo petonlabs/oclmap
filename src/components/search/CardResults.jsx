@@ -14,7 +14,7 @@ const CardResults = ({bgColor, handleClick, handleRowClick, results, resource, i
             selected: selected,
             isShown: isItemShown,
             bgColor: bgColor,
-            key: row.version_url || row.url,
+            key: index,
             onSelect: handleClick,
             onCardClick: handleRowClick,
             isSplitView: isSplitView,

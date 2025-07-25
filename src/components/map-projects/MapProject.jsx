@@ -67,6 +67,7 @@ import findIndex from 'lodash/findIndex'
 import isString from 'lodash/isString'
 import isNaN from 'lodash/isNaN'
 import isArray from 'lodash/isArray'
+import isBoolean from 'lodash/isBoolean'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -886,8 +887,10 @@ const MapProject = () => {
         setConceptCache({...conceptCache, [url]: res})
       })
     setRow(csvRow)
-    if(repo?.id)
+    if(repo?.id) {
       fetchOtherCandidates(csvRow)
+      getFacets(csvRow)
+    }
 
     const el = document.querySelector(`div[data-id="${csvRow.__index}"]`)
     if(el) {
@@ -1025,7 +1028,16 @@ const MapProject = () => {
       log({action: newValue || 'decision_changed', description: 'Desicion Changed to None', extras: newValue ? {} : {decision: 'None'}})
   }
 
-  const fetchOtherCandidates = (_row, offset=0) => {
+  const toggleRetired = () => {
+    let newRetired = !retired
+    setRetired(newRetired)
+    if(decisionTab === 'search')
+      searchCandidates(null, null, null, newRetired)
+    else if(decisionTab === 'candidates')
+      fetchOtherCandidates(null, 0, newRetired)
+  }
+
+  const fetchOtherCandidates = (_row, offset=0, _retired) => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
@@ -1036,7 +1048,7 @@ const MapProject = () => {
         .post(payload, null, null, {
           includeSearchMeta: true,
           includeMappings: true,
-          includeRetired: retired,
+          includeRetired: isBoolean(_retired) ? _retired : retired,
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
@@ -1071,6 +1083,8 @@ const MapProject = () => {
   }
 
   const searchCandidates = (event, page, pageSize, includeRetired, appliedFilters) => {
+    if(!searchStr)
+      return
     setIsLoadingInDecisionView(true)
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       includeSearchMeta: true,
@@ -1095,13 +1109,13 @@ const MapProject = () => {
     });
   }
 
-  const getFacets = () => {
+  const getFacets = _row => {
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       q: searchStr,
       includeRetired: retired,
       facetsOnly: true
     }).then(response => {
-      setFacets({...facets, [row.__index]: response?.data?.facets?.fields || {}})
+      setFacets({...facets, [_row?.__index === undefined ? row.__index : _row.__index]: response?.data?.facets?.fields || {}})
     })
   }
 
@@ -1638,6 +1652,8 @@ const MapProject = () => {
                       onMap={onMap}
                       isLoading={isLoadingInDecisionView}
                       onFetchMore={onFetchMoreCandidates}
+                      retired={retired}
+                      setRetired={toggleRetired}
                     />
                 }
                 {
@@ -1663,6 +1679,8 @@ const MapProject = () => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         searchCandidates(null, null, null, null, filters)
                       }}
+                      retired={retired}
+                      setRetired={toggleRetired}
                     />
                 }
                 {

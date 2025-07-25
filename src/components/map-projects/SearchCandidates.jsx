@@ -15,8 +15,9 @@ import SearchResults from '../search/SearchResults';
 import SearchFilters from '../search/SearchFilters'
 import Mappings from './Mappings'
 import Concept from './Concept'
+import IncludeRetired from './IncludeRetired'
 
-const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets, isLoading}) => {
+const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
@@ -30,7 +31,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
 
   return (
     <div className='col-xs-12 padding-0'>
-      <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', margin: '16px 0'}}>
+      <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center'}}>
         <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} style={{marginRight: '4px'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
           <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
     <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
@@ -39,13 +40,18 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
         <TextField
           autoFocus
           label='Search'
-          sx={{width: 'calc(100% - 90px)'}}
+          sx={{width: 'calc(100% - 190px)'}}
           required
           id="search"
           value={searchStr}
           onChange={event => setSearchStr(event.target.value || '')}
           size='small'
           onKeyDown={onKeyPress}
+        />
+        <IncludeRetired
+          checked={retired}
+          onChange={setRetired}
+          sx={{margin: '0 4px', flexDirection: 'column-reverse', textAlign: 'center', '.MuiFormControlLabel-label': {fontSize: '12px'}}}
         />
         <Button
           color='primary'
@@ -88,7 +94,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           renderer={
             props =>
             isLoading ?
-              <Skeleton height={58} /> :
+              <Skeleton height={58} key={props?.key} /> :
             <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />
           }
           display='card'
