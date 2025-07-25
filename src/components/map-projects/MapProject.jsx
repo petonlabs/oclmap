@@ -1213,8 +1213,6 @@ const MapProject = () => {
                     columnVisibilityModel={columnVisibilityModel}
                     setColumnVisibilityModel={setColumnVisibilityModel}
                     onSave={onSave}
-                    retired={retired}
-                    setRetired={setRetired}
                   />
                 </div>
           }
@@ -1541,8 +1539,6 @@ const MapProject = () => {
                 columnVisibilityModel={columnVisibilityModel}
                 setColumnVisibilityModel={setColumnVisibilityModel}
                 onSave={onSave}
-                retired={retired}
-                setRetired={setRetired}
               />
             </div> :
           (
