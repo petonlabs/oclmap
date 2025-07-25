@@ -24,7 +24,7 @@ const IkonButton = ({title, icon, onClick, color, disabled}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving}) => {
   const lastSavedText = project?.updated_at ? moment(project.updated_at).fromNow() : false
   return (
     <span style={{textAlign: 'right'}}>
@@ -33,7 +33,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file}) => {
           color='primary'
           onClick={onSave}
           title='Save this project'
-          disabled={!owner || !file?.name}
+          disabled={!owner || !file?.name || isSaving}
           icon={<SaveIcon />}
         />
         <IkonButton
@@ -46,6 +46,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file}) => {
           project?.id &&
             <IkonButton
               color='error'
+              disabled={isSaving}
               onClick={onDelete}
               title='Delete this project'
               icon={<DeleteIcon />}
@@ -53,9 +54,12 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file}) => {
         }
       </div>
       {
-        lastSavedText &&
+        (lastSavedText || isSaving) &&
           <div style={{fontSize: '11px', color: 'rgba(0, 0, 0, 0.6)', textAlign: 'right', marginTop: '-4px'}}>
-            last saved {lastSavedText}
+            {
+              isSaving ? 'Saving...' :
+                `last saved ${lastSavedText}`
+            }
           </div>
       }
     </span>

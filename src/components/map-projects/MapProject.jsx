@@ -178,6 +178,7 @@ const MapProject = () => {
   const [random, setRandom] = React.useState(0)
   const [deleteProject, setDeleteProject] = React.useState(false)
   const [loadingProject, setLoadingProject] = React.useState(false)
+  const [isSaving, setIsSaving] = React.useState(false)
 
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
@@ -502,6 +503,7 @@ const MapProject = () => {
   }
 
   const onSave = () => {
+    setIsSaving(true)
     const f = getFileObjectFromRows()
     const selected = map(mapSelected, (data, i) => {
       return {
@@ -532,12 +534,14 @@ const MapProject = () => {
       service = service.post(formData, null, {"Content-Type": "multipart/form-data"})
 
     service.then(response => {
+      setIsSaving(false)
       if(response?.data?.id) {
         setConfigure(false)
         setProject(response.data)
         if(response.data.url)
           history.push(response.data.url)
         baseSetAlert({severity: 'success', message: 'Successfully Saved.', duration: 2000})
+
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: logs}).then(() => {})
       }
     })
@@ -1283,6 +1287,7 @@ const MapProject = () => {
                   onDelete={() => setDeleteProject(true)}
                   owner={owner}
                   file={file}
+                  isSaving={isSaving}
                 />
             }
           </div>
