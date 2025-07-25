@@ -81,6 +81,7 @@ import ConceptHome from '../concepts/ConceptHome'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import DraggablePaperComponent from '../common/DraggablePaperComponent'
+import LoaderDialog from '../common/LoaderDialog'
 import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
@@ -155,7 +156,6 @@ const MapProject = () => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const [searchText, setSearchText] = React.useState('')  // csv row search
 
-
   const [matchDialog, setMatchDialog] = React.useState(false)
   const [showHighlights, setShowHighlights] = React.useState(false)
   const [showItem, setShowItem] = React.useState(false)
@@ -176,6 +176,7 @@ const MapProject = () => {
   const [allMapTypes, setAllMapTypes] = React.useState([])
   const [random, setRandom] = React.useState(0)
   const [deleteProject, setDeleteProject] = React.useState(false)
+  const [loadingProject, setLoadingProject] = React.useState(false)
 
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
@@ -202,6 +203,7 @@ const MapProject = () => {
   }, [])
 
   const fetchAndSetProject = () => {
+    setLoadingProject(true)
     let url = ['', params.ownerType, params.owner, 'map-projects', params.projectId, ''].join('/')
     APIService.new().overrideURL(url).get().then(response => {
       if(response.data.url) {
@@ -247,7 +249,10 @@ const MapProject = () => {
             setFile(_file)
             setName(response.data?.name || name || file?.name || '')
           }, 500)
+          setLoadingProject(false)
         })
+      } else {
+        setLoadingProject(false)
       }
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
@@ -1155,6 +1160,10 @@ const MapProject = () => {
 
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
+      {
+        loadingProject &&
+          <LoaderDialog open message='Loading project...'/>
+      }
       <Split
         sizes={isSplitView ? [50, 50] : [100, 0]} // initial % widths
         minSize={isSplitView ? 200 : 1000}
