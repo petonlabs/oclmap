@@ -17,8 +17,8 @@ import Score from './Score'
 
 const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
-  const hasClass = has(row, 'Class') || has(row, 'Concept Class')
-  const hasDatatype = has(row, 'Datatype') || has(row, 'datatype')
+  const hasClass = has(row, 'Class') || has(row, 'Concept Class') || has(row, 'Property: Class')
+  const hasDatatype = has(row, 'Datatype') || has(row, 'datatype') || has(row, 'Property: Datatype')
   const getFieldFromProposed = field => {
     return find(proposed?.attributes, attr => attr?.name?.toLowerCase()?.includes(field))?.value || ''
   }
@@ -112,8 +112,9 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <span style={{fontSize: '12px'}}>
                 {
                 hasClass &&
-                    <>Class: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i>,</>
+                    <>Class: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i></>
                 }
+                {hasClass && hasDatatype && ','}
                 {
                   hasDatatype &&
                     <>Datatype: <i>{getValue('Property: Datatype') || getValue('datatype')}</i></>
