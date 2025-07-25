@@ -1231,6 +1231,7 @@ const MapProject = () => {
                     columnVisibilityModel={columnVisibilityModel}
                     setColumnVisibilityModel={setColumnVisibilityModel}
                     onSave={onSave}
+                    isSaving={isSaving}
                   />
                 </div>
           }
@@ -1255,8 +1256,10 @@ const MapProject = () => {
                     sx={{textTransform: 'none', margin: '5px'}}
                     endIcon={<DoubleArrowIcon />}
                     startIcon={<AutoMatchIcon />}
-                    disabled={loadingMatches || !file}
+                    disabled={!file}
                     onClick={onGetCandidates}
+                    loading={loadingMatches}
+                    loadingPosition="start"
                   >
                     {getCandidatesButtonLabel()}
                   </Button>
@@ -1558,6 +1561,7 @@ const MapProject = () => {
                 columnVisibilityModel={columnVisibilityModel}
                 setColumnVisibilityModel={setColumnVisibilityModel}
                 onSave={onSave}
+                isSaving={isSaving}
               />
             </div> :
           (
