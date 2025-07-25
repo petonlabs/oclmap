@@ -5,6 +5,9 @@ import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import InputAdornment from '@mui/material/InputAdornment';
+import ClearIcon from '@mui/icons-material/Clear';
+
 import max from 'lodash/max'
 import isEmpty from 'lodash/isEmpty'
 import values from 'lodash/values'
@@ -17,7 +20,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
 
-const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, onSearch, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
+const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
@@ -25,7 +28,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
   const onKeyPress = event => {
     if(event.key === 'Enter') {
       if(searchStr)
-        candidates(event)
+        onSearch(event)
     }
   }
 
@@ -47,6 +50,19 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           onChange={event => setSearchStr(event.target.value || '')}
           size='small'
           onKeyDown={onKeyPress}
+          slotProps={{
+            input: {
+              endAdornment: (
+                searchStr ?
+                  <InputAdornment position="end">
+                    <IconButton color='secondary' onClick={() => setSearchStr('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                : undefined
+              ),
+            },
+          }}
         />
         <IncludeRetired
           checked={retired}
@@ -58,7 +74,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           variant="contained"
           sx={{textTransform: 'none', marginLeft: '10px'}}
           disabled={!repo?.id || !repoVersion?.id || !searchStr}
-          onClick={candidates}
+          onClick={onSearch}
         >
           Search
         </Button>
@@ -129,4 +145,4 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
   )
 }
 
-export default SearchCandidates
+export default Search

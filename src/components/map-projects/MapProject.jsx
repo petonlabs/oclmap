@@ -94,7 +94,7 @@ import DecisionSelector from './DecisionSelector'
 import ReviewNote from './ReviewNote'
 import Propose from './Propose'
 import Candidates from './Candidates'
-import SearchCandidates from './SearchCandidates'
+import Search from './Search'
 import Discuss from './Discuss'
 
 import './MapProject.scss'
@@ -1036,7 +1036,7 @@ const MapProject = () => {
     let newRetired = !retired
     setRetired(newRetired)
     if(decisionTab === 'search')
-      searchCandidates(null, null, null, newRetired)
+      search(null, null, null, newRetired)
     else if(decisionTab === 'candidates')
       fetchOtherCandidates(null, 0, newRetired)
   }
@@ -1086,7 +1086,7 @@ const MapProject = () => {
     fetchOtherCandidates(null, currentResults)
   }
 
-  const searchCandidates = (event, page, pageSize, includeRetired, appliedFilters) => {
+  const search = (event, page, pageSize, includeRetired, appliedFilters) => {
     if(!searchStr)
       return
     setIsLoadingInDecisionView(true)
@@ -1663,9 +1663,9 @@ const MapProject = () => {
                 }
                 {
                   decisionTab === 'search' && isSplitView &&
-                    <SearchCandidates
+                    <Search
                       rowIndex={rowIndex}
-                      candidates={searchCandidates}
+                      onSearch={search}
                       repo={repo}
                       repoVersion={repoVersion}
                       concepts={searchedConcepts[rowIndex]}
@@ -1676,13 +1676,12 @@ const MapProject = () => {
                       onMap={onMap}
                       searchStr={searchStr}
                       setSearchStr={setSearchStr}
-                      onSearch={searchCandidates}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
                       isLoading={isLoadingInDecisionView}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
-                        searchCandidates(null, null, null, null, filters)
+                        search(null, null, null, null, filters)
                       }}
                       retired={retired}
                       setRetired={toggleRetired}
