@@ -5,6 +5,7 @@ import IconButton from '@mui/material/Button';
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import Button from '@mui/material/Button'
+import Skeleton from '@mui/material/Skeleton'
 
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -78,7 +79,14 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         </div>
       }
     </ul>
-  ) : null
+  ) : <ul>
+        <Skeleton height={60} />
+        <Skeleton height={60} />
+        <Skeleton height={60} />
+        <Skeleton height={60} />
+        <Skeleton height={60} />
+        <Skeleton height={60} />
+  </ul>
 }
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired}) => {
