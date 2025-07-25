@@ -8,6 +8,14 @@ import MapButton from './MapButton'
 const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown(id)
+
+  let synonymPrefix = ''
+  const highlights = concept?.search_meta?.search_highlight
+  const synonymHighlight = highlights?.synonyms
+  const nameHighlight = highlights?.name
+  if(!nameHighlight?.length && synonymHighlight?.length)
+    synonymPrefix = synonymHighlight[0].replace('<em>', "<b className='searchable'>").replace('</em>', '</b>')
+
   return (
     <ListItemButton selected={isSelectedToShow} onClick={event => onCardClick(event, id)} sx={{padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)'}}>
       <ListItemText
@@ -15,7 +23,17 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
         primary={
           <span>
             <span>
-              {`${concept.source}:${concept.id} ${concept.display_name}`}
+              {`${concept.source}:${concept.id}`}
+              <span style={{marginLeft: '4px'}}>
+                {
+                  synonymPrefix &&
+                    <span>
+                      <span dangerouslySetInnerHTML={{__html: synonymPrefix}} />
+                      <span style={{margin: '0 5px'}}>&rarr;</span>
+                    </span>
+                }
+                {concept.display_name}
+              </span>
             </span>
           {
             concept.retired &&
