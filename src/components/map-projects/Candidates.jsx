@@ -79,17 +79,10 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         </div>
       }
     </ul>
-  ) : <ul>
-        <Skeleton height={60} />
-        <Skeleton height={60} />
-        <Skeleton height={60} />
-        <Skeleton height={60} />
-        <Skeleton height={60} />
-        <Skeleton height={60} />
-  </ul>
+  ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading}) => {
   const concepts = find(candidates, c => c.row.__index === rowIndex )?.results || []
   const canFetchMore = concepts?.length > 0
   const recommended = filter(concepts, concept => concept?.search_meta?.match_type === 'very_high')
@@ -142,10 +135,18 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
           subheader={<li />}
         >
           <li>
-            <CandidateList {...props} candidates={recommended} header='Recommended Candidates' canFetchMore={canFetchMore && !available?.length} onFetchMore={onFetchMore} />
+            {
+              isLoading ?
+                <Skeleton height={60} /> :
+                <CandidateList {...props} candidates={recommended} header='Recommended Candidates' canFetchMore={canFetchMore && !available?.length} onFetchMore={onFetchMore} />
+            }
           </li>
           <li>
-            <CandidateList {...props} candidates={available} header='Available Candidates' canFetchMore={canFetchMore} onFetchMore={onFetchMore} />
+            {
+              isLoading ?
+                <Skeleton height={60} /> :
+                <CandidateList {...props} candidates={available} header='Available Candidates' canFetchMore={canFetchMore} onFetchMore={onFetchMore} />
+            }
           </li>
         </List>
       </div>
