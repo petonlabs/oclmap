@@ -40,7 +40,6 @@ const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
       const newAttributes = [...state.attributes]
       newAttributes[attributeIndex][attributeType] = event.target.value
       newState = {...state, attributes: newAttributes}
-      console.log(newState)
       setState(newState)
     } else {
       newState = {...state, [event.target.id]: event.target.value}
