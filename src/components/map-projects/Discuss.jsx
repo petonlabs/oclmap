@@ -74,8 +74,7 @@ const Discuss = ({ logs, onAdd }) => {
         sx={{
           maxHeight: 'calc(100vh - 560px)',
           overflow: 'auto',
-          p: 2,
-          paddingTop: '4px',
+          padding: '4px 16px',
           marginBottom: 0,
           [`& .${timelineItemClasses.root}:before`]: {
             flex: 0,
@@ -110,7 +109,7 @@ const Discuss = ({ logs, onAdd }) => {
           })
         }
       </Timeline>
-      <div className='col-xs-12' style={{padding: '16px'}}>
+      <div className='col-xs-12' style={{padding: '4px 16px'}}>
         <TextField
           autoFocus
           fullWidth
