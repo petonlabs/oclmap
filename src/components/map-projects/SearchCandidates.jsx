@@ -105,7 +105,7 @@ const SearchCandidates = ({searchStr, setSearchStr, candidates, repo, repoVersio
           noToolbar
           isLoading={isLoading}
           rowsPerPageOptions={[]}
-          resultContainerStyle={{height: 'calc(100vh - 630px)'}}
+          resultContainerStyle={{height: 'calc(100vh - 630px)', overflow: 'auto'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {
