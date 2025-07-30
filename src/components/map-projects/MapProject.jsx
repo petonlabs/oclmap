@@ -143,6 +143,8 @@ const MapProject = () => {
   const [searchStr, setSearchStr] = React.useState('') // concept search
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_score')
+  const [matchAPI, setMatchAPI] = React.useState('')
+  const [matchAPIToken, setMatchAPIToken] = React.useState('')
 
   const abortRef = React.useRef(false);
 
@@ -260,6 +262,8 @@ const MapProject = () => {
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
       setRetired(Boolean(response.data?.include_retired))
+      setMatchAPI(response.data?.match_api_url)
+      setMatchAPIToken(response.data?.match_api_token)
       setProject(response.data)
       setConfigure(false)
     })
@@ -527,6 +531,10 @@ const MapProject = () => {
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
     formData.append('include_retired', retired)
+    if(matchAPI) {
+      formData.append('match_api_url', matchAPI)
+      formData.append('match_api_token', matchAPIToken)
+    }
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
@@ -583,6 +591,17 @@ const MapProject = () => {
     }
   }
 
+  const getMatchAPIService = () => {
+    let service;
+    if(matchAPI) {
+      service = APIService.new()
+      service.URL = matchAPI
+    } else {
+      service = APIService.concepts().appendToUrl('$match/')
+    }
+    return service
+  }
+
 
   const getRowsResults = async (rows) => {
     abortRef.current = false;
@@ -602,13 +621,17 @@ const MapProject = () => {
       const payload = getPayloadForMatching(rowBatch, _repo)
 
       try {
-        const response = await APIService.concepts()
-              .appendToUrl('$match/')
-              .post(payload, null, null, {
-                includeSearchMeta: true,
-                semantic: algo === 'llm',
-                bestMatch: true
-              });
+        const service = getMatchAPIService()
+        const response = await service.post(
+          payload,
+          (matchAPI && matchAPIToken) ? matchAPIToken : null,
+          null,
+          {
+            includeSearchMeta: true,
+            semantic: algo === 'llm',
+            bestMatch: true
+          }
+        );
 
         return response.data || [];
       } catch {
@@ -1047,9 +1070,12 @@ const MapProject = () => {
       let __row = isEmpty(_row) ? row : _row
       setIsLoadingInDecisionView(true)
       const payload = getPayloadForMatching([__row], repo)
-      APIService.concepts()
-        .appendToUrl('$match/')
-        .post(payload, null, null, {
+      const service = getMatchAPIService()
+      service.post(
+        payload,
+        (matchAPI && matchAPIToken) ? matchAPIToken : null,
+        null,
+        {
           includeSearchMeta: true,
           includeMappings: true,
           includeRetired: isBoolean(_retired) ? _retired : retired,
@@ -1232,6 +1258,10 @@ const MapProject = () => {
                     setColumnVisibilityModel={setColumnVisibilityModel}
                     onSave={onSave}
                     isSaving={isSaving}
+                    matchAPI={matchAPI}
+                    setMatchAPI={setMatchAPI}
+                    matchAPIToken={matchAPIToken}
+                    setMatchAPIToken={setMatchAPIToken}
                   />
                 </div>
           }
@@ -1562,6 +1592,11 @@ const MapProject = () => {
                 setColumnVisibilityModel={setColumnVisibilityModel}
                 onSave={onSave}
                 isSaving={isSaving}
+                matchAPI={matchAPI}
+                setMatchAPI={setMatchAPI}
+                matchAPIToken={matchAPIToken}
+                setMatchAPIToken={setMatchAPIToken}
+
               />
             </div> :
           (

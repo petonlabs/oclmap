@@ -35,7 +35,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -125,6 +125,28 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       <RepoSearchAutocomplete label='Repository' size='small' onChange={(id, item) => onRepoChange(item)} value={repo}  sx={{marginTop: '12px'}}/>
       <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '12px'}} />
 
+      <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
+        Match API
+      </Typography>
+      <FormHelperText sx={{marginTop: 0}}>
+        Configure External Match API URL and Token
+      </FormHelperText>
+      <TextField
+        fullWidth
+        sx={{marginTop: '12px'}}
+        label='Match API URL'
+        placeholder='e.g. https://api.openconceptlab.org/concepts/$match/?includeSearchMeta=true'
+        value={matchAPI}
+        onChange={event => setMatchAPI(event.target.value || '')}
+      />
+      <TextField
+        fullWidth
+        sx={{marginTop: '12px'}}
+        label='Match API Token'
+        placeholder='e.g. XXXXXXXXXXX'
+        value={matchAPIToken}
+        onChange={event => setMatchAPIToken(event.target.value || '')}
+      />
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
         Matching Algorithm
       </Typography>
