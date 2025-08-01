@@ -20,7 +20,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
 
-const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, rowIndex, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
+const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
@@ -92,7 +92,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, rowIndex,
           </div>
         }
         <SearchResults
-          id={rowIndex}
+          resultsContainerId='search-results'
           resultSize='small'
           sx={{
             borderRadius: '10px 10px 0 0',

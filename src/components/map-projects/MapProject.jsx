@@ -1132,6 +1132,10 @@ const MapProject = () => {
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
       setSearchResponse(response)
       setIsLoadingInDecisionView(false)
+      const el = document.getElementById('search-results')
+      if(el)
+        el.scrollTop = 0
+
       if(!page || page == 1)
         getFacets()
       if(items.length > 0)
