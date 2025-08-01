@@ -126,28 +126,6 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '12px'}} />
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-        Match API
-      </Typography>
-      <FormHelperText sx={{marginTop: 0}}>
-        Configure External Match API URL and Token
-      </FormHelperText>
-      <TextField
-        fullWidth
-        sx={{marginTop: '12px'}}
-        label='Match API URL'
-        placeholder='e.g. https://api.openconceptlab.org/concepts/$match/?includeSearchMeta=true'
-        value={matchAPI}
-        onChange={event => setMatchAPI(event.target.value || '')}
-      />
-      <TextField
-        fullWidth
-        sx={{marginTop: '12px'}}
-        label='Match API Token'
-        placeholder='e.g. XXXXXXXXXXX'
-        value={matchAPIToken}
-        onChange={event => setMatchAPIToken(event.target.value || '')}
-      />
-      <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
         Matching Algorithm
       </Typography>
       <FormHelperText sx={{marginTop: 0}}>
@@ -186,7 +164,33 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
           </ListItemButton>
         ))}
       </Menu>
-
+      {
+        algo === 'custom' &&
+          <>
+            <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
+              Custom Match API
+            </Typography>
+            <FormHelperText sx={{marginTop: 0}}>
+              Configure External Match API URL and Token
+            </FormHelperText>
+            <TextField
+              fullWidth
+              sx={{marginTop: '12px'}}
+              label='Match API URL'
+              placeholder='e.g. https://api.openconceptlab.org/concepts/$match/?includeSearchMeta=true'
+              value={matchAPI}
+              onChange={event => setMatchAPI(event.target.value || '')}
+            />
+            <TextField
+              fullWidth
+              sx={{marginTop: '12px'}}
+              label='Match API Token'
+              placeholder='e.g. XXXXXXXXXXX'
+              value={matchAPIToken}
+              onChange={event => setMatchAPIToken(event.target.value || '')}
+            />
+          </>
+      }
       {
         file?.name &&
           <>

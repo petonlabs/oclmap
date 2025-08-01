@@ -185,11 +185,12 @@ const MapProject = () => {
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
-  const headers = algo === 'llm' ? SEMANTIC_SEARCH_HEADERS : HEADERS
+  const headers = ['llm', 'custom'].includes(algo) ? SEMANTIC_SEARCH_HEADERS : HEADERS
 
   const ALGOS = [
     {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
     {id: 'llm', label: 'Semantic Search (all-MiniLM-L6-v2)', description: "Vector based search powered by MiniLM", disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
+    {id: 'custom', label: 'Custom API', description: 'Custom $match API'}
   ]
 
   React.useEffect(() => {
@@ -531,9 +532,12 @@ const MapProject = () => {
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
     formData.append('include_retired', retired)
-    if(matchAPI) {
+    if(matchAPI && algo === 'custom') {
       formData.append('match_api_url', matchAPI)
       formData.append('match_api_token', matchAPIToken)
+    } else {
+      formData.append('match_api_url', '')
+      formData.append('match_api_token', '')
     }
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
@@ -593,7 +597,7 @@ const MapProject = () => {
 
   const getMatchAPIService = () => {
     let service;
-    if(matchAPI) {
+    if(matchAPI && algo === 'custom') {
       service = APIService.new()
       service.URL = matchAPI
     } else {
@@ -606,7 +610,7 @@ const MapProject = () => {
   const getRowsResults = async (rows) => {
     abortRef.current = false;
 
-    const CHUNK_SIZE = algo === 'llm' ? 10 : 50; // Number of rows per batch
+    const CHUNK_SIZE = ['llm', 'custom'].includes(algo) ? 10 : 50; // Number of rows per batch
     const MAX_CONCURRENT_REQUESTS = 2; // Number of parallel API requests allowed
     if(autoMatchUnmappedOnly)
       rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
@@ -624,11 +628,11 @@ const MapProject = () => {
         const service = getMatchAPIService()
         const response = await service.post(
           payload,
-          (matchAPI && matchAPIToken) ? matchAPIToken : null,
+          (algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null,
           null,
           {
             includeSearchMeta: true,
-            semantic: algo === 'llm',
+            semantic: ['llm', 'custom'].includes(algo),
             bestMatch: true
           }
         );
@@ -1073,7 +1077,7 @@ const MapProject = () => {
       const service = getMatchAPIService()
       service.post(
         payload,
-        (matchAPI && matchAPIToken) ? matchAPIToken : null,
+        (algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null,
         null,
         {
           includeSearchMeta: true,
@@ -1084,7 +1088,7 @@ const MapProject = () => {
           verbose: true,
           limit: 5,
           offset: offset || 0,
-          semantic: algo === 'llm'
+          semantic: ['llm', 'custom'].includes(algo)
         }).then(response => {
           if(offset === 0)
             setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...(response?.data || [])])
