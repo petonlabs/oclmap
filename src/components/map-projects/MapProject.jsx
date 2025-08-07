@@ -1145,7 +1145,7 @@ const MapProject = () => {
       setIsLoadingInDecisionView(false)
       const el = document.getElementById('search-results')
       if(el)
-        el.scrollTop = 0
+        el.scrollTo({ top: 0, behavior: 'smooth' });
 
       if(!page || page == 1)
         getFacets()
