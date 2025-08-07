@@ -83,7 +83,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
 }
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading}) => {
-  const concepts = find(candidates, c => c.row.__index === rowIndex )?.results || []
+  const concepts = find(candidates, c => c.row?.__index === rowIndex )?.results || []
   const canFetchMore = concepts?.length > 0
   const recommended = filter(concepts, concept => concept?.search_meta?.match_type === 'very_high')
   const available = filter(concepts, concept => concept?.search_meta?.match_type !== 'very_high')
