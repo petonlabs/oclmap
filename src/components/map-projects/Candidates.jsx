@@ -18,7 +18,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, canFetchMore}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, canFetchMore, isLoading}) => {
   const results = {total: onFetchMore ? candidates.length : 1, results: candidates || []}
 
   return candidates.length > 0 ? (
@@ -73,8 +73,8 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
       {
         onFetchMore && canFetchMore &&
           <div className='col-xs-12' style={{textAlign: 'right', margin: '16px 0'}}>
-            <Button size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
-            Fetch More
+            <Button disabled={isLoading} size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
+              {isLoading ? 'Fetching...' : 'Fetch More'}
         </Button>
         </div>
       }
@@ -96,7 +96,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     order: order,
     onOrderChange: onOrderChange,
     setShowItem: setShowItem,
-    showItem: showItem
+    showItem: showItem,
+    isLoading: isLoading
   }
   return (
     <div className='col-xs-12 padding-0'>
@@ -133,17 +134,18 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             '& ul': { padding: 0 },
           }}
           subheader={<li />}
+          id='candidates-list'
         >
           <li>
             {
-              isLoading ?
+              (isLoading && !recommended?.length) ?
                 <Skeleton height={60} /> :
                 <CandidateList {...props} candidates={recommended} header='Recommended Candidates' canFetchMore={canFetchMore && !available?.length} onFetchMore={onFetchMore} />
             }
           </li>
           <li>
             {
-              isLoading ?
+              (isLoading && !available?.length) ?
                 <Skeleton height={60} /> :
                 <CandidateList {...props} candidates={available} header='Available Candidates' canFetchMore={canFetchMore} onFetchMore={onFetchMore} />
             }

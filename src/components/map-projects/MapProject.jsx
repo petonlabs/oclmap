@@ -1068,7 +1068,7 @@ const MapProject = () => {
       fetchOtherCandidates(null, 0, newRetired)
   }
 
-  const fetchOtherCandidates = (_row, offset=0, _retired) => {
+  const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom) => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
@@ -1104,6 +1104,13 @@ const MapProject = () => {
             const synonyms = get(payload, 'rows.0.synonyms')
             setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
           }
+          if(scrollToBottom) {
+            setTimeout(() => {
+              const el = document.getElementById('candidates-list')
+              if(el)
+                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            }, 100)
+          }
         });
     } else {
       setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
@@ -1113,7 +1120,7 @@ const MapProject = () => {
 
   const onFetchMoreCandidates = () => {
     const currentResults = find(otherMatchedConcepts, matched => matched.row.__index === rowIndex)?.results?.length || 0
-    fetchOtherCandidates(null, currentResults)
+    fetchOtherCandidates(null, currentResults, undefined, true)
   }
 
   const search = (event, page, pageSize, includeRetired, appliedFilters) => {
