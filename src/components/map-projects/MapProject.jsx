@@ -182,16 +182,17 @@ const MapProject = () => {
   const [loadingProject, setLoadingProject] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
 
+  // algos
+  const [algos, setAlgos] = React.useState([
+    {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
+    {id: 'llm', label: 'Semantic Search (all-MiniLM-L6-v2)', description: "Vector based search powered by MiniLM", disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
+    {id: 'custom', label: 'Custom API', description: 'Custom $match API'}
+  ])
+
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
   const headers = ['llm', 'custom'].includes(algo) ? SEMANTIC_SEARCH_HEADERS : HEADERS
-
-  const ALGOS = [
-    {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
-    {id: 'llm', label: 'Semantic Search (all-MiniLM-L6-v2)', description: "Vector based search powered by MiniLM", disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
-    {id: 'custom', label: 'Custom API', description: 'Custom $match API'}
-  ]
 
   React.useEffect(() => {
     if(!isEmpty(decisions)) {
@@ -570,8 +571,20 @@ const MapProject = () => {
 
   const onRepoVersionChange = version => {
     setRepoVersion(version)
-    if(version?.version_url)
+    if(version?.version_url) {
       fetchMappedSources(version.version_url)
+      updateAlgosByRepoVersion(version)
+    }
+  }
+
+  const updateAlgosByRepoVersion = version => {
+    const newAlgos = [...algos]
+    const isLLMAlgoAllowed = version?.match_algorithms?.includes('llm')
+    newAlgos[1].disabled = !isLLMAlgoAllowed
+    setAlgos(newAlgos)
+    if(!isLLMAlgoAllowed && algo === 'llm') {
+      onAlgoSelect('es')
+    }
   }
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -702,7 +715,7 @@ const MapProject = () => {
   };
 
   const fetchVersions = (url, _selectedVersion) => {
-    APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/').get(null, null, {brief: true}).then(response => {
+    APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/').get().then(response => {
       let _versions = response.data
       setVersions(_versions)
       if(_selectedVersion) {
@@ -1090,6 +1103,10 @@ const MapProject = () => {
           offset: offset || 0,
           semantic: ['llm', 'custom'].includes(algo)
         }).then(response => {
+          if(response?.detail) {
+            setAlert({message: response.detail, severity: 'error'})
+            return
+          }
           if(offset === 0)
             setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...(response?.data || [])])
           else {
@@ -1262,7 +1279,7 @@ const MapProject = () => {
                     versions={versions}
                     algo={algo}
                     onAlgoSelect={onAlgoSelect}
-                    algos={ALGOS}
+                    algos={algos}
                     validColumns={headers}
                     columns={columns}
                     isValidColumnValue={isValidColumnValue}
@@ -1543,7 +1560,7 @@ const MapProject = () => {
               endIcon={<DownIcon />}
               onClick={onAlgoButtonClick}
             >
-              {ALGOS.find(_algo => _algo.id === algo).label}
+              {algos.find(_algo => _algo.id === algo).label}
             </Button>
             <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
             <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
@@ -1596,7 +1613,7 @@ const MapProject = () => {
                 versions={versions}
                 algo={algo}
                 onAlgoSelect={onAlgoSelect}
-                algos={ALGOS}
+                algos={algos}
                 validColumns={headers}
                 columns={columns}
                 isValidColumnValue={isValidColumnValue}
@@ -1768,7 +1785,7 @@ const MapProject = () => {
         }}
       >
         {
-          ALGOS.map(_algo => (
+          algos.map(_algo => (
             <MenuItem
               key={_algo.id}
               disabled={_algo.disabled}

@@ -43,6 +43,9 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
     setAlgoMenuAnchorEl(null)
     onAlgoSelect(id)
   }
+
+  const isLLMAlgoNotAllowed = !repoVersion?.match_algorithms?.includes('llm')
+
   return (
     <div className='col-xs-12' style={{padding: '8px 0', ...sx}}>
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
@@ -124,6 +127,12 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
 
       <RepoSearchAutocomplete label='Repository' size='small' onChange={(id, item) => onRepoChange(item)} value={repo}  sx={{marginTop: '12px'}}/>
       <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '12px'}} />
+      {
+        isLLMAlgoNotAllowed && repoVersion?.version_url &&
+          <FormHelperText sx={{marginTop: '4px', marginLeft: '8px', color: 'warning.main'}}>
+            {`${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
+          </FormHelperText>
+      }
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
         Matching Algorithm
