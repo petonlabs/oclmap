@@ -232,8 +232,8 @@ const SearchResults = props => {
           />
       }
       {
-        props.noResults ?
-          <NoResults searchedText={props.searchedText} height={props.height} /> :
+        props.noResults && props.searchedText ?
+          <NoResults searchedText={props.searchedText} height={props.height || '220px'} /> :
         <React.Fragment>
           {
             isCardDisplay ?

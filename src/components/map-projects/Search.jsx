@@ -12,6 +12,7 @@ import max from 'lodash/max'
 import isEmpty from 'lodash/isEmpty'
 import values from 'lodash/values'
 import flatten from 'lodash/flatten'
+import isNaN from 'lodash/isNaN'
 
 import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
@@ -119,6 +120,8 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           resource='concepts'
           noSorting
           noToolbar
+          searchedText={searchStr}
+          noResults={!isLoading && !isNaN(results.page) && results?.results?.length === 0}
           isLoading={isLoading}
           rowsPerPageOptions={[]}
           resultContainerStyle={{height: 'calc(100vh - 630px)', overflow: 'auto'}}
