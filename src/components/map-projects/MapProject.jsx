@@ -217,7 +217,7 @@ const MapProject = () => {
       }
       if(response.data?.file_url) {
         fetch(response.data.file_url).then(res => res.text()).then(csvText => {
-          const workbook = XLSX.read(csvText, { type: "string" });
+          const workbook = XLSX.read(csvText, { type: "string", raw: true });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
