@@ -993,7 +993,9 @@ export const highlightTexts = (items, texts, unmark=false, additionalTexts) => {
     element: "span",
     className: "highlight-search-results",
     separateWordSearch: false,
-    caseSensitive: false
+    caseSensitive: false,
+    ignoreJoiners: true,
+    diacritics: true
   }
   if(unmark)
     markInstance.unmark(options)

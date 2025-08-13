@@ -1077,8 +1077,10 @@ const MapProject = () => {
     setRetired(newRetired)
     if(decisionTab === 'search')
       search(null, null, null, newRetired)
-    else if(decisionTab === 'candidates')
+    else if(decisionTab === 'candidates') {
+      setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index === row.__index)])
       fetchOtherCandidates(null, 0, newRetired)
+    }
   }
 
   const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom) => {
