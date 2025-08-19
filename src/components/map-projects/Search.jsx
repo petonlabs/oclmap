@@ -120,11 +120,11 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           resource='concepts'
           noSorting
           noToolbar
+          noPagination={results?.results?.length === 0}
           searchedText={searchStr}
           noResults={!isLoading && !isNaN(results.page) && results?.results?.length === 0}
           isLoading={isLoading}
-          rowsPerPageOptions={[]}
-          resultContainerStyle={{height: 'calc(100vh - 630px)', overflow: 'auto'}}
+          resultContainerStyle={{height: 'calc(100vh - 615px)', overflow: 'auto'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {
