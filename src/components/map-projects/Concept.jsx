@@ -22,7 +22,7 @@ const getBestSynonym = synonyms => {
 
 const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore}) => {
   const id = concept?.version_url || concept?.url || concept?.id
-  const isSelectedToShow = isShown(id)
+  const isSelectedToShow = isShown ? isShown(id) : false
 
   let synonymPrefix = ''
   const highlights = concept?.search_meta?.search_highlight
@@ -34,7 +34,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
   }
 
   return (
-    <ListItemButton selected={isSelectedToShow} onClick={event => onCardClick(event, id)} sx={{padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)'}}>
+    <ListItemButton selected={isSelectedToShow} onClick={onCardClick ? event => onCardClick(event, id) : undefined} sx={{padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)'}}>
       <ListItemText
         className='searchable'
         primary={
@@ -70,12 +70,15 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
           !noScore &&
             <Score concept={concept} setShowHighlights={setShowHighlights} />
         }
-        <MapButton
-          simple
-          onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
-          isMapped={isSelectedForMap(concept)}
-          sx={{marginLeft: '8px'}}
-        />
+        {
+        isSelectedForMap &&
+            <MapButton
+              simple
+              onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
+              isMapped={isSelectedForMap(concept)}
+              sx={{marginLeft: '8px'}}
+            />
+        }
       </span>
     </ListItemButton>
   )

@@ -6,6 +6,9 @@ export const TEXT_GRAY = '#47464f'
 export const BG_GRAY = '#f6f2f7'
 export const LIGHT_GRAY = '#e5e1e6'
 export const VERY_LIGHT_GRAY = '#5e5c71'
+export const RECOMMEND_COLOR = 'rgb(172,212,182)'
+export const AVAILABLE_COLOR = 'rgb(250,224,148)'
+export const UNRANKED_COLOR = 'rgb(235, 162, 150)'
 export const PRIMARY_COLORS = {
   main: '#4836ff',
   light: '#4836ff',

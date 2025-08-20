@@ -22,6 +22,9 @@ import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import CloseIconButton from '../common/CloseIconButton';
 import ColumnMapTable from './ColumnMapTable'
+import ScoreConfiguration from './ScoreConfiguration'
+import { SCORES_COLOR } from './constants'
+
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
   clipPath: 'inset(50%)',
@@ -35,7 +38,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -200,6 +203,26 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
             />
           </>
       }
+      <>
+        <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
+          Score Configuration
+        </Typography>
+        <FormHelperText sx={{marginTop: 0}}>
+          Configure Score threshold to group candidates recommendations
+        </FormHelperText>
+        <ScoreConfiguration scores={candidatesScore} onChange={onScoreChange} />
+        <div className='col-xs-12' style={{fontSize: '12px', margin: '-4px 0 16px 0'}}>
+          <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.unranked}}>
+            Unranked: {`<${candidatesScore.available}`}%
+          </div>
+          <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.available}}>
+            Available: {`>=${candidatesScore.available}`}%
+          </div>
+          <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.recommended}}>
+            Recommended: {`>=${candidatesScore.recommended}`}%
+          </div>
+        </div>
+      </>
       {
         file?.name &&
           <>

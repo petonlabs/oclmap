@@ -68,6 +68,7 @@ import isString from 'lodash/isString'
 import isNaN from 'lodash/isNaN'
 import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
+import isNumber from 'lodash/isNumber'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -96,6 +97,8 @@ import Propose from './Propose'
 import Candidates from './Candidates'
 import Search from './Search'
 import Discuss from './Discuss'
+import ScoreBucketButton from './ScoreBucketButton'
+import Concept from './Concept'
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
@@ -142,9 +145,10 @@ const MapProject = () => {
   const [endMatchingAt, setEndMatchingAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
-  const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_score')
+  const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
+  const [candidatesScore, setCandidatesScore] = React.useState({recommended: 100, available: 70})
 
   const abortRef = React.useRef(false);
 
@@ -158,6 +162,8 @@ const MapProject = () => {
   const [decisionTab, setDecisionTab] = React.useState('candidates')
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const [searchText, setSearchText] = React.useState('')  // csv row search
+  const [selectedCandidatesScoreBucket, setSelectedCandidatesScoreBucket] = React.useState(false)
+  const [scoreBucketSortBy, setScoreBucketSortBy] = React.useState('desc')
 
   const [matchDialog, setMatchDialog] = React.useState(false)
   const [showHighlights, setShowHighlights] = React.useState(false)
@@ -266,6 +272,7 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setMatchAPI(response.data?.match_api_url)
       setMatchAPIToken(response.data?.match_api_token)
+      setCandidatesScore(response.data?.score_configuration)
       setProject(response.data)
       setConfigure(false)
     })
@@ -363,6 +370,17 @@ const MapProject = () => {
         ...widthParams
       })
     })
+    cols.push({
+      field: '_targetCode_',
+      headerName: 'Target Code',
+      width: columnWidth['_targetCode_'] || 300,
+      renderCell: params => {
+        const targetConcept = mapSelected[params.row.__index]
+        if(targetConcept?.url) {
+          return <Concept firstChild concept={targetConcept} noScore onCardClick={false} />
+        }
+      }
+    })
     return cols
   }
 
@@ -432,6 +450,8 @@ const MapProject = () => {
     setShowItem(false)
     setAutoMatchUnmappedOnly(true)
     setAlert(false)
+    setSelectedCandidatesScoreBucket(false)
+    setScoreBucketSortBy('desc')
   }
 
   const handleFileUpload = event => {
@@ -467,7 +487,7 @@ const MapProject = () => {
       data.__index = index
       if(isResuming) {
         let repo = {id: data['__Repo ID__'], version: data['__Repo Version__'], url: dropVersion(data['__Repo URL__']), version_url: data['__Repo URL__']}
-        let concept = {id: data['__Concept ID__'], url: data['__Concept URL__'], search_meta: {search_score: data['__Match Score__'], match_type: snakeCase(data['__Match Type__'])}, repo: repo}
+        let concept = {id: data['__Concept ID__'], url: data['__Concept URL__'], search_meta: {search_normalized_score: data['__Match Score__'], match_type: snakeCase(data['__Match Type__'])}, repo: repo}
         if(concept?.id) {
           _mapSelected[index] = concept
           _repo = repo
@@ -532,6 +552,7 @@ const MapProject = () => {
     if(repoVersion?.version_url)
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
+    formData.append('score_configuration', JSON.stringify(candidatesScore))
     formData.append('include_retired', retired)
     if(matchAPI && algo === 'custom') {
       formData.append('match_api_url', matchAPI)
@@ -853,8 +874,56 @@ const MapProject = () => {
       let indexes = keys(pickBy(decisions, value => (hasNone && !value) || decisionFilters.includes(value)))
       rows = filter(rows, row => indexes.includes(row.__index.toString()))
     }
+    if(selectedCandidatesScoreBucket) {
+      let minScore = 0
+      let maxScore = 100.1
+      let noScore = false
+      let rowIndexes = []
+      if(selectedCandidatesScoreBucket === 'unranked' ) {
+        minScore = -0.1
+        maxScore = candidatesScore.available
+        noScore = true
+      }
+      else if(selectedCandidatesScoreBucket === 'available') {
+        minScore = candidatesScore.available
+        maxScore = candidatesScore.recommended
+      }
+      else if(selectedCandidatesScoreBucket === 'recommended') {
+        minScore = candidatesScore.recommended
+      }
+      if(minScore) {
+        rowIndexes = Object.entries(mapSelected)
+          .filter(([, v]) => {
+            let score = v?.search_meta?.search_normalized_score
+            return isNumber(score) ? score >= minScore && score < maxScore : noScore
+          })
+          .sort((a, b) => {
+            let aScore = a[1].search_meta.search_normalized_score
+            let bScore = b[1].search_meta.search_normalized_score
+            if(noScore) {
+              aScore = aScore || 0
+              bScore = bScore || 0
+            }
+
+            return scoreBucketSortBy === 'asc' ? aScore - bScore : bScore - aScore
+          })
+          .map(([k]) => k);
+      }
+      if(rowIndexes?.length) {
+        const orderMap = Object.fromEntries(rowIndexes.map((idx, pos) => [idx, pos]));
+        rows = rows.filter(row => rowIndexes.includes(row.__index.toString()))
+        rows = rows.sort(
+          (a, b) => orderMap[a.__index] - orderMap[b.__index]
+        );
+      }
+
+    }
     return rows
   }
+
+  const unrankedCount = filter(mapSelected, target => !target?.search_meta?.search_normalized_score || target?.search_meta?.search_normalized_score < candidatesScore.available)?.length
+  const availableCount = filter(mapSelected, target => target?.search_meta?.search_normalized_score >= candidatesScore.available && target?.search_meta?.search_normalized_score < candidatesScore.recommended)?.length
+  const recommendedCount = filter(mapSelected, target => target?.search_meta?.search_normalized_score >= candidatesScore.recommended)?.length
 
   const getStateFromIndex = index => {
     if(rowStatuses.reviewed.includes(index))
@@ -900,7 +969,7 @@ const MapProject = () => {
         '__Concept Name__': concept?.display_name,
         '__Concept URL__': concept?.url,
         '__Map Type__': mapTypes[index],
-        '__Match Score__': concept?.search_meta?.search_score,
+        '__Match Score__': concept?.search_meta?.search_normalized_score,
         '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
         '__Decision__': decisions[index] || 'None',
         '__Note__': notes[index] || null,
@@ -1152,7 +1221,7 @@ const MapProject = () => {
       mappingBrief: true,
       mapTypes: 'SAME-AS,SAME AS,SAME_AS',
       verbose: true,
-      limit: pageSize || 5,
+      limit: pageSize || 25,
       q: searchStr,
       page: page || 1,
       includeRetired: includeRetired === undefined ? retired : includeRetired,
@@ -1225,9 +1294,9 @@ const MapProject = () => {
   const targetConceptFromCandidate = find(otherMatchedConcepts[rowIndex]?.results, {url: targetConcept?.url})
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
-  else if(!targetConcept?.search_meta?.search_score) {
+  else if(!targetConcept?.search_meta?.search_normalized_score) {
     let meta = find(searchedConcepts[rowIndex], {url: targetConcept?.url})?.search_meta
-    if(meta?.search_score)
+    if(meta?.search_normalized_score)
       targetConcept.search_meta = meta
   }
 
@@ -1235,6 +1304,13 @@ const MapProject = () => {
     return `${from.toLocaleString()}–${to.toLocaleString()} of ${count?.toLocaleString()}`;
   };
 
+  const getCandidateBucket = score => {
+    if(score >= candidatesScore.recommended)
+      return 'recommended'
+    if(score >= candidatesScore.available)
+      return 'available'
+    return 'unranked'
+  }
 
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
@@ -1296,6 +1372,8 @@ const MapProject = () => {
                     setMatchAPI={setMatchAPI}
                     matchAPIToken={matchAPIToken}
                     setMatchAPIToken={setMatchAPIToken}
+                    candidatesScore={candidatesScore}
+                    onScoreChange={setCandidatesScore}
                   />
                 </div>
           }
@@ -1401,10 +1479,19 @@ const MapProject = () => {
                 <FormControlLabel
                   sx={{
                     marginLeft: '10px',
-                    '.MuiFormControlLabel-label': {fontSize: '0.875rem'}
+                    '.MuiFormControlLabel-label': {fontSize: '0.8125rem'}
                   }}
                   control={<Switch disabled={!showMatchSummary || selectedRowStatus === 'unmapped'} size="small" checked={selectedMatchBucket === 'very_high'} onChange={() => onMatchTypeChange('very_high')} />}
                   label={`Auto Match (${(matchTypes.very_high || 0).toLocaleString()})`}
+                />
+                <ScoreBucketButton
+                  selected={selectedCandidatesScoreBucket}
+                  onSort={() => setScoreBucketSortBy(scoreBucketSortBy === 'desc' ? 'asc' : 'desc')}
+                  sortBy={scoreBucketSortBy}
+                  onClick={bucket => setSelectedCandidatesScoreBucket(selectedCandidatesScoreBucket === bucket ? false : bucket)}
+                  recommended={recommendedCount}
+                  available={availableCount}
+                  unranked={unrankedCount}
                 />
                 {
                   selectedRowStatus === 'unmapped' &&
@@ -1485,7 +1572,7 @@ const MapProject = () => {
                   {alert.message}
                 </Alert>
               </Collapse>
-              <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 259px)' : 'calc(100vh - 250px)' }}>
+              <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 258px)' : 'calc(100vh - 250px)' }}>
                 <DataGrid
                   onFilterModelChange={(model) => setFilterModel(model)}
                   filterModel={filterModel}
@@ -1530,6 +1617,14 @@ const MapProject = () => {
                   }}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
+                  getRowClassName={params => {
+                    const index = params?.row?.__index
+                    const targetConcept = mapSelected[index]
+                    if(targetConcept) {
+                      const score = targetConcept?.search_meta?.search_normalized_score
+                      return getCandidateBucket(score) + '-row'
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -1630,7 +1725,8 @@ const MapProject = () => {
                 setMatchAPI={setMatchAPI}
                 matchAPIToken={matchAPIToken}
                 setMatchAPIToken={setMatchAPIToken}
-
+                candidatesScore={candidatesScore}
+                onScoreChange={setCandidatesScore}
               />
             </div> :
           (
@@ -1716,6 +1812,7 @@ const MapProject = () => {
                 {
                   decisionTab === 'candidates' && isSplitView &&
                     <Candidates
+                      candidatesScore={candidatesScore}
                       rowIndex={rowIndex}
                       alert={alert}
                       setAlert={setAlert}
@@ -1769,7 +1866,7 @@ const MapProject = () => {
                 open={Boolean(showHighlights)}
                 onClose={() => setShowHighlights(false)}
                 highlight={showHighlights?.search_meta?.search_highlight || []}
-                score={parseFloat(showHighlights?.search_meta?.search_score || 0).toFixed(2)}
+                score={parseFloat(showHighlights?.search_meta?.search_normalized_score || 0).toFixed(2)}
               />
             </>
           )

@@ -7,6 +7,7 @@ import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import MediumMatchIcon from '@mui/icons-material/Rule';
 import LowMatchIcon from '@mui/icons-material/DynamicForm';
 import NoMatchIcon from '@mui/icons-material/RemoveRoad';
+import { RECOMMEND_COLOR, AVAILABLE_COLOR, UNRANKED_COLOR } from '../../common/colors'
 
 const ID_HEADER = {id: 'id', label: 'ID', description: 'Exact match on concept ID'}
 const COMMON_HEADERS = [
@@ -58,24 +59,30 @@ export const VIEWS = {
 export const MATCH_TYPES = {
   very_high: {
     label: 'Auto Match',
-    icon: <AutoMatchIcon fontSize='small' />,
+    icon: <AutoMatchIcon fontSize='small' color='primary' />,
     color: 'primary',
   },
   high: {
     label: 'High Match',
-    icon: <MediumMatchIcon fontSize='small' />,
+    icon: <MediumMatchIcon fontSize='small' color='warning' />,
     color: 'warning',
   },
   low: {
     label: 'Low Match',
-    icon: <LowMatchIcon fontSize='small' />,
+    icon: <LowMatchIcon fontSize='small' color='secondary' />,
     color: 'secondary',
   },
   no_match: {
     label: 'No Match',
-    icon: <NoMatchIcon fontSize='small' />,
+    icon: <NoMatchIcon fontSize='small' color='error' />,
     color: 'error',
   },
 }
 
 export const DECISION_TABS = ['candidates', 'propose', 'search', 'discuss']
+
+export const SCORES_COLOR = {
+  recommended: RECOMMEND_COLOR,
+  available: AVAILABLE_COLOR,
+  unranked: UNRANKED_COLOR
+}

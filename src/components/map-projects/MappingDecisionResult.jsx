@@ -111,7 +111,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
             secondary={
               <span style={{fontSize: '12px'}}>
                 {
-                hasClass &&
+                  hasClass &&
                     <>Class: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i></>
                 }
                 {hasClass && hasDatatype && ','}
@@ -140,12 +140,11 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Target Code</Typography>
               <div className='col-xs-12 padding-0'>
                 <ListItemText
-                  className='searchable'
                   primary={
-                    <span>
-                    <span>
-                      {`${parentParams.repo}:${targetConcept.id} ${targetConcept.display_name || ''}`}
-                    </span>
+                    <span className='searchable'>
+                      <span>
+                        {`${parentParams.repo}:${targetConcept.id} ${targetConcept.display_name || ''}`}
+                      </span>
                       {
                         targetConcept.retired &&
                           <Retired size='small' style={{margin: '0 12px'}} />
@@ -154,19 +153,19 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                   }
                   secondary={
                     <>
-                      <div>
-                      <span className='searchable' style={{fontSize: '12px'}}>
-                        Class: <i>{targetConcept.concept_class}</i>,
-                        Datatype: <i>{targetConcept.datatype}</i>
-                        {
-                          rightMappings &&
-                            <><br/>Mappings: <i>{rightMappings}</i></>
-                        }
-                    </span>
+                      <div className='searchable'>
+                        <span className='searchable' style={{fontSize: '12px'}}>
+                          Class: <i>{targetConcept.concept_class}</i>,
+                          Datatype: <i>{targetConcept.datatype}</i>
+                          {
+                            rightMappings &&
+                              <><br/>Mappings: <i>{rightMappings}</i></>
+                          }
+                        </span>
                       </div>
                       <div>
-                    <Score concept={targetConcept} sx={{marginTop: '4px'}} />
-                    </div>
+                        <Score concept={targetConcept} sx={{marginTop: '4px'}} />
+                      </div>
                     </>
                   }
                   sx={{height: '100px', overflow: 'auto', marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}
