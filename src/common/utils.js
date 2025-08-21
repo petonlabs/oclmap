@@ -985,21 +985,31 @@ const getHighlightedTexts = items => {
 
 
 export const highlightTexts = (items, texts, unmark=false, additionalTexts) => {
-  const markInstance = new Mark(document.querySelectorAll('.searchable'))
-  let _texts = texts || getHighlightedTexts(items)
-  if(additionalTexts)
-    _texts = [..._texts, ...additionalTexts]
+  const containers = document.querySelectorAll('.searchable');
+  if (!containers?.length) return;
+  const mark = new Mark(containers)
+  let terms = texts ?? getHighlightedTexts(items);
+  if (additionalTexts?.length) terms = [...terms, ...additionalTexts];
+  terms = [...new Set((terms || []).map(t => (t || '').trim()))].filter(Boolean);
   const options = {
     element: "span",
     className: "highlight-search-results",
     separateWordSearch: false,
     caseSensitive: false,
     ignoreJoiners: true,
-    diacritics: true
+    diacritics: true,
+    exclude: ['.highlight-search-results']
   }
+
+  const doMark = () => {
+    if (!terms.length) return;
+    mark.mark(terms, options);
+  };
+
   if(unmark)
-    markInstance.unmark(options)
-  markInstance.mark(_texts, options);
+    mark.unmark({done: doMark})
+  else
+    doMark()
 }
 
 export const pluralize = (count, singular, plural) => `${count?.toLocaleString()} ${count === 1 ? singular : plural}`;

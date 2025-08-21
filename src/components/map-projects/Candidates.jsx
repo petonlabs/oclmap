@@ -18,7 +18,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId}) => {
   const results = {total: onFetchMore ? candidates.length : 1, results: candidates || []}
 
   return candidates.length > 0 ? (
@@ -42,7 +42,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
               borderRadius: '10px 10px 0 0',
             }
           }}
-          renderer={props => <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} />}
+          renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} />}
           display='card'
           nested
           results={results}
@@ -143,21 +143,21 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && !candidates?.length) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} />
+              <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} bucketId={`${rowIndex}-recommended`} />
             }
           </li>
           <li>
             {
               (isLoading && !candidates?.length) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={available} header='Available Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} />
+              <CandidateList {...props} candidates={available} header='Available Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} bucketId={`${rowIndex}-available`} />
             }
           </li>
           <li>
             {
               (isLoading && !candidates?.length) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={unranked} header='Unranked Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} />
+              <CandidateList {...props} candidates={unranked} header='Unranked Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} />
             }
           </li>
         </List>
