@@ -868,7 +868,11 @@ const MapProject = () => {
       rows = filter(rows, r => rowIndexes.includes(r.__index))
     }
     if(searchText)
-      rows = filter(rows, row => find(values(row), v => v?.toString().toLowerCase()?.search(searchText.trim().toLowerCase()) > -1))
+      rows = filter(rows, row =>
+        find(values(row), v =>
+          v?.toString().toLowerCase().includes(searchText.trim().toLowerCase())
+        )
+      )
     if(decisionFilters?.length > 0) {
       const hasNone = decisionFilters.includes('none')
       let indexes = keys(pickBy(decisions, value => (hasNone && !value) || decisionFilters.includes(value)))
@@ -1000,6 +1004,7 @@ const MapProject = () => {
         setConceptCache({...conceptCache, [url]: res})
       })
     setRow(csvRow)
+
     if(repo?.id) {
       fetchOtherCandidates(csvRow)
       getFacets(csvRow)
