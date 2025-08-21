@@ -40,7 +40,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
         primary={
           <span>
             <span>
-              {`${concept.source}:${concept.id}`}
+              {`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}
               <span style={{marginLeft: '4px'}}>
                 {
                   synonymPrefix &&
