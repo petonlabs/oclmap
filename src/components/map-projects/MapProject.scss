@@ -6,17 +6,11 @@
     background: rgb(255, 152, 0, 0.3);
 }
 .recommended-row {
-    .MuiDataGrid-cell {
-        background: rgb(172,212,182, 0.8);
-    }
+    border-left: 8px solid rgb(172,212,182, 0.8);
 }
 .available-row {
-    .MuiDataGrid-cell {
-        background: rgb(250,224,148, 0.8);
-    }
+    border-left: 8px solid rgb(250,224,148, 0.8);
 }
 .unranked-row {
-    .MuiDataGrid-cell {
-        background: rgb(235, 162, 150, 0.8);
-    }
+    border-left: 8px solid rgb(235, 162, 150, 0.8);
 }
