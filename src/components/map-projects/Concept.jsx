@@ -60,7 +60,18 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
         }
         secondary={
           <>
-            <i style={{marginRight: '2px'}}>Class:</i> {concept.concept_class} <i style={{marginLeft: '6px', marginRight: '2px'}}>Datatype:</i> {concept.datatype}
+            {
+              concept.concept_class &&
+                <>
+                  <i style={{marginRight: '2px'}}>Class:</i> {concept.concept_class}
+                </>
+            }
+            {
+              concept.datatype &&
+                <>
+                  <i style={{marginLeft: '6px', marginRight: '2px'}}>Datatype:</i> {concept.datatype}
+                </>
+            }
           </>
         }
         sx={{margin: '2px 0', '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px'}}}
