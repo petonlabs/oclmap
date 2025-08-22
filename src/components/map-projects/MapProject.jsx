@@ -1175,7 +1175,7 @@ const MapProject = () => {
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
-          limit: 5,
+          limit: 10,
           offset: offset || 0,
           semantic: ['llm', 'custom'].includes(algo)
         }).then(response => {
