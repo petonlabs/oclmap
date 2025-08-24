@@ -25,7 +25,7 @@ import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplet
 import CloseIconButton from '../common/CloseIconButton';
 import ColumnMapTable from './ColumnMapTable'
 import ScoreConfiguration from './ScoreConfiguration'
-import { SCORES_COLOR } from './constants'
+import { SCORES_COLOR, SEMANTIC_BATCH_SIZE } from './constants'
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -40,7 +40,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -203,11 +203,23 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
             />
             <TextField
               fullWidth
-              sx={{marginTop: '12px'}}
+              sx={{marginTop: '12px', width: 'calc(100% - 160px)'}}
               label='Match API Token'
               placeholder='e.g. XXXXXXXXXXX'
               value={matchAPIToken}
               onChange={event => setMatchAPIToken(event.target.value || '')}
+            />
+            <TextField
+              fullWidth
+              required
+              type='number'
+              inputProps={{min: 1, max: 100, step: 1}}
+              sx={{marginTop: '12px', width: '160px', paddingLeft: '8px', '.MuiFormHelperText-root': {marginLeft: '4px'}, '.MuiInputLabel-root': {left: '6px'}}}
+              label=' Batch Size'
+              value={semanticBatchSize}
+              onChange={event => setSemanticBatchSize(event.target.value || '')}
+              onBlur={() => semanticBatchSize ? undefined : setSemanticBatchSize(SEMANTIC_BATCH_SIZE)}
+              helperText='Rows per $match API'
             />
           </>
       }

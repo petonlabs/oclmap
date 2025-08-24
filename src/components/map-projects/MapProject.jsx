@@ -84,7 +84,7 @@ import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import DraggablePaperComponent from '../common/DraggablePaperComponent'
 import LoaderDialog from '../common/LoaderDialog'
-import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
+import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS, SEMANTIC_BATCH_SIZE, ES_BATCH_SIZE } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
 import Controls from './Controls'
@@ -148,6 +148,7 @@ const MapProject = () => {
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
+  const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 100, available: 70})
 
   const abortRef = React.useRef(false);
@@ -272,6 +273,8 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setMatchAPI(response.data?.match_api_url)
       setMatchAPIToken(response.data?.match_api_token)
+      if(response.data?.match_api_url)
+        setSemanticBatchSize(response.data?.batch_size || SEMANTIC_BATCH_SIZE)
       setCandidatesScore(response.data?.score_configuration)
       setProject(response.data)
       setConfigure(false)
@@ -644,7 +647,7 @@ const MapProject = () => {
   const getRowsResults = async (rows) => {
     abortRef.current = false;
 
-    const CHUNK_SIZE = ['llm', 'custom'].includes(algo) ? 10 : 50; // Number of rows per batch
+    const CHUNK_SIZE = ['llm', 'custom'].includes(algo) ? semanticBatchSize : ES_BATCH_SIZE; // Number of rows per batch
     const MAX_CONCURRENT_REQUESTS = 2; // Number of parallel API requests allowed
     if(autoMatchUnmappedOnly)
       rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
@@ -1377,6 +1380,8 @@ const MapProject = () => {
                     setMatchAPI={setMatchAPI}
                     matchAPIToken={matchAPIToken}
                     setMatchAPIToken={setMatchAPIToken}
+                    semanticBatchSize={semanticBatchSize}
+                    setSemanticBatchSize={setSemanticBatchSize}
                     candidatesScore={candidatesScore}
                     onScoreChange={setCandidatesScore}
                   />
@@ -1730,6 +1735,8 @@ const MapProject = () => {
                 setMatchAPI={setMatchAPI}
                 matchAPIToken={matchAPIToken}
                 setMatchAPIToken={setMatchAPIToken}
+                semanticBatchSize={semanticBatchSize}
+                setSemanticBatchSize={setSemanticBatchSize}
                 candidatesScore={candidatesScore}
                 onScoreChange={setCandidatesScore}
               />

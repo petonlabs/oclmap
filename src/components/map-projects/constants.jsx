@@ -86,3 +86,6 @@ export const SCORES_COLOR = {
   available: AVAILABLE_COLOR,
   unranked: UNRANKED_COLOR
 }
+
+export const SEMANTIC_BATCH_SIZE = 10
+export const ES_BATCH_SIZE = 50
