@@ -16,7 +16,9 @@ import DownIcon from '@mui/icons-material/ArrowDropDown';
 import MatchingIcon from '@mui/icons-material/DeviceHub';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
+import { toV3URL } from '../../common/utils'
 import NamespaceDropdown from '../common/NamespaceDropdown'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
@@ -123,6 +125,12 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
         Target Repository
+        {
+          (repo?.version_url || repo?.url) &&
+            <IconButton size='small' sx={{marginLeft: '8px'}} href={toV3URL(repo.version_url || repo.url)} target='_blank' rel='noopener noreferrer' color='primary'>
+              <OpenInNewIcon fontSize='inherit' />
+            </IconButton>
+        }
       </Typography>
       <FormHelperText sx={{marginTop: 0}}>
         Select the repository that you want to map your input data to.

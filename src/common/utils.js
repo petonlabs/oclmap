@@ -1014,3 +1014,14 @@ export const highlightTexts = (items, texts, unmark=false, additionalTexts) => {
 
 export const pluralize = (count, singular, plural) => `${count?.toLocaleString()} ${count === 1 ? singular : plural}`;
 
+export const toV3URL = path => {
+  let url = 'https://app.v3.openconceptlab.org'
+  if(window.location.host?.includes('localhost'))
+    url = 'http://localhost:4002'
+  if(['map.dev.openconceptlab.org', 'map.demo.openconceptlab.org'].includes(window.location.host))
+    url = 'https://app.v3.qa.openconceptlab.org'
+  if(window.location.host.match('map.*.openconceptlab.org'))
+    url = window.location.origin.replace('//map.', '//app.v3.')
+
+  return `${url}/#${path || '/'}`
+}
