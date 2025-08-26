@@ -461,7 +461,8 @@ const MapProject = () => {
     resetState()
     const file = event.target.files[0];
     setFile(file)
-    setName(file?.name || '')
+    if(!name)
+      setName(file?.name || '')
     const reader = new FileReader();
     reader.onload = (e) => {
       const workbook = XLSX.read(e.target.result, { type: 'binary', raw: true, cellText: true, codepage: 65001 });
