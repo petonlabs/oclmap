@@ -561,6 +561,7 @@ const MapProject = () => {
     if(matchAPI && algo === 'custom') {
       formData.append('match_api_url', matchAPI)
       formData.append('match_api_token', matchAPIToken)
+      formData.append('batch_size', semanticBatchSize)
     } else {
       formData.append('match_api_url', '')
       formData.append('match_api_token', '')
