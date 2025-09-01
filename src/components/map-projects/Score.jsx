@@ -5,9 +5,12 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import isNumber from 'lodash/isNumber'
+import isNaN from 'lodash/isNaN'
 
 const Score = ({concept, setShowHighlights, sx}) => {
-  const percentile = concept?.search_meta?.search_normalized_score
+  let percentile = concept?.search_meta?.search_normalized_score
+  if(percentile && !isNumber(percentile))
+    percentile = parseFloat(percentile)
   const score = concept?.search_meta?.search_score
   const hasPercentile = isNumber(percentile)
   const { icon, color } = MATCH_TYPES[concept?.search_meta?.match_type || 'no_match']
@@ -31,7 +34,7 @@ const Score = ({concept, setShowHighlights, sx}) => {
         <ListItemText
           sx={{margin: '4px 0', '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px'}}}
           primary={`${parseFloat(hasPercentile ? percentile : score).toFixed(2)}%`}
-          secondary={hasPercentile ? `${parseFloat(score).toFixed(2)}` : ''}
+          secondary={hasPercentile && !isNaN(score) && score ? `${parseFloat(score).toFixed(2)}` : ''}
         />
       </ListItemButton>
     </ListItem>
