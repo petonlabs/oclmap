@@ -80,7 +80,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
       onChange={(event, item) => handleChange(event, id || 'source', item)}
       groupBy={option => option.resultType}
       renderGroup={params => (
-        <li style={{listStyle: 'none'}} key={params.group}>
+        <li style={{listStyle: 'none'}} key={params.key}>
           <GroupHeader>{params.group}</GroupHeader>
           <GroupItems>{params.children}</GroupItems>
         </li>
@@ -110,7 +110,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
       renderOption={
         (props, option) => (
           <React.Fragment key={option.url}>
-            <RepoListItem listItemProps={props} option={option} repoChipProps={{noTooltip: true}} />
+            <RepoListItem listItemProps={props} option={option} />
             <Divider component="li" style={{listStyle: 'none'}} />
           </React.Fragment>
         )

@@ -141,7 +141,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       {
         isLLMAlgoNotAllowed && repoVersion?.version_url &&
           <FormHelperText sx={{marginTop: '4px', marginLeft: '8px', color: 'warning.main'}}>
-            {`${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
+            {`${repo?.owner}:${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
           </FormHelperText>
       }
 
