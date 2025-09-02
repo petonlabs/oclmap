@@ -491,7 +491,7 @@ const MapProject = () => {
       data.__index = index
       if(isResuming) {
         let repo = {id: data['__Repo ID__'], version: data['__Repo Version__'], url: dropVersion(data['__Repo URL__']), version_url: data['__Repo URL__']}
-        let concept = {id: data['__Concept ID__'], url: data['__Concept URL__'], search_meta: {search_normalized_score: data['__Match Score__'], match_type: snakeCase(data['__Match Type__'])}, repo: repo}
+        let concept = {id: data['__Concept ID__'], display_name: data['__Concept Name__'], url: data['__Concept URL__'], search_meta: {search_normalized_score: data['__Match Score__'], match_type: snakeCase(data['__Match Type__'])}, repo: repo}
         if(concept?.id) {
           _mapSelected[index] = concept
           _repo = repo
