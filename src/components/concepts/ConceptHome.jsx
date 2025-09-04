@@ -31,7 +31,7 @@ const ConceptHome = props => {
     setConcept(props.concept || {})
     getService().get().then(response => {
       const resource = response.data
-      setConcept(resource)
+      setConcept({...resource, search_meta: {...(props?.concept?.search_meta || {})}})
       props.repo?.id ? setRepo(repo) : fetchRepo(resource)
       getMappings(resource)
     })

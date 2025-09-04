@@ -709,10 +709,11 @@ const MapProject = () => {
                     _prev[concept.row.__index] = _concept
                     return _prev
                   })
+                  const mapType = get(concept, 'results.0.search_meta.map_type') || 'SAME-AS'
                   prev.readyForReview = uniq([...prev.readyForReview, concept.row.__index])
                   setDecisions(prev => ({...prev, [concept.row.__index]: 'map'}))
-                  setMapTypes(prev => ({...prev, [concept.row.__index]: 'SAME-AS'}))
-                  log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: 'SAME-AS'}}, concept.row.__index)
+                  setMapTypes(prev => ({...prev, [concept.row.__index]: mapType}))
+                  log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: mapType}}, concept.row.__index)
                 } else
                   prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
               })

@@ -69,6 +69,7 @@ const ConceptHeader = ({concept, repo, onClose, repoURL, onEdit, nested, loading
           onMap &&
             <MapButton
               simple
+              selected={concept?.search_meta?.map_type}
               onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType, true)}
               isMapped={isSelectedForMap(concept)}
               sx={{marginLeft: '8px'}}

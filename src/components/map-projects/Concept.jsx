@@ -85,6 +85,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
         isSelectedForMap &&
             <MapButton
               simple
+              selected={concept?.search_meta?.map_type}
               onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
               isMapped={isSelectedForMap(concept)}
               sx={{marginLeft: '8px'}}
