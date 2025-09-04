@@ -121,7 +121,7 @@ const MapProject = () => {
   // project state
   const [project, setProject] = React.useState(null)
   const [name, setName] = React.useState('')
-  const [owner, setOwner] = React.useState(user.url)
+  const [owner, setOwner] = React.useState(user?.url)
   const [description, setDescription] = React.useState('')
   const [file, setFile] = React.useState(false)
   const [data, setData] = React.useState(false)
