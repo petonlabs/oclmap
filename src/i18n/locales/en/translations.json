@@ -1,6 +1,7 @@
 {
   "common": {
     "or": "or",
+    "action": "Action",
     "language": "Language",
     "languages": "Languages",
     "preferred_language": "Preferred Language",

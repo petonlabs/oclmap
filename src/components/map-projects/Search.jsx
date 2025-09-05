@@ -20,17 +20,53 @@ import SearchFilters from '../search/SearchFilters'
 import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
+import MapButton from './MapButton'
 
 const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
+  const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
+
 
   const onKeyPress = event => {
     if(event.key === 'Enter') {
       if(searchStr)
         onSearch(event)
     }
+  }
+
+  const getExtraColumns = () => {
+    let cols = [
+      {
+        sortable: false,
+        id: 'mappings',
+        labelKey: 'common.action',
+        align: 'center',
+        renderer: item => {
+          return (
+            <MapButton
+              simple
+              selected={item?.search_meta?.map_type}
+              onClick={(event, applied, mapType) => onMap(event, item, !applied, mapType)}
+              isMapped={isSelectedForMap(item)}
+              sx={{marginLeft: '8px'}}
+            />
+          )
+        },
+      },
+    ]
+    if(display === 'card')
+      cols = [
+        {
+          sortable: false,
+          id: 'mappings',
+          labelKey: 'mapping.same_as_mappings',
+          renderer: item => <Mappings item={item} />,
+        },
+        ...cols
+      ]
+    return cols
   }
 
   return (
@@ -114,17 +150,18 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
               <Skeleton height={58} key={props?.key} /> :
             <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />
           }
-          display='card'
+          display={display}
+          onDisplayChange={setDisplay}
           nested
           results={results}
           resource='concepts'
           noSorting
-          noToolbar
+          noToolbar={results?.results?.length === 0}
           noPagination={results?.results?.length === 0}
           searchedText={searchStr}
           noResults={!isLoading && !isNaN(results.page) && results?.results?.length === 0}
           isLoading={isLoading}
-          resultContainerStyle={{height: 'calc(100vh - 615px)', overflow: 'auto'}}
+          resultContainerStyle={{height: 'calc(100vh - 645px)', overflow: 'auto'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {
@@ -133,14 +170,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           }}
           selectedToShow={showItem}
           onPageChange={(page, pageSize) => onSearch(null, page, pageSize)}
-          extraColumns={[
-            {
-              sortable: false,
-              id: 'mappings',
-              labelKey: 'mapping.same_as_mappings',
-              renderer: item => <Mappings item={item} />,
-            },
-          ]}
+          extraColumns={getExtraColumns()}
         />
       </div>
     </div>
