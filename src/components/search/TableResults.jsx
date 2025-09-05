@@ -71,7 +71,7 @@ const EnhancedTableHead = props => {
   );
 }
 
-const TableResults = ({selected, bgColor, handleClick, handleRowClick, handleSelectAllClick, results, resource, nested, isSelected, isItemShown, order, orderBy, className, style, onOrderByChange, selectedToShowItem, size, excludedColumns, extraColumns}) => {
+const TableResults = ({selected, bgColor, handleClick, handleRowClick, handleSelectAllClick, results, resource, nested, isSelected, isItemShown, order, orderBy, className, style, onOrderByChange, selectedToShowItem, size, excludedColumns, extraColumns, noHeader}) => {
   const rows = results?.results || []
   const getValue = (row, column) => {
     let val = get(row, column.value)
@@ -97,23 +97,26 @@ const TableResults = ({selected, bgColor, handleClick, handleRowClick, handleSel
   };
 
   return (
-    <TableContainer style={style || {height: 'calc(100vh - 275px)'}} className={className}>
+    <TableContainer sx={style || {height: 'calc(100vh - 275px)'}} className={className}>
         <Table
           stickyHeader
           size={size || 'small'}
         >
-          <EnhancedTableHead
-            size={size}
-            bgColor={bgColor}
-            numSelected={selected.length}
-            order={order}
-            orderBy={orderBy}
-            onSelectAllClick={handleSelectAllClick}
-            onRequestSort={handleRequestSort}
-            rowCount={rows.length || 0}
-            resource={resource}
-            columns={columns}
-          />
+          {
+            !noHeader &&
+              <EnhancedTableHead
+                size={size}
+                bgColor={bgColor}
+                numSelected={selected.length}
+                order={order}
+                orderBy={orderBy}
+                onSelectAllClick={handleSelectAllClick}
+                onRequestSort={handleRequestSort}
+                rowCount={rows.length || 0}
+                resource={resource}
+                columns={columns}
+              />
+          }
           <TableBody>
             {rows.map((row, index) => {
               const id = row.version_url || row.url || row.id

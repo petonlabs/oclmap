@@ -98,7 +98,7 @@ const SearchResults = props => {
     }
     await new Promise(r => setTimeout(r, ms))
     setDisplay(newDisplay)
-    props.onDisplayChange()
+    props.onDisplayChange(newDisplay)
   }
 
   const handleChangePage = (event, newPage) => {
@@ -207,6 +207,10 @@ const SearchResults = props => {
     setSelected(props.selected || [])
   }, [props.selected])
 
+  React.useEffect(() => {
+    setDisplay(props.display || 'table')
+  }, [props.display])
+
 
   const defaultLabelDisplayedRows = ({ from, to, count }) => `${from}–${to} of ${count !== -1 ? count?.toLocaleString() : `more than ${to?.toLocaleString()}`}`
 
@@ -231,6 +235,7 @@ const SearchResults = props => {
             toolbarControl={props.toolbarControl}
           />
       }
+      {props.subheader}
       {
         props.noResults && props.searchedText ?
           <NoResults searchedText={props.searchedText} height={props.height || '220px'} /> :
@@ -238,7 +243,7 @@ const SearchResults = props => {
           {
             isCardDisplay ?
               <CardResults {...resultsProps} className={cardDisplayAnimation} /> :
-            <TableResults {...resultsProps} className={tableDisplayAnimation} />
+            <TableResults {...resultsProps} className={tableDisplayAnimation} noHeader={props.noHeader} />
           }
           {
           !props.noPagination &&
