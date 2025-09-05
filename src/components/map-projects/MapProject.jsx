@@ -774,10 +774,10 @@ const MapProject = () => {
     let row = {}
     forEach(csvRow,  (value, key) => {
       if((value === 0 || value) && !has(csvRow, key + '__updated')) {
-        const column = find(columns, {original: key.replace('__updated', '')})
+        const column = find(columns, {original: key.replace('__updated', '')}) || find(columns, {dataKey: key.replace('__updated', '')})
         key = column?.label || key
         const dataKey = column?.dataKey || key
-        if(columnVisibilityModel[dataKey] !== false) {
+        if(columnVisibilityModel[dataKey] !== false && (dataKey === '__index' || isValidColumnValue(column?.label))) {
           let newValue = value
           let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
           let isList = key === '__index' ? false : newValue.includes('\n')
