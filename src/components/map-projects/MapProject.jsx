@@ -742,7 +742,7 @@ const MapProject = () => {
   };
 
   const fetchVersions = (url, _selectedVersion) => {
-    APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/').get().then(response => {
+    APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/?verbose=true').get().then(response => {
       let _versions = response.data
       setVersions(_versions)
       if(_selectedVersion) {

@@ -18,6 +18,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
+import isEmpty from 'lodash/isEmpty'
+
 import { toV3URL } from '../../common/utils'
 import NamespaceDropdown from '../common/NamespaceDropdown'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
@@ -143,6 +145,13 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
           <FormHelperText sx={{marginTop: '4px', marginLeft: '8px', color: 'warning.main'}}>
             {`${repo?.owner}:${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
           </FormHelperText>
+      }
+      {
+        !isEmpty(repoVersion?.meta?.display?.default_filter) && repoVersion?.meta?.display?.default_filter &&
+        <FormHelperText sx={{marginTop: '4px', marginLeft: '8px'}}>
+            <div>Default Filters:</div>
+          <div style={{whiteSpace: 'pre'}}>{JSON.stringify(repoVersion.meta.display.default_filter, undefined, 2)}</div>
+        </FormHelperText>
       }
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
