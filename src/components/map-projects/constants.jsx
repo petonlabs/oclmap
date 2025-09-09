@@ -12,10 +12,10 @@ import { RECOMMEND_COLOR, AVAILABLE_COLOR, UNRANKED_COLOR } from '../../common/c
 const ID_HEADER = {id: 'id', label: 'ID', description: 'Exact match on concept ID'}
 const COMMON_HEADERS = [
   {id: 'description', label: 'Description', description: 'Basic string search on concept descriptions'},
-  {id: 'concept_class', label: 'Property: Class', description: 'String matching on concept class (e.g. diagnosis, symptom)'},
-  {id: 'datatype', label: 'Property: Datatype', description: 'String matching on concept datatype (e.g. numeric, coded)'},
   {id: 'mapping_code', label: 'Mapping: Code', description: 'Matches concepts in the target repo that share a mapping with the input row. For example, the input row and target concept share a mapping to the same LOINC code.'},
   {id: 'mapping_list', label: 'Mapping: List', description: 'Matches the target repo concept ID or when an input row and a concept in the target repo share a common mapping'},
+  {id: 'concept_class', label: 'Property: Class', description: 'String matching on concept class (e.g. diagnosis, symptom)'},
+  {id: 'datatype', label: 'Property: Datatype', description: 'String matching on concept datatype (e.g. numeric, coded)'},
 ]
 
 export const HEADERS = [

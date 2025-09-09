@@ -199,7 +199,12 @@ const MapProject = () => {
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
-  const headers = ['llm', 'custom'].includes(algo) ? SEMANTIC_SEARCH_HEADERS : HEADERS
+  let headers = ['llm', 'custom'].includes(algo) ? SEMANTIC_SEARCH_HEADERS : HEADERS
+  if(repoVersion?.properties)
+    headers = [...headers, ...compact(repoVersion?.filters?.map(_filter => {
+      if(_filter?.code && !['concept_class', 'datatype'].includes(_filter.code))
+        return {id: `property__${_filter.code}`, label: `Property: ${_filter.code}`, description: _filter.description || ''}
+    }))]
 
   React.useEffect(() => {
     if(!isEmpty(decisions)) {
@@ -796,6 +801,8 @@ const MapProject = () => {
             newKey = 'other_map_codes'
           if(newKey === 'same_as')
             newKey = 'same_as_map_codes'
+          if(newKey.startsWith('property_'))
+            newKey = newKey.replace('property_', 'properties__')
           if(isList)
             row[newKey] = [...(row[newKey] || []), ...newValue]
           else
