@@ -635,7 +635,8 @@ const MapProject = () => {
         'source_version': repoVersion?.id || _repo.version || _repo.id,
         'source': _repo.short_code || _repo.id
       },
-      map_config: getMapConfigs()
+      map_config: getMapConfigs(),
+      filter: repoVersion?.meta?.display?.default_filter || {}
     }
   }
 
