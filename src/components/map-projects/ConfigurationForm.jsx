@@ -7,6 +7,8 @@ import Menu from '@mui/material/Menu';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton'
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 import { styled } from '@mui/material/styles';
 
@@ -42,7 +44,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -148,8 +150,8 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       }
       {
         !isEmpty(repoVersion?.meta?.display?.default_filter) && repoVersion?.meta?.display?.default_filter &&
-        <FormHelperText sx={{marginTop: '4px', marginLeft: '8px'}}>
-            <div>Default Filters:</div>
+          <FormHelperText sx={{marginLeft: '8px'}}>
+            <FormControlLabel size='small' control={<Checkbox size='small' checked={includeDefaultFilter} onChange={event => setIncludeDefaultFilter(event.target.checked)} sx={{padding: '8px 4px'}} />} label="Default Filter" />
           <div style={{whiteSpace: 'pre'}}>{JSON.stringify(repoVersion.meta.display.default_filter, undefined, 2)}</div>
         </FormHelperText>
       }

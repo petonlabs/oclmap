@@ -188,6 +188,7 @@ const MapProject = () => {
   const [deleteProject, setDeleteProject] = React.useState(false)
   const [loadingProject, setLoadingProject] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
+  const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
 
   // algos
   const [algos, setAlgos] = React.useState([
@@ -1395,6 +1396,8 @@ const MapProject = () => {
                     setSemanticBatchSize={setSemanticBatchSize}
                     candidatesScore={candidatesScore}
                     onScoreChange={setCandidatesScore}
+                    includeDefaultFilter={includeDefaultFilter}
+                    setIncludeDefaultFilter={setIncludeDefaultFilter}
                   />
                 </div>
           }
@@ -1750,6 +1753,8 @@ const MapProject = () => {
                 setSemanticBatchSize={setSemanticBatchSize}
                 candidatesScore={candidatesScore}
                 onScoreChange={setCandidatesScore}
+                includeDefaultFilter={includeDefaultFilter}
+                setIncludeDefaultFilter={setIncludeDefaultFilter}
               />
             </div> :
           (
