@@ -111,7 +111,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const [display, setDisplay] = React.useState('card')
   const recommendedScore = candidatesScore?.recommended
   const availableScore = candidatesScore?.available
-  const concepts = find(candidates, c => c.row?.__index === rowIndex )?.results || []
+  const results = find(candidates, c => c.row?.__index === rowIndex )?.results
+  const isNoneLoaded = results === null || results === undefined
+  const concepts = results || []
   const canFetchMore = concepts?.length > 0
   let recommended = []
   let available = []
@@ -173,21 +175,21 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
         >
           <li>
             {
-              (isLoading && !candidates?.length) ?
+              (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} bucketId={`${rowIndex}-recommended`} noToolbar={false} onDisplayChange={setDisplay} toolbarControl={<IncludeRetired checked={retired} onChange={setRetired} sx={{margin: '3px 0 0px 8px', float: 'right', '.MuiTypography-root': {fontSize: '12px'}}} />} />
             }
           </li>
           <li>
             {
-              (isLoading && !candidates?.length) ?
+              (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList {...props} candidates={available} header='Available Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} bucketId={`${rowIndex}-available`} noToolbar />
             }
           </li>
           <li>
             {
-              (isLoading && !candidates?.length) ?
+              (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList {...props} candidates={unranked} header='Unranked Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} noToolbar />
             }
