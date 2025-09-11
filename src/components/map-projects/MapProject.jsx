@@ -599,7 +599,33 @@ const MapProject = () => {
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
 
-  const fetchMappedSources = url => APIService.new().overrideURL(url).appendToUrl('mapped-sources/?excludeSelf=false&brief=true').get().then(response => setMappedSources(response?.data || []))
+  const fetchMappedSources = url => {
+    let limit = 25
+
+    const recurse = (offset, page, fetchedSoFar, accumulated) => {
+      _fetchMappedSources(url, limit, offset, page, response => {
+        const data = response?.data || []
+        const updated = [...accumulated, ...data]
+
+        setMappedSources(updated)
+
+        const fetched = fetchedSoFar + data.length
+        const numFound = parseInt(response?.headers?.num_found || 0)
+
+        if (fetched < numFound) {
+          recurse(offset + limit, page + 1, fetched, updated)
+        }
+      })
+    }
+
+    recurse(0, 1, 0, [])
+  }
+
+  const _fetchMappedSources = (
+    url, limit, offset, page, callback
+  ) => {
+    APIService.new().overrideURL(url).appendToUrl('mapped-sources/').get(null, null, {excludeSelf: false, brief: true, limit: limit || 25, offset: offset || 0, page: page || 1}).then(callback)
+  }
 
   const onRepoVersionChange = version => {
     setRepoVersion(version)
