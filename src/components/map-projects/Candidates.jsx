@@ -19,7 +19,7 @@ import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
 import MapButton from './MapButton'
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
 
   const getExtraColumns = () => {
@@ -79,7 +79,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
               </ListSubheader>
           }
           title=' '
-          renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} />}
+          renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} />}
           display={display}
           onDisplayChange={onDisplayChange}
           nested
@@ -107,7 +107,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading, candidatesScore}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading, candidatesScore, repoVersion}) => {
   const [display, setDisplay] = React.useState('card')
   const recommendedScore = candidatesScore?.recommended
   const availableScore = candidatesScore?.available
@@ -139,6 +139,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     showItem: showItem,
     isLoading: isLoading,
     display: display,
+    repoVersion: repoVersion
   }
   return (
     <div className='col-xs-12 padding-0'>

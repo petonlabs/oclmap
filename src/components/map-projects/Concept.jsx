@@ -1,9 +1,11 @@
 import React from 'react'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
+
 import Retired from '../common/Retired'
 import Score from './Score'
 import MapButton from './MapButton'
+import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 
 const getBestSynonym = synonyms => {
   return synonyms
@@ -20,7 +22,8 @@ const getBestSynonym = synonyms => {
     })[0].text; // return best match's text
 }
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore}) => {
+
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -58,22 +61,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
           }
           </span>
         }
-        secondary={
-          <>
-            {
-              concept.concept_class &&
-                <>
-                  <i style={{marginRight: '2px'}}>Class:</i> {concept.concept_class}
-                </>
-            }
-            {
-              concept.datatype &&
-                <>
-                  <i style={{marginLeft: '6px', marginRight: '2px'}}>Datatype:</i> {concept.datatype}
-                </>
-            }
-          </>
-        }
+        secondary={<ConceptSummaryProperties concept={concept} repoVersion={repoVersion} />}
         sx={{margin: '2px 0', '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px'}}}
       />
       <span style={{display: 'flex', alignItems: 'center'}}>

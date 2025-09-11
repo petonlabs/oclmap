@@ -637,7 +637,7 @@ const MapProject = () => {
         'source': _repo.short_code || _repo.id
       },
       map_config: getMapConfigs(),
-      filter: repoVersion?.meta?.display?.default_filter || {}
+      filter: includeDefaultFilter ? repoVersion?.meta?.display?.default_filter || {} : {}
     }
   }
 
@@ -1245,7 +1245,8 @@ const MapProject = () => {
       q: searchStr,
       page: page || 1,
       includeRetired: includeRetired === undefined ? retired : includeRetired,
-      ...getFacetQueryParam(appliedFilters || appliedFacets[rowIndex])
+      conceptFilterDefault: includeDefaultFilter,
+      ...getFacetQueryParam(appliedFilters || appliedFacets[rowIndex]),
     }).then(response => {
       let items = response.data
       setSearchedConcepts({...searchedConcepts, [row.__index]: items})
@@ -1769,6 +1770,7 @@ const MapProject = () => {
                 </div>
                 <MappingDecisionResult
                   targetConcept={targetConcept}
+                  repoVersion={repoVersion}
                   row={row}
                   rowIndex={rowIndex}
                   repo={repo}
@@ -1857,6 +1859,7 @@ const MapProject = () => {
                       onFetchMore={onFetchMoreCandidates}
                       retired={retired}
                       setRetired={toggleRetired}
+                      repoVersion={repoVersion}
                     />
                 }
                 {
@@ -1937,18 +1940,18 @@ const MapProject = () => {
             open
             onClose={() => setShowItem(false)}
             scroll='paper'
+            maxWidth='sm'
+            fullWidth
             sx={{
               '& .MuiDialog-paper': {
                 borderRadius: '28px',
-                minWidth: '312px',
-                minHeight: '262px',
-                padding: 0
+                padding: 0,
               }
             }}
           >
             <ConceptHome
               style={{borderRadius: 0}}
-              detailsStyle={{height: 'calc(100vh - 550px)'}}
+              detailsStyle={{height: 'calc(100vh - 400px)'}}
               source={repo}
               repo={repoVersion}
               url={showItem.url}

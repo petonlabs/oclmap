@@ -12,10 +12,11 @@ import forEach from 'lodash/forEach'
 import compact from 'lodash/compact'
 import { URIToParentParams } from '../../common/utils'
 import Retired from '../common/Retired'
+import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 import MapButton from './MapButton'
 import Score from './Score'
 
-const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns}) => {
+const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns, repoVersion}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
   const hasClass = has(row, 'Class') || has(row, 'Concept Class') || has(row, 'Property: Class')
   const hasDatatype = has(row, 'Datatype') || has(row, 'datatype') || has(row, 'Property: Datatype')
@@ -155,8 +156,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                     <>
                       <div className='searchable'>
                         <span className='searchable' style={{fontSize: '12px'}}>
-                          Class: <i>{targetConcept.concept_class}</i>,
-                          Datatype: <i>{targetConcept.datatype}</i>
+                          <ConceptSummaryProperties concept={targetConcept} repoVersion={repoVersion}  />
                           {
                             rightMappings &&
                               <><br/>Mappings: <i>{rightMappings}</i></>

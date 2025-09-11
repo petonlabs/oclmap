@@ -148,7 +148,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
             props =>
             isLoading ?
               <Skeleton height={58} key={props?.key} /> :
-            <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} noScore />
+              <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} repoVersion={repoVersion} noScore />
           }
           display={display}
           onDisplayChange={setDisplay}
