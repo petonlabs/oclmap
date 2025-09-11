@@ -62,7 +62,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
           </span>
         }
         secondary={<ConceptSummaryProperties concept={concept} repoVersion={repoVersion} />}
-        sx={{margin: '2px 0', '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px'}}}
+        sx={{margin: '2px 0', '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px', overflow: 'scroll'}}}
       />
       <span style={{display: 'flex', alignItems: 'center'}}>
         {
