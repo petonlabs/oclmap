@@ -1369,7 +1369,7 @@ const MapProject = () => {
         candidates: _candidates
       }
       APIService.new().overrideURL(project.url).appendToUrl('recommend-beta/').post(payload).then(response => {
-        if(response?.detal) {
+        if(response?.detail) {
           setAlert({message: response.detail, severity: 'error'})
           return
         }

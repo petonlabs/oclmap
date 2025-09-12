@@ -25,7 +25,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
             AI Candidates Analysis
             <span>
-              <Button variant='text' sx={{textTransform: 'none', fontSize: '12px', padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
+              <Button disabled={!Boolean(analysis)} variant='text' sx={{textTransform: 'none', fontSize: '12px', padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
                 View raw
               </Button>
             </span>
