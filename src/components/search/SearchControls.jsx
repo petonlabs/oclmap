@@ -5,7 +5,7 @@ import DownIcon from '@mui/icons-material/ArrowDropDown';
 import DisplayMenu from './DisplayMenu';
 import SortMenu from './SortMenu';
 
-const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, onOrderByChange, sortableFields, noCardDisplay, extraControls}) => {
+const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, onOrderByChange, sortableFields, noCardDisplay, extraControls, alignLeft, rightControl}) => {
   const { t } = useTranslation()
   const [displayAnchorEl, setDisplayAnchorEl] = React.useState(null);
   const [sortAnchorEl, setSortAnchorEl] = React.useState(null);
@@ -14,40 +14,68 @@ const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, on
   const onSortClick = event => setSortAnchorEl(event.currentTarget)
   const onSortMenuClose = () => setSortAnchorEl(null);
 
+  const getControls = () => {
+    return (
+      <>
+        {
+          sortableFields?.length > 0 &&
+            <Button disabled={Boolean(disabled)} variant='contained' color='default' size='small' style={{textTransform: 'none'}} endIcon={<DownIcon fontSize='inherit' />} onClick={onSortClick}>
+              {t('search.sort_by')}
+            </Button>
+        }
+        {
+          !noCardDisplay &&
+            <Button id="display-menu" disabled={Boolean(disabled)} variant='contained' color='default' size='small' style={{textTransform: 'none', marginLeft: '8px'}} endIcon={<DownIcon fontSize='inherit' />} onClick={onDisplayClick}>
+              {t('search.display')}
+            </Button>
+        }
+        {
+          !noCardDisplay &&
+            <DisplayMenu
+              labelId="display-menu"
+              anchorEl={displayAnchorEl}
+              onClose={onDisplayMenuClose}
+              onSelect={onDisplayChange}
+              selected={display}
+            />
+        }
+        <SortMenu
+          labelId="sort-menu"
+          anchorEl={sortAnchorEl}
+          onClose={onSortMenuClose}
+          onChange={onOrderByChange}
+          order={order}
+          orderBy={orderBy}
+          fields={sortableFields}
+        />
+        {extraControls}
+      </>
+    )
+  }
+
   return (
-    <div className='col-xs-12 padding-0' style={{float: 'right', textAlign: 'right'}}>
+    <div className='col-xs-12 padding-0' style={{display: 'inline-flex', alignItems: 'center'}}>
       {
-      sortableFields?.length > 0 &&
-          <Button disabled={Boolean(disabled)} variant='contained' color='default' size='small' style={{textTransform: 'none'}} endIcon={<DownIcon fontSize='inherit' />} onClick={onSortClick}>
-            {t('search.sort_by')}
-          </Button>
+        alignLeft ?
+          <>
+            <div className='col-xs-12 padding-0' style={{float: 'left', textAlign: 'right', display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between'}}>
+              <span>
+                {getControls()}
+              </span>
+              {
+              rightControl &&
+                  <span>
+                    {rightControl}
+                  </span>
+              }
+            </div>
+          </> :
+        <>
+          <div className='col-xs-12 padding-0' style={{float: 'right', textAlign: 'right', display: 'inline-flex', alignItems: 'center', justifyContent: 'right'}}>
+            {getControls()}
+          </div>
+        </>
       }
-      {
-      !noCardDisplay &&
-          <Button id="display-menu" disabled={Boolean(disabled)} variant='contained' color='default' size='small' style={{textTransform: 'none', marginLeft: '8px'}} endIcon={<DownIcon fontSize='inherit' />} onClick={onDisplayClick}>
-            {t('search.display')}
-          </Button>
-      }
-      {
-      !noCardDisplay &&
-          <DisplayMenu
-            labelId="display-menu"
-            anchorEl={displayAnchorEl}
-            onClose={onDisplayMenuClose}
-            onSelect={onDisplayChange}
-            selected={display}
-          />
-      }
-      <SortMenu
-        labelId="sort-menu"
-        anchorEl={sortAnchorEl}
-        onClose={onSortMenuClose}
-        onChange={onOrderByChange}
-        order={order}
-        orderBy={orderBy}
-        fields={sortableFields}
-      />
-      {extraControls}
     </div>
   )
 }

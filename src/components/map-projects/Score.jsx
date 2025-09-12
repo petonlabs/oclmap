@@ -4,10 +4,13 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
+import Tooltip from '@mui/material/Tooltip'
+import AssistantIcon from '@mui/icons-material/Assistant';
 import isNumber from 'lodash/isNumber'
 import isNaN from 'lodash/isNaN'
 
-const Score = ({concept, setShowHighlights, sx}) => {
+
+const Score = ({concept, setShowHighlights, sx, isAIRecommended}) => {
   let percentile = concept?.search_meta?.search_normalized_score
   if(percentile && !isNumber(percentile))
     percentile = parseFloat(percentile)
@@ -29,6 +32,12 @@ const Score = ({concept, setShowHighlights, sx}) => {
         } : undefined}
       >
         <ListItemIcon sx={{minWidth: 'auto', marginRight: '6px'}}>
+          {
+            isAIRecommended &&
+              <Tooltip title='AI Recommended'>
+            <AssistantIcon color='primary' fontSize='small' sx={{marginRight: '4px'}} />
+            </Tooltip>
+          }
           {icon}
         </ListItemIcon>
         <ListItemText

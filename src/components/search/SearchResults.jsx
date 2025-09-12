@@ -17,7 +17,8 @@ import CardResults from './CardResults';
 import { SORT_ATTRS } from './ResultConstants'
 
 const ResultsToolbar = props => {
-  const { numSelected, title, onFiltersToggle, disabled, isFilterable, onDisplayChange, display, order, orderBy, onOrderByChange, sortableFields, noCardDisplay, isFiltersApplied, toolbarControl } = props;
+  const { numSelected, title, onFiltersToggle, disabled, isFilterable, onDisplayChange, display, order, orderBy, onOrderByChange, sortableFields, noCardDisplay, isFiltersApplied, toolbarControl, alignToolbarLeft, rightControl } = props;
+  const hideTitle = !title?.trim() && alignToolbarLeft && rightControl
   return (
     <Toolbar
       sx={{
@@ -48,7 +49,7 @@ const ResultsToolbar = props => {
         >
           {numSelected} selected
         </Typography>
-      ) : (
+      ) : !hideTitle && (
         title ?
           <Typography
             sx={{ flex: '1 1 100%', marginLeft: isFilterable ? '8px' : 0 }}
@@ -58,9 +59,10 @@ const ResultsToolbar = props => {
           >
             {title}
           </Typography> :
+        ((alignToolbarLeft && rightControl) ? '' :
         <div style={{flex: '1 1 100%', marginLeft: isFilterable ? '8px' : 0}}>
           <Skeleton variant="text" sx={{ fontSize: '1rem', width: '15%' }} />
-        </div>
+        </div>)
       )}
       <SearchControls
         disabled={disabled}
@@ -72,6 +74,8 @@ const ResultsToolbar = props => {
         sortableFields={sortableFields}
         noCardDisplay={noCardDisplay}
         extraControls={toolbarControl}
+        alignLeft={alignToolbarLeft}
+        rightControl={rightControl}
       />
     </Toolbar>
   );
@@ -233,6 +237,8 @@ const SearchResults = props => {
             onOrderByChange={props.onOrderByChange}
             noCardDisplay={noCardDisplay}
             toolbarControl={props.toolbarControl}
+            alignToolbarLeft={props.alignToolbarLeft}
+            rightControl={props.rightControl}
           />
       }
       {props.subheader}

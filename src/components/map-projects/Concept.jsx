@@ -23,7 +23,7 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion}) => {
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -67,7 +67,7 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
       <span style={{display: 'flex', alignItems: 'center'}}>
         {
           !noScore &&
-            <Score concept={concept} setShowHighlights={setShowHighlights} />
+            <Score concept={concept} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} />
         }
         {
         isSelectedForMap &&

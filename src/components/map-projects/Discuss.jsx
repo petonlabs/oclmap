@@ -16,6 +16,7 @@ import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import RejectIcon from '@mui/icons-material/Clear';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
+import AssistantIcon from '@mui/icons-material/Assistant';
 
 import map from 'lodash/map'
 import startCase from 'lodash/startCase'
@@ -32,6 +33,8 @@ const Discuss = ({ logs, onAdd }) => {
       }
       return description
     }
+    if(['AIRecommendation'].includes(log.action))
+      return `${log.action}: ${log.description}`
     if(['commented'].includes(log.action)) {
       return <b>{log.description}</b>
     }
@@ -39,6 +42,8 @@ const Discuss = ({ logs, onAdd }) => {
   }
 
   const getIcon = (log, color) => {
+    if(log.action === 'AIRecommendation')
+      return <AssistantIcon fontSize='small' color={color} />
     if(log.action === 'commented')
       return <CommentIcon fontSize='small' color={color} />
     if(['mapped'].includes(log.action))
@@ -57,7 +62,7 @@ const Discuss = ({ logs, onAdd }) => {
       return 'error'
     if(['proposed'].includes(log.action))
       return 'warning'
-    if(['mapped', 'auto-matched'].includes(log.action))
+    if(['mapped', 'auto-matched', 'AIRecommendation'].includes(log.action))
       return 'primary'
     return undefined
   }

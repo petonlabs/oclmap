@@ -189,6 +189,7 @@ const MapProject = () => {
   const [loadingProject, setLoadingProject] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
   const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
+  const [analysis, setAnalysis] = React.useState({})
 
   // algos
   const [algos, setAlgos] = React.useState([
@@ -1359,6 +1360,25 @@ const MapProject = () => {
     return 'unranked'
   }
 
+  const fetchRecommendation = () => {
+    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === rowIndex)?.results || []
+    if(isNumber(rowIndex) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
+      const payload = {
+        target_repo_url: repo.version_url,
+        row: prepareRow(row),
+        candidates: _candidates
+      }
+      APIService.new().overrideURL(project.url).appendToUrl('recommend-beta/').post(payload).then(response => {
+        if(response?.detal) {
+          setAlert({message: response.detail, severity: 'error'})
+          return
+        }
+        log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data})
+        setAnalysis({...analysis, [rowIndex]: response.data})
+      })
+    }
+  }
+
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       {
@@ -1886,6 +1906,8 @@ const MapProject = () => {
                       retired={retired}
                       setRetired={toggleRetired}
                       repoVersion={repoVersion}
+                      onFetchRecommendation={fetchRecommendation}
+                      analysis={analysis[rowIndex]}
                     />
                 }
                 {
