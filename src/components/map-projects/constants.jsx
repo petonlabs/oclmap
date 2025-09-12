@@ -79,7 +79,7 @@ export const MATCH_TYPES = {
   },
 }
 
-export const DECISION_TABS = ['candidates', 'propose', 'search', 'discuss']
+export const DECISION_TABS = ['candidates', 'search', 'propose', 'discuss']
 
 export const SCORES_COLOR = {
   recommended: RECOMMEND_COLOR,
