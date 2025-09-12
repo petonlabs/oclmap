@@ -1373,7 +1373,8 @@ const MapProject = () => {
           setAlert({message: response.detail, severity: 'error'})
           return
         }
-        log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data})
+        if(get(response.data, 'choices.0.message.content.rationale.narrative'))
+          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data})
         setAnalysis({...analysis, [rowIndex]: response.data})
       })
     }
