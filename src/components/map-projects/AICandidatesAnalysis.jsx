@@ -8,8 +8,10 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import DialogTitle from '@mui/material/DialogTitle'
 import Button from '@mui/material/Button'
+import Tooltip from '@mui/material/Tooltip'
 import Skeleton from '@mui/material/Skeleton'
 import CloseIcon from '@mui/icons-material/Close'
+import DataObjectIcon from '@mui/icons-material/DataObject';
 
 import get from 'lodash/get'
 
@@ -24,11 +26,13 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-6px'}}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
             AI Candidates Analysis
+            <Tooltip title='View Raw JSON' placement='right'>
             <span>
-              <Button disabled={!analysis} variant='text' sx={{textTransform: 'none', fontSize: '12px', padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
-                View raw
-              </Button>
+              <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
+                <DataObjectIcon fontSize='inherit' />
+              </IconButton>
             </span>
+            </Tooltip>
           </Typography>
           <IconButton onClick={onClose} size='small' color='secondary'>
             <CloseIcon fontSize='small' />
