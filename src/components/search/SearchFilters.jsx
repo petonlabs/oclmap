@@ -1,8 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {omit, omitBy, isEmpty, isObject, has, map, startCase, includes, get, without, forEach, flatten, values} from 'lodash';
+import {omit, omitBy, isEmpty, isObject, has, map, startCase, includes, get, without, forEach, flatten, values, pickBy, isEqual, filter, reject, cloneDeep, keys} from 'lodash';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import Button from '@mui/material/Button';
-import ClearIcon from '@mui/icons-material/Clear';
+import Badge from '@mui/material/Badge';
+import Tooltip from '@mui/material/Tooltip';
 import DownIcon from '@mui/icons-material/ArrowDropDown';
 import UpIcon from '@mui/icons-material/ArrowDropUp';
 import List from '@mui/material/List';
@@ -12,18 +14,23 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
+import CircularProgress from '@mui/material/CircularProgress';
+import { URIToParentParams, currentUserHasAccess } from '../../common/utils'
+import { PRIMARY_COLORS } from '../../common/colors'
 import { FACET_ORDER } from './ResultConstants';
 
 
-const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters}) => {
+const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters}) => {
   const { t } = useTranslation()
   const [applied, setApplied] = React.useState({});
   const [count, setCount] = React.useState(0);
   const [expanded, setExpanded] = React.useState([])
 
-  const filterOrder = FACET_ORDER[resource]
+  const filterOrder = fieldOrder || FACET_ORDER[resource]
   let blacklisted = ['is_active', 'is_latest_version', 'is_in_latest_source_version'];
-  const isSourceChild = ['concepts', 'mappings'].includes(resource)
+  const isConcept = resource === 'concepts'
+  const isMapping = resource === 'mappings'
+  const isSourceChild = isConcept || isMapping
   const hasValidKwargs = !isEmpty(kwargs) && isObject(kwargs);
   if(hasValidKwargs) {
     if(kwargs.user || kwargs.org)
@@ -37,7 +44,6 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
   }
 
   let uiFilters = omit(omitBy(filters, isEmpty), blacklisted)
-
   if(isObject(kwargs) && !kwargs.collection && isSourceChild && !isEmpty(uiFilters) && !isEmpty(uiFilters.collection)){
     uiFilters['collection_membership'] = uiFilters.collection
     delete uiFilters.collection
@@ -46,31 +52,66 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
   if(has(uiFilters, 'experimental'))
     uiFilters.experimental = [[(uiFilters.experimental[0][0] === 1).toString(), uiFilters.experimental[0][1], uiFilters.experimental[0][2]]]
 
-  if(!isEmpty(filterOrder) && !isEmpty(uiFilters)) {
+  if((!isEmpty(filterOrder) || !isEmpty(propertyFilters)) && !isEmpty(uiFilters)) {
     const orderedUIFilters = {}
-    forEach(filterOrder, attr => {
+    let ordered = filterOrder?.length ? filterOrder : propertyFilters?.map(prop => prop?.code)
+    forEach(ordered, attr => {
       if(has(uiFilters, attr))
         orderedUIFilters[attr] = uiFilters[attr]
     })
+    if(isConcept) {
+      let orderedKeys = keys(uiFilters).sort()
+      orderedKeys.forEach(key => {
+        orderedUIFilters[key] = uiFilters[key]
+      })
+    }
     uiFilters = orderedUIFilters
+  }
+  if(isConcept){
+    const properties = pickBy(filters, (values, field) => field.startsWith('properties__') && !isEmpty(values))
+    if(!isEmpty(properties)) {
+      uiFilters = omit(uiFilters, ['conceptClass', 'datatype'])
+      uiFilters = {...properties, ...uiFilters}
+    }
   }
 
   const formattedName = (field, name) => {
+    let label;
     if(includes(['locale', 'version', 'source_version', 'nameTypes', 'expansion'], field))
-      return name
-    if(includes(['owner', 'source', 'collection', 'collection_membership'], field))
-      return name.replaceAll('_', '-').toUpperCase()
-    if(name) {
+      label = name
+    else if(includes(['owner', 'source', 'collection', 'collection_membership'], field))
+      label = name.replaceAll('_', '-').toUpperCase()
+    else if (field === 'targetRepo') {
+      const params = URIToParentParams(name)
+      return `${params.owner}:${params.repo}`
+    }
+    else if(name) {
       name = name.trim()
       if(name === 'n/a')
-        return name.toUpperCase()
-      return startCase(name)
+        label = name.toUpperCase()
+      else
+        label = get(filterDefinitions, name)?.label || name
     }
+    if(!label)
+      label = 'None'
+    if(isUnApplied(field, [name]))
+      label += '*'
+    return label
+  }
+
+  const formattedListSubheader = field => {
+    if(field.startsWith('properties__')){
+      const fields = field.split('__')
+      return `Property: ${startCase(fields[1])}`
+    } else if (isFixedConceptField(field)) {
+      return `Property: ${startCase(field)}`
+    }
+    return startCase(field)
   }
 
   const handleToggle = (field, value) => () => {
     const checked = !isApplied(field, value)
-    let newApplied = {...applied}
+    let newApplied = {...cloneDeep(applied)}
     let newCount = count
     if(checked) {
       newApplied[field] = newApplied[field] || {}
@@ -85,23 +126,23 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
       newApplied = omit(newApplied, field)
     setCount(newCount)
     setApplied(newApplied)
-    onChange(newApplied)
   };
 
   const onClear = () => {
     setApplied({})
     setCount(0)
+    if(onSaveAsDefaultFilters)
+      onSaveAsDefaultFilters({})
     onChange({})
   }
 
-  const isApplied = (field, value) => Boolean(get(applied[field], value[0]))
-
-  const getClearButtonText = () => {
-    let text = t('common.clear')
-    if(count)
-      text += ` ${count} ${t('search.filters').toLowerCase()}`
-    return text
+  const onApply = () => {
+    onChange(applied)
   }
+
+  const isApplied = (field, value) => Boolean(get(applied[field], value[0]))
+  const isUnApplied = (field, value) => isApplied(field, value) && !get(appliedFilters[field], value[0])
+  const canResetToDefaultFilters = (!isEqual(applied, repoDefaultFilters) || !isEqual(appliedFilters, repoDefaultFilters)) && !isEmpty(repoDefaultFilters)
 
   React.useEffect(() => {
     setCount(flatten(values(appliedFilters).map(v => values(v))).length)
@@ -109,9 +150,13 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
   }, [filters])
 
   const getFieldFilters = (field, fieldFilters) => {
+    let ordered = [
+      ...filter(fieldFilters, _filter => get(appliedFilters, `${field}.${_filter[0]}`)),
+      ...reject(fieldFilters, _filter => get(appliedFilters, `${field}.${_filter[0]}`)),
+    ]
     if(expanded.includes(field))
-      return fieldFilters
-    return fieldFilters.slice(0, 4)
+      return ordered
+    return ordered.slice(0, 4)
   }
 
   const toggleExpanded = field => {
@@ -121,41 +166,87 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
       setExpanded([...expanded, field])
   }
 
+  const unapplied = (!isEmpty(applied) || !isEmpty(appliedFilters)) && !isEqual(applied, appliedFilters)
+
+  const onSetDefaultFilters = () => {
+    if(unapplied)
+      onChange(applied)
+    onSaveAsDefaultFilters(applied)
+  }
+
+  const onResetDefaultFilters = () => {
+    setApplied(repoDefaultFilters)
+    onChange(repoDefaultFilters)
+  }
+
+  const isFixedConceptField = field => isConcept && ['conceptClass', 'datatype'].includes(field)
+
   return (
     <div className='col-xs-12 padding-0'>
-      <div className='col-xs-12' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2, padding: 0}}>
-        <span>
-          <b>{t('search.filters')}</b>
+      <div className='col-xs-12' style={{zIndex: 2, padding: '0px'}}>
+        <div className='col-xs-12' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px'}}>
+          <span>
+          <Badge badgeContent={count} color='primary' sx={{'.MuiBadge-badge': {top: '10px', left: '36px'}}}>
+            <b>{t('search.filters')}</b>
+          </Badge>
         </span>
         <span>
-          <Button variant='text' startIcon={<ClearIcon style={{color: 'inherit'}} fontSize='inherit' />} style={{textTransform: 'none'}} onClick={onClear} disabled={!count}>
-            {getClearButtonText()}
+            <Button variant='text' color='primary' style={{textTransform: 'none'}} onClick={onApply} disabled={!unapplied}>
+              {t('common.apply')}
+            </Button>
+          <Button variant='text' style={{textTransform: 'none'}} onClick={onClear} disabled={!count} color='error'>
+            {t('common.clear')}
           </Button>
         </span>
+        </div>
+        {
+          nested && onSaveAsDefaultFilters && currentUserHasAccess() &&
+            <div className='col-xs-12 padding-0' style={{textAlign: 'right'}}>
+              <Button size='small' sx={{textTransform: 'none'}} onClick={onSetDefaultFilters} disabled={isEmpty(applied) || isEqual(applied, repoDefaultFilters)}>
+                {t('search.save_default_filters')}
+              </Button>
+              <Button size='small' color='error' sx={{textTransform: 'none'}} onClick={onResetDefaultFilters} disabled={!canResetToDefaultFilters}>
+                {t('common.reset')}
+              </Button>
+            </div>
+        }
       </div>
       {
-        map(uiFilters, (fieldFilters, field) => {
+        loading &&
+          <div className='col-xs-12' style={{textAlign: 'center', padding: '16px'}}>
+        <CircularProgress />
+        </div>
+      }
+      {
+        !loading && map(uiFilters, (fieldFilters, field) => {
           const shouldShowExpand = fieldFilters.length > 4
           const isExpanded = expanded.includes(field)
+          const isProperty = field?.startsWith('properties__') || isFixedConceptField(field)
           return (
-            <React.Fragment key={field}>
+            <div className='col-xs-12 padding-0' style={isProperty ? {border: `4px solid ${PRIMARY_COLORS['90']}`, borderTopWidth: 0, borderBottomWidth: 0} : {}} key={field}>
               <List
                 dense
                 sx={{
                   width: '100%',
                   position: 'relative',
-                  padding: '2px 0 4px 0',
+                  padding: '0px 0px 4px 0px',
+                  display: 'inline-block',
                 }}
               >
-            <ListSubheader sx={{p: 0, fontWeight: 'bold', background: bgColor, lineHeight: '30px', fontSize: '11px'}}>{startCase(field)}</ListSubheader>
+                {
+                !noSubheader &&
+                    <ListSubheader sx={{padding: isProperty ? '0 4px 2px 4px' : '0 8px', fontWeight: 'bold', backgroundColor: isProperty ? 'primary.90' : bgColor, lineHeight: '30px'}}>
+                      {formattedListSubheader(field)}
+                    </ListSubheader>
+                }
                 {
                   getFieldFilters(field, fieldFilters).map(value => {
                     const labelId = `checkbox-list-label-${value[0]}`;
                     const key = `${field}-${value[0]}`
 
                     return (
-                      <ListItemButton key={key} onClick={handleToggle(field, value)} sx={{p: '0 12px 0 4px'}} disabled={value[3] === true}>
-                        <ListItemIcon sx={{minWidth: '14px', '.MuiSvgIcon-root': {fontSize: '16px'}}}>
+                      <ListItemButton key={key} onClick={handleToggle(field, value)} sx={{p: isProperty ? '0 12px 0 8px' : '0 12px'}} disabled={value[3] === true || (disabledZero && value[1] === 0)}>
+                        <ListItemIcon sx={{minWidth: '25px'}}>
                           <Checkbox
                             size="small"
                             edge="start"
@@ -163,10 +254,24 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
                             tabIndex={-1}
                             disableRipple
                             inputProps={{ 'aria-labelledby': labelId }}
-                            style={{padding: '2px 0 2px 6px'}}
+                            style={{padding: '4px 8px'}}
+                            disabled={(disabledZero && value[1] === 0)}
                           />
                         </ListItemIcon>
-                        <ListItemText id={labelId} primary={formattedName(field, value[0]) || 'None'} primaryTypographyProps={{style: {fontSize: '0.8rem'}}} style={{margin: 0}} />
+                        <ListItemText
+                          id={labelId}
+                          primary={
+                            <span style={{display: 'flex', alignItems: 'center'}}>
+                              {formattedName(field, value[0])}
+                            {
+                              get(filterDefinitions, value[0])?.tooltip &&
+                                <Tooltip title={filterDefinitions[value[0]].tooltip}>
+                                  <InfoIcon sx={{marginLeft: '4px', fontSize: '1rem'}} color='primary' />
+                              </Tooltip>
+                            }
+                            </span>
+                          }
+                          primaryTypographyProps={{style: {fontSize: '0.875rem'}}} style={{margin: 0}} />
                         <span style={{fontSize: '0.7rem'}}>{value[1].toLocaleString()}</span>
                       </ListItemButton>
                     );
@@ -174,12 +279,15 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
               </List>
               {
                 shouldShowExpand &&
-                  <Button size='small' onClick={() => toggleExpanded(field)} style={{textTransform: 'none', fontSize: '10px'}} color='secondary' startIcon={isExpanded ? <UpIcon fontSize='inherit'/> : <DownIcon fontSize='inherit'/>}>
+                  <Button size='small' onClick={() => toggleExpanded(field)} style={{textTransform: 'none'}} color='secondary' startIcon={isExpanded ? <UpIcon fontSize='inherit'/> : <DownIcon fontSize='inherit'/>}>
                     {isExpanded ? t('common.hide') : `${t('common.show')} ${fieldFilters.length - 4} ${t('common.more').toLowerCase()}`}
                   </Button>
               }
-              <Divider />
-            </React.Fragment>
+            {
+              !noSubheader &&
+                <Divider sx={isProperty ? {backgroundColor: 'primary.90', borderWidth: '2px', borderColor: 'primary.90'} : {}} />
+            }
+            </div>
           )
         })
       }
