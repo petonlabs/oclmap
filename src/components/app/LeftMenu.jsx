@@ -11,9 +11,10 @@ import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import FolderOpenIcon from '@mui/icons-material/FolderOutlined';
+import MapperIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import Divider from '@mui/material/Divider';
 import map from 'lodash/map'
-import { getCurrentUser, refreshCurrentUserCache, getCurrentUserOrgs } from '../../common/utils';
+import { getCurrentUser, refreshCurrentUserCache, getCurrentUserOrgs, toV3URL } from '../../common/utils';
 import Drawer from '../common/Drawer';
 import OrgIcon from '../orgs/OrgIcon';
 import EntityIcon from '../common/EntityIcon'
@@ -62,9 +63,8 @@ const LeftMenu = ({ isOpen, onClose }) => {
         <ListItem disablePadding sx={{ display: 'block' }}>
           <ListItemButton
             onClick={onClose}
-            href="/#/"
+            href={toV3URL()}
             className='no-anchor-styles'
-            selected={location.pathname === '/'}
             sx={{
               minHeight: 56,
               justifyContent: 'initial',
@@ -79,7 +79,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
                 justifyContent: 'center',
               }}
             >
-              <DashboardIcon color={location.pathname === '/' ? 'primary' : undefined} />
+              <DashboardIcon />
             </ListItemIcon>
             <ListItemText primary={t('dashboard.my')} />
           </ListItemButton>
@@ -93,7 +93,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
               px: 2,
               borderRadius: '100px'
             }}
-            href={`#${user?.url}repos`}
+            href={toV3URL(user?.url + 'repos')}
             className='no-anchor-styles'
             selected={location.pathname === (user?.url + 'repos')}
           >
@@ -108,6 +108,31 @@ const LeftMenu = ({ isOpen, onClose }) => {
             </ListItemIcon>
             <ListItemText primary={t('user.my_repositories')} />
             <span><b>{((user?.collections || 0) + (user?.sources + 0)).toLocaleString()}</b></span>
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding sx={{ display: 'block' }}>
+          <ListItemButton
+            onClick={onClose}
+            sx={{
+              minHeight: 56,
+              justifyContent: 'initial',
+              px: 2,
+              borderRadius: '100px'
+            }}
+            href='/#/'
+            className='no-anchor-styles'
+            selected={location.pathname === '/'}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: 1.75,
+                justifyContent: 'center',
+              }}
+            >
+              <MapperIcon color={location.pathname === '/' ? 'primary' : undefined} />
+            </ListItemIcon>
+            <ListItemText primary={t('user.my_mapping_projects')} />
           </ListItemButton>
         </ListItem>
       </List>
@@ -143,7 +168,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
                   padding: '0px 16px',
                   borderRadius: '100px'
                 }}
-                href={`#${org?.url}`}
+                href={toV3URL(org?.url)}
                 className='no-anchor-styles'
                 selected={location.pathname === org?.url}
               >
@@ -191,7 +216,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
                   padding: '0px 16px',
                   borderRadius: '100px'
                 }}
-                href={`#${followed.url}`}
+                href={toV3URL(followed.url)}
                 className='no-anchor-styles'
                 selected={location.pathname === followed?.url}
               >

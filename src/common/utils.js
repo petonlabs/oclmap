@@ -1005,5 +1005,21 @@ export const toV3URL = path => {
   if(window.location.host.match('map.*.openconceptlab.org'))
     url = window.location.origin.replace('//map.', '//app.v3.')
 
-  return `${url}/#${path || '/'}`
+  let referrerParams = `referrer=${window.location.href}`
+  if(isLoggedIn())
+    referrerParams += '?auth=true'
+
+  return `${url}/#${path || '/'}?${referrerParams}`
+}
+
+export const isV3URL = url => {
+  if(!url)
+    return false
+  if(url.startsWith('http://localhost:4002'))
+    return true
+  if(!url.includes('.openconceptlab.org'))
+    return false
+  if(url.startsWith('https://app.v3.'))
+    return true
+  return false
 }

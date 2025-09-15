@@ -9,11 +9,13 @@ import Collapse from '@mui/material/Collapse';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import LanguageIcon from '@mui/icons-material/Language';
+import ProfileIcon from '@mui/icons-material/AccountCircle';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import HelpIcon from '@mui/icons-material/HelpCenterOutlined';
 import ChatIcon from '@mui/icons-material/ForumOutlined';
 import CommunityIcon from '@mui/icons-material/GroupsOutlined';
 import find from 'lodash/find';
-import { getCurrentUser, logoutUser, isLoggedIn, getLoginURL, getRegisterURL } from '../../common/utils'
+import { getCurrentUser, logoutUser, isLoggedIn, getLoginURL, getRegisterURL, toV3URL } from '../../common/utils'
 import { LANGUAGES } from '../../common/constants';
 import Button from '../common/Button';
 import Link from '../common/Link';
@@ -57,7 +59,15 @@ const UserMenu = ({ isOpen, onClose }) => {
         </div>
         <div className='col-xs-12 padding-0'>
           {
-            !authenticated &&
+            authenticated ?
+              <List>
+                <ListItemButton sx={{p: 1, borderRadius: '100px'}} component='a' className='no-anchor-styles' href={toV3URL(user?.url)} onClick={onClose} disabled={!user?.url} selected={location.pathname === user?.url}>
+                  <ListItemIcon sx={{minWidth: 'auto', paddingRight: '14px'}}>
+                    <ProfileIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={t('user.my_profile')} />
+                </ListItemButton>
+              </List> :
               <div className='col-xs-12 padding-0' style={{marginBottom: '24px'}}>
               <Button className='no-anchor-styles' label={t('auth.sign_in')} sx={{ backgroundColor: 'surface.s90', maxWidth: '100%', minWidth: '92px' }} href={getLoginURL(window.location.href)} component='a' />
               <Link sx={{fontSize: '14px', marginLeft: '16px'}} label={t('auth.register')} href={getRegisterURL()} />
@@ -85,6 +95,12 @@ const UserMenu = ({ isOpen, onClose }) => {
                 }
               </List>
             </Collapse>
+            <ListItemButton component='a' className='no-anchor-styles' sx={{p: 1, borderRadius: '100px'}} href={toV3URL(user?.url + 'settings')} onClick={onClose} disabled={!user?.url}>
+              <ListItemIcon sx={{minWidth: 'auto', paddingRight: '14px'}}>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary={t('common.settings')} />
+            </ListItemButton>
           </List>
         </div>
         <Divider style={{width: '100%'}} />
