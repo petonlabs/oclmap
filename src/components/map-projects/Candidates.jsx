@@ -115,6 +115,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         }}
         selectedToShow={showItem}
         extraColumns={getExtraColumns()}
+        properties={repoVersion?.meta?.display?.concept_summary_properties}
+        propertyFilters={repoVersion?.filters}
+        repoDefaultFilters={repoVersion?.meta?.display?.default_filter}
       />
     </ul>
   ): null

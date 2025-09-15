@@ -239,7 +239,8 @@
     "refresh_summary": "Refresh summary",
     "repo_version_summary": "Repository Version Summary",
     "repo_summary_is_calculating": "Repo summary is calculating, please check back after some time.",
-    "no_overview": "The owner has not created an Overview page for this repository"
+    "no_overview": "The owner has not created an Overview page for this repository",
+    "property": "Property"
   },
   "org": {
     "my": "My organizations",

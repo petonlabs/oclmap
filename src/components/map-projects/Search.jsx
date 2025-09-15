@@ -174,6 +174,9 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           selectedToShow={showItem}
           onPageChange={(page, pageSize) => onSearch(null, page, pageSize)}
           extraColumns={getExtraColumns()}
+          repoDefaultFilters={repoVersion?.meta?.display?.default_filter}
+          properties={repoVersion?.meta?.display?.concept_summary_properties}
+          propertyFilters={repoVersion?.filters}
         />
       </div>
     </div>

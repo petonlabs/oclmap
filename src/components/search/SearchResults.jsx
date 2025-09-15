@@ -200,6 +200,9 @@ const SearchResults = props => {
     size: props.resultSize,
     excludedColumns: props.excludedColumns,
     extraColumns: props.extraColumns,
+    properties: props.properties,
+    propertyFilters: props.propertyFilters,
+    loading: props.loading,
     renderer: props.renderer,
     id: props.resultsContainerId
   }
