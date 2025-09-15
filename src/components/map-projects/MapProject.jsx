@@ -1234,7 +1234,7 @@ const MapProject = () => {
             setOtherMatchedConcepts(newMatches)
           }
           setIsLoadingInDecisionView(false)
-          let items = get(response.data, '0.results') || []
+          let items = get(response?.data, '0.results') || []
           if(items.length > 0){
             const synonyms = get(payload, 'rows.0.synonyms')
             setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)

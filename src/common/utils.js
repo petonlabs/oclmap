@@ -820,18 +820,12 @@ export const isSSOEnabled = () => {
 }
 
 export const getLoginURL = returnTo => {
-  if(isSSOEnabled()) {
-    const oidClientID = window.OIDC_RP_CLIENT_ID || process.env.OIDC_RP_CLIENT_ID
-    let redirectURL = returnTo || window.LOGIN_REDIRECT_URL || process.env.LOGIN_REDIRECT_URL
-    redirectURL = redirectURL.replace(/([^:]\/)\/+/g, "$1");
-    return `${getAPIURL()}/users/login/?client_id=${oidClientID}&state=fj8o3n7bdy1op5&nonce=13sfaed52le09&redirect_uri=${redirectURL}`
-  }
-
-  let url = '/#/accounts/login'
-  if(returnTo)
-    url += `?returnTo=${returnTo}`
-
-  return url
+  const oidClientID = window.OIDC_RP_CLIENT_ID || process.env.OIDC_RP_CLIENT_ID
+  let redirectURL = window.LOGIN_REDIRECT_URL || process.env.LOGIN_REDIRECT_URL
+  redirectURL = redirectURL.replace(/([^:]\/)\/+/g, "$1");
+  if(returnTo && returnTo.includes('/#/') && returnTo.split('/#/')[1])
+    redirectURL = returnTo.replace('/#/', '/')
+  return `${getAPIURL()}/users/login/?client_id=${oidClientID}&state=fj8o3n7bdy1op5&nonce=13sfaed52le09&redirect_uri=${redirectURL}`
 }
 
 export const getResetPasswordURL = returnTo => {
@@ -840,13 +834,7 @@ export const getResetPasswordURL = returnTo => {
 
   redirectURL = redirectURL.replace(/([^:]\/)\/+/g, "$1");
 
-  if(isSSOEnabled())
-    return `${getAPIURL()}/users/password/reset/?client_id=${oidClientID}&redirect_uri=${redirectURL}`
-  let url = '/#/accounts/login'
-  if(returnTo)
-    url += `?returnTo=${returnTo}`
-
-  return url
+  return `${getAPIURL()}/users/password/reset/?client_id=${oidClientID}&redirect_uri=${redirectURL}`
 }
 
 export const getRegisterURL = returnTo => {
@@ -855,13 +843,7 @@ export const getRegisterURL = returnTo => {
 
   redirectURL = redirectURL.replace(/([^:]\/)\/+/g, "$1");
 
-  if(isSSOEnabled())
-    return `${getAPIURL()}/users/signup/?client_id=${oidClientID}&state=fj8o3n7bdy1op5&nonce=13sfaed52le09&redirect_uri=${redirectURL}`
-  let url = '/#/accounts/signup'
-  if(returnTo)
-    url += `?returnTo=${returnTo}`
-
-  return url
+  return `${getAPIURL()}/users/signup/?client_id=${oidClientID}&state=fj8o3n7bdy1op5&nonce=13sfaed52le09&redirect_uri=${redirectURL}`
 }
 
 
