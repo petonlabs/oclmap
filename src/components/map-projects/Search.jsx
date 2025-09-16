@@ -19,10 +19,9 @@ import SearchResults from '../search/SearchResults';
 import SearchFilters from '../search/SearchFilters'
 import Mappings from './Mappings'
 import Concept from './Concept'
-import IncludeRetired from './IncludeRetired'
 import MapButton from './MapButton'
 
-const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, retired, setRetired}) => {
+const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading}) => {
   const [openFilters, setOpenFilters] = React.useState(openFilters)
   const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
@@ -80,7 +79,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
         <TextField
           autoFocus
           label='Search'
-          sx={{width: 'calc(100% - 190px)'}}
+          sx={{width: 'calc(100% - 132px)'}}
           required
           id="search"
           value={searchStr}
@@ -100,11 +99,6 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
               ),
             },
           }}
-        />
-        <IncludeRetired
-          checked={retired}
-          onChange={setRetired}
-          sx={{margin: '0 4px', flexDirection: 'column-reverse', textAlign: 'center', '.MuiFormControlLabel-label': {fontSize: '12px'}}}
         />
         <Button
           color='primary'

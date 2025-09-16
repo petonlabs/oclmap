@@ -1933,8 +1933,6 @@ const MapProject = () => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         search(null, null, null, null, filters)
                       }}
-                      retired={retired}
-                      setRetired={toggleRetired}
                     />
                 }
                 {
