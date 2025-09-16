@@ -1670,6 +1670,13 @@ const MapProject = () => {
                     },
                     [`.MuiDataGrid-row[data-id="${rowIndex}"]`]: {
                       backgroundColor: 'primary.90'
+                    },
+                    '.MuiDataGrid-footerContainer': {
+                      minHeight: '40px',
+                      '.MuiToolbar-root': {
+                        height: '40px',
+                        minHeight: '40px'
+                      }
                     }
                   }}
                   columnHeaderHeight={64}

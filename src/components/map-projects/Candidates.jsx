@@ -211,7 +211,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             width: '100%',
             position: 'relative',
             overflow: 'auto',
-            maxHeight: 'calc(100vh - 524px)',
+            maxHeight: 'calc(100vh - 514px)',
             '& ul': { padding: 0 },
           }}
           subheader={<li />}
@@ -241,7 +241,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
         </List>
         {
           onFetchMore && canFetchMore &&
-            <div className='col-xs-12' style={{textAlign: 'right', marginTop: '6px'}}>
+            <div className='col-xs-12' style={{textAlign: 'right', marginTop: '4px'}}>
               <Button disabled={isLoading} size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
                 {isLoading ? 'Fetching...' : 'Fetch More'}
               </Button>
