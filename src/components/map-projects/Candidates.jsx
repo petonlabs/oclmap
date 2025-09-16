@@ -13,7 +13,7 @@ import AssistantIcon from '@mui/icons-material/Assistant';
 import find from 'lodash/find'
 import get from 'lodash/get'
 
-import { highlightTexts, isAdminUser } from '../../common/utils';
+import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
 import { SCORES_COLOR } from './constants'
 import SearchResults from '../search/SearchResults';
 import Mappings from './Mappings'
@@ -124,7 +124,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
 }
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation}) => {
-  const isAdmin = isAdminUser()
+  const inAIAssistantGroup = hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant')
   const [display, setDisplay] = React.useState('card')
   const [openAIAnalysis, setOpenAIAnalysis] = React.useState(false)
   const recommendedScore = candidatesScore?.recommended
@@ -170,7 +170,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   }
 
   const getRightControls = () => {
-    if(isAdmin)
+    if(inAIAssistantGroup)
       return (
         <Button size='small' variant={'outlined'} startIcon={<AssistantIcon color={results?.length ? 'primary' : undefined} />} sx={{textTransform: 'none', margin: '0 8px'}} disabled={!results?.length} onClick={onRecommend}>
           AI Assistant
@@ -221,7 +221,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} bucketId={`${rowIndex}-recommended`} noToolbar={false} onDisplayChange={setDisplay} toolbarControl={<IncludeRetired checked={retired} onChange={setRetired} sx={{margin: '3px 0 0px 8px', float: 'right', '.MuiTypography-root': {fontSize: '12px'}}} />} alignToolbarLeft={isAdmin} rightControl={getRightControls()} analysis={analysis} showAnalysis openAnalysis={openAIAnalysis} onCloseAnalysis={() => setOpenAIAnalysis(false)} />
+              <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} bucketId={`${rowIndex}-recommended`} noToolbar={false} onDisplayChange={setDisplay} toolbarControl={<IncludeRetired checked={retired} onChange={setRetired} sx={{margin: '3px 0 0px 8px', float: 'right', '.MuiTypography-root': {fontSize: '12px'}}} />} alignToolbarLeft={inAIAssistantGroup} rightControl={getRightControls()} analysis={analysis} showAnalysis openAnalysis={openAIAnalysis} onCloseAnalysis={() => setOpenAIAnalysis(false)} />
             }
           </li>
           <li>
