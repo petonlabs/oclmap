@@ -1549,7 +1549,7 @@ const MapProject = () => {
                 }
               </div>
               <div className='col-xs-12' style={{padding: '8px 14px', display: 'flex', alignItems: 'center', backgroundColor: SURFACE_COLORS.main}}>
-                <FormControl>
+                <FormControl sx={{minWidth: '16px'}}>
                   <SearchField onChange={debounce(val => setSearchText(val || ''))} />
                 </FormControl>
                 <FormControlLabel
@@ -1569,6 +1569,7 @@ const MapProject = () => {
                   available={availableCount}
                   unranked={unrankedCount}
                 />
+                <div style={{display: 'inline-block'}}>
                 {
                   selectedRowStatus === 'unmapped' &&
                     <Chip
@@ -1588,7 +1589,7 @@ const MapProject = () => {
                             [...decisionFilters, 'rejected']
                         )
                       }
-                      sx={{marginLeft: '10px'}}
+                      sx={{margin: '4px'}}
                     />
 
                 }
@@ -1622,13 +1623,14 @@ const MapProject = () => {
                                     [...decisionFilters, _decision]
                                 )
                               }
-                              sx={{marginLeft: '10px'}}
+                              sx={{margin: '4px'}}
                             />
                           )
                         })
                       }
                     </React.Fragment>
                 }
+                  </div>
               </div>
               <Collapse in={Boolean(alert?.message)}>
                 <Alert
