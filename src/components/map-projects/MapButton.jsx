@@ -142,7 +142,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
                   {
                     usedOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Frequently Used</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Used in this Project</ListSubheader>
                         {
                           usedOptions.map(option => (
                             <MenuItem
@@ -176,7 +176,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
                   {
                     otherOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Rest</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>All Options</ListSubheader>
                         {
                           otherOptions.map(option => (
                             <MenuItem
