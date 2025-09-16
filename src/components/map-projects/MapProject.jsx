@@ -1046,6 +1046,8 @@ const MapProject = () => {
         setConceptCache({...conceptCache, [url]: res})
       })
     setRow(csvRow)
+    setSearchStr(getRowNameValue(csvRow) || '')
+
 
     if(repo?.id) {
       fetchOtherCandidates(csvRow)
@@ -1379,6 +1381,8 @@ const MapProject = () => {
       })
     }
   }
+
+  const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
 
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
