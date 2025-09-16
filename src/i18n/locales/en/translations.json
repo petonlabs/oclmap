@@ -88,7 +88,8 @@
     "from": "From",
     "target": "Target",
     "properties": "Properties",
-    "custom": "Custom"
+    "custom": "Custom",
+    "apply": "Apply"
   },
   "errors": {
     "404": "Sorry your page could not be found.",
