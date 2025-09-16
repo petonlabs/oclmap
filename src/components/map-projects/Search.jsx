@@ -113,7 +113,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
       <div className='col-xs-12 padding-0' style={{display: 'flex'}}>
         {
           !isEmpty(facets) &&
-            <div className='col-xs-5 padding-0' style={openFilters ? {borderRight: '1px solid lightgray', height: 'calc(100vh - 585px)', overflow: 'auto'} : {width: 0, display: 'none'}}>
+            <div className='col-xs-4 padding-0' style={openFilters ? {borderRight: '1px solid lightgray', height: 'calc(100vh - 585px)', overflow: 'auto'} : {width: 0, display: 'none'}}>
               <SearchFilters
                 resource='concepts'
                 filters={facets}
@@ -129,6 +129,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           resultsContainerId='search-results'
           resultSize='small'
           sx={{
+            width: openFilters ? '66%' : '100%',
             borderRadius: '10px 10px 0 0',
             '.MuiTableCell-root': {
               padding: '6px !important',
