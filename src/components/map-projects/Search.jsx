@@ -27,7 +27,6 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
 
-
   const onKeyPress = event => {
     if(event.key === 'Enter') {
       if(searchStr)
@@ -158,7 +157,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           noPagination={results?.results?.length === 0}
           searchedText={searchStr}
           noResults={!isLoading && !isNaN(results.page) && results?.results?.length === 0}
-          isLoading={isLoading}
+          loading={isLoading}
           resultContainerStyle={{height: 'calc(100vh - 602px)', overflow: 'auto'}}
           onShowItemSelect={item => {
             setShowItem(item)
