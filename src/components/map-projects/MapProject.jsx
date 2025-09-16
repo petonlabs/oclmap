@@ -1051,7 +1051,6 @@ const MapProject = () => {
 
     if(repo?.id) {
       fetchOtherCandidates(csvRow)
-      getFacets(csvRow)
     }
 
     const el = document.querySelector(`div[data-id="${csvRow.__index}"]`)
