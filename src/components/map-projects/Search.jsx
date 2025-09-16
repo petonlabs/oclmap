@@ -164,7 +164,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           searchedText={searchStr}
           noResults={!isLoading && !isNaN(results.page) && results?.results?.length === 0}
           isLoading={isLoading}
-          resultContainerStyle={{height: 'calc(100vh - 645px)', overflow: 'auto'}}
+          resultContainerStyle={{height: 'calc(100vh - 623px)', overflow: 'auto'}}
           onShowItemSelect={item => {
             setShowItem(item)
             setTimeout(() => {
