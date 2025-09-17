@@ -387,7 +387,7 @@ const MapProject = () => {
       renderCell: params => {
         const targetConcept = mapSelected[params.row.__index]
         if(targetConcept?.url) {
-          return <Concept firstChild concept={targetConcept} noScore onCardClick={false} />
+          return <Concept sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} />
         }
       }
     })

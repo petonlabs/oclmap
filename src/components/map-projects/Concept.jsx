@@ -1,5 +1,6 @@
 import React from 'react'
 import ListItemButton from '@mui/material/ListItemButton'
+import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
 
 import Retired from '../common/Retired'
@@ -23,21 +24,9 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended}) => {
-  const id = concept?.version_url || concept?.url || concept?.id
-  const isSelectedToShow = isShown ? isShown(id) : false
-
-  let synonymPrefix = ''
-  const highlights = concept?.search_meta?.search_highlight
-  const synonymHighlight = highlights?.synonyms
-  const nameHighlight = highlights?.name
-  if(!nameHighlight?.length && synonymHighlight?.length) {
-    const bestMatch = getBestSynonym(synonymHighlight) || synonymHighlight[0]
-    synonymPrefix = bestMatch.replace('<em>', "<b className='searchable'>").replace('</em>', '</b>')
-  }
-
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended}) => {
   return (
-    <ListItemButton selected={isSelectedToShow} onClick={onCardClick ? event => onCardClick(event, id) : undefined} sx={{padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)'}}>
+    <>
       <ListItemText
         className='searchable'
         primary={
@@ -80,8 +69,38 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
             />
         }
       </span>
-    </ListItemButton>
+    </>
   )
+}
+
+
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable}) => {
+  const id = concept?.version_url || concept?.url || concept?.id
+  const isSelectedToShow = isShown ? isShown(id) : false
+
+  let synonymPrefix = ''
+  const highlights = concept?.search_meta?.search_highlight
+  const synonymHighlight = highlights?.synonyms
+  const nameHighlight = highlights?.name
+  if(!nameHighlight?.length && synonymHighlight?.length) {
+    const bestMatch = getBestSynonym(synonymHighlight) || synonymHighlight[0]
+    synonymPrefix = bestMatch.replace('<em>', "<b className='searchable'>").replace('</em>', '</b>')
+  }
+
+  const props = {
+    selected: isSelectedToShow,
+    sx: {padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)', ...sx}
+  }
+
+  return notClickable ? (
+    <ListItem {...props}>
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} />
+    </ListItem>
+  ) : (
+    <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} />
+      </ListItemButton>
+    )
 }
 
 export default Concept;
