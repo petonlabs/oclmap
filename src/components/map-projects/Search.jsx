@@ -13,6 +13,7 @@ import isEmpty from 'lodash/isEmpty'
 import values from 'lodash/values'
 import flatten from 'lodash/flatten'
 import isNaN from 'lodash/isNaN'
+import times from 'lodash/times'
 
 import { highlightTexts } from '../../common/utils';
 import SearchResults from '../search/SearchResults';
@@ -124,7 +125,16 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
             />
           </div>
         }
-        <SearchResults
+        {
+          isLoading && results?.total === 0 ?
+            <div style={{width: openFilters ? '66%' : '100%'}}>
+              {
+                times(25, i => (
+                  <Skeleton height={58} key={i} />
+                ))
+              }
+            </div> :
+          <SearchResults
           resultsContainerId='search-results'
           resultSize='small'
           sx={{
@@ -172,6 +182,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           properties={repoVersion?.meta?.display?.concept_summary_properties}
           propertyFilters={repoVersion?.filters}
         />
+        }
       </div>
     </div>
 
