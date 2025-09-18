@@ -113,8 +113,9 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
       <div className='col-xs-12 padding-0' style={{display: 'flex'}}>
         {
           !isEmpty(facets) &&
-            <div className='col-xs-4 padding-0' style={openFilters ? {borderRight: '1px solid lightgray', height: 'calc(100vh - 585px)', overflow: 'auto'} : {width: 0, display: 'none'}}>
+            <div className='col-xs-4 padding-0' style={openFilters ? {borderRight: '1px solid lightgray'} : {width: 0, display: 'none'}}>
               <SearchFilters
+                open={openFilters}
                 resource='concepts'
                 filters={facets}
                 appliedFilters={appliedFacets || {}}
@@ -122,6 +123,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
                 repoDefaultFilters={repoVersion?.meta?.display?.default_filter}
                 properties={repoVersion?.meta?.display?.concept_summary_properties}
                 propertyFilters={repoVersion?.filters}
+                heightToSubtract={523}
             />
           </div>
         }

@@ -241,7 +241,9 @@
     "repo_version_summary": "Repository Version Summary",
     "repo_summary_is_calculating": "Repo summary is calculating, please check back after some time.",
     "no_overview": "The owner has not created an Overview page for this repository",
-    "property": "Property"
+    "property": "Property",
+    "properties_filters_subheader": "Repository Properties",
+    "additional_metadata_filters_subheader": "Additional Metadata"
   },
   "org": {
     "my": "My Organizations",
