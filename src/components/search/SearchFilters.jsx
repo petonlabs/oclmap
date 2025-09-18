@@ -256,8 +256,8 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
 
   return (
     <div className='col-xs-12 padding-0'>
-      <div className='col-xs-12' style={{zIndex: 2, padding: '0px', position: open ? 'absolute' : undefined, top: 0, display: open ? undefined : 'none'}}>
-        <div className='col-xs-12' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 8px 0 0'}}>
+      <div className='col-xs-12 padding-0' style={{zIndex: 2, position: open ? 'absolute' : undefined, top: 0, display: open ? undefined : 'none'}}>
+        <div className='col-xs-12 padding-0' style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
           <span>
             <Badge badgeContent={count} color='primary' sx={{'.MuiBadge-badge': {top: '10px', left: '36px'}}}>
               <b>{t('search.filters')}</b>
