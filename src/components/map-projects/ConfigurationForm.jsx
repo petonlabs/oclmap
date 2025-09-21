@@ -244,13 +244,13 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         <ScoreConfiguration scores={candidatesScore} onChange={onScoreChange} />
         <div className='col-xs-12' style={{fontSize: '12px', margin: '-4px 0 16px 0'}}>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.unranked}}>
-            Unranked: {`<${candidatesScore.available}`}%
+            {`Not Recommended (<${candidatesScore.available}%)`}
           </div>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.available}}>
-            Available: {`>=${candidatesScore.available}`}%
+            {`Available (≥${candidatesScore.available}%, <${candidatesScore.recommended}%)`}
           </div>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.recommended}}>
-            Recommended: {`>=${candidatesScore.recommended}`}%
+            {`Recommended (≥${candidatesScore.recommended}%)`}
           </div>
         </div>
       </>
