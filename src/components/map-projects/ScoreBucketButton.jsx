@@ -4,12 +4,14 @@ import UpIcon from '@mui/icons-material/NorthRounded';
 import SortIcon from '@mui/icons-material/SwapVertRounded';
 import ButtonGroup from '@mui/material/ButtonGroup'
 import Button from '@mui/material/Button'
+import Badge from '@mui/material/Badge'
 import startCase from 'lodash/startCase'
 import { SCORES_COLOR } from './constants'
 
 const BucketButton = ({id, selected, onClick, count}) => {
   const isSelected = selected === id && count
-  return <Button
+  return <Badge badgeContent={count} color='primary' max={999} sx={{'.MuiBadge-badge': {backgroundColor: SCORES_COLOR[id]}}}>
+  <Button
            onClick={() => onClick(id)}
            disabled={!count}
            sx={{
@@ -18,8 +20,9 @@ const BucketButton = ({id, selected, onClick, count}) => {
              backgroundColor: isSelected ? SCORES_COLOR[id] : undefined,
              borderBottom: count ? `2px solid ${SCORES_COLOR[id]} !important` : undefined,
            }}>
-           {`${startCase(id)} (${count})`}
-         </Button>
+           {startCase(id)}
+  </Button>
+  </Badge>
 }
 
 const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, available, unranked}) => {
@@ -33,7 +36,7 @@ const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, avai
   const disabled = !recommended && !available && !unranked
   const selectedCount = selected === 'recommended' ? recommended : (selected === 'available' ? available : unranked)
   return (
-    <ButtonGroup size='small' variant='text' sx={{marginRight: '8px'}}>
+    <ButtonGroup size='small' variant='text' sx={{marginRight: '8px', marginLeft: '12px'}}>
       <BucketButton id='recommended' selected={selected} count={recommended} onClick={onClick} />
       <BucketButton id='available' selected={selected} count={available} onClick={onClick} />
       <BucketButton id='unranked' selected={selected} count={unranked} onClick={onClick} />

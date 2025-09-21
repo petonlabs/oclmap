@@ -27,6 +27,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
+import Badge from '@mui/material/Badge';
 import { DataGrid } from '@mui/x-data-grid';
 
 
@@ -1555,10 +1556,11 @@ const MapProject = () => {
                   })
                 }
               </div>
-              <div className='col-xs-12' style={{padding: '8px 14px', display: 'flex', alignItems: 'center', backgroundColor: SURFACE_COLORS.main}}>
+              <div className='col-xs-12' style={{padding: '12px 14px 8px 14px', display: 'flex', alignItems: 'center', backgroundColor: SURFACE_COLORS.main}}>
                 <FormControl sx={{minWidth: '16px'}}>
                   <SearchField onChange={debounce(val => setSearchText(val || ''))} />
                 </FormControl>
+                <Badge badgeContent={matchTypes.very_high || 0} max={999} color='primary'>
                 <FormControlLabel
                   sx={{
                     marginLeft: '4px',
@@ -1566,8 +1568,9 @@ const MapProject = () => {
                     '.MuiFormControlLabel-label': {fontSize: '0.8125rem'}
                   }}
                   control={<Switch disabled={!showMatchSummary || selectedRowStatus === 'unmapped'} size="small" checked={selectedMatchBucket === 'very_high'} onChange={() => onMatchTypeChange('very_high')} />}
-                  label={`Auto Match (${(matchTypes.very_high || 0).toLocaleString()})`}
+                  label='Auto Match'
                 />
+                  </Badge>
                 <ScoreBucketButton
                   selected={selectedCandidatesScoreBucket}
                   onSort={() => setScoreBucketSortBy(scoreBucketSortBy === 'desc' ? 'asc' : 'desc')}
