@@ -948,12 +948,12 @@ const MapProject = () => {
       if(minScore) {
         rowIndexes = Object.entries(mapSelected)
           .filter(([, v]) => {
-            let score = v?.search_meta?.search_normalized_score
+            let score = parseFloat(v?.search_meta?.search_normalized_score || 0)
             return isNumber(score) ? score >= minScore && score < maxScore : noScore
           })
           .sort((a, b) => {
-            let aScore = a[1].search_meta.search_normalized_score
-            let bScore = b[1].search_meta.search_normalized_score
+            let aScore = parseFloat(a[1].search_meta.search_normalized_score || 0)
+            let bScore = parseFloat(b[1].search_meta.search_normalized_score || 0)
             if(noScore) {
               aScore = aScore || 0
               bScore = bScore || 0
@@ -1715,7 +1715,8 @@ const MapProject = () => {
                     if(targetConcept) {
                       const score = targetConcept?.search_meta?.search_normalized_score
                       return getCandidateBucket(score) + '-row'
-                    }
+                    } else
+                      return 'unmatched-row'
                   }}
                 />
               </div>
