@@ -33,7 +33,7 @@ const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, avai
   const disabled = !recommended && !available && !unranked
   const selectedCount = selected === 'recommended' ? recommended : (selected === 'available' ? available : unranked)
   return (
-    <ButtonGroup size='small' variant='text'>
+    <ButtonGroup size='small' variant='text' sx={{marginRight: '8px'}}>
       <BucketButton id='recommended' selected={selected} count={recommended} onClick={onClick} />
       <BucketButton id='available' selected={selected} count={available} onClick={onClick} />
       <BucketButton id='unranked' selected={selected} count={unranked} onClick={onClick} />

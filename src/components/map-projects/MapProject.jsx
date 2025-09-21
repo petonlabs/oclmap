@@ -1561,7 +1561,8 @@ const MapProject = () => {
                 </FormControl>
                 <FormControlLabel
                   sx={{
-                    marginLeft: '10px',
+                    marginLeft: '4px',
+                    marginRight: '8px',
                     '.MuiFormControlLabel-label': {fontSize: '0.8125rem'}
                   }}
                   control={<Switch disabled={!showMatchSummary || selectedRowStatus === 'unmapped'} size="small" checked={selectedMatchBucket === 'very_high'} onChange={() => onMatchTypeChange('very_high')} />}
