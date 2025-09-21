@@ -84,6 +84,7 @@ import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import DraggablePaperComponent from '../common/DraggablePaperComponent'
 import LoaderDialog from '../common/LoaderDialog'
+import Error403 from '../errors/Error403'
 import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS, SEMANTIC_BATCH_SIZE, ES_BATCH_SIZE } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
@@ -191,6 +192,8 @@ const MapProject = () => {
   const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
   const [analysis, setAnalysis] = React.useState({})
 
+  const [permissionDenied, setPermissionDenied] = React.useState(false)
+
   // algos
   const [algos, setAlgos] = React.useState([
     {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
@@ -222,10 +225,21 @@ const MapProject = () => {
     }
   }, [])
 
+  React.useEffect(() => {
+    setPermissionDenied(false)
+  }, [params.projectId])
+
+
   const fetchAndSetProject = () => {
     setLoadingProject(true)
     let url = ['', params.ownerType, params.owner, 'map-projects', params.projectId, ''].join('/')
     APIService.new().overrideURL(url).get().then(response => {
+      if(response?.detail) {
+        setPermissionDenied(true)
+        baseSetAlert({message: response.detail, severity: 'error'})
+        setLoadingProject(false)
+        return
+      }
       if(response.data.url) {
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => setLogs(response.data.logs || []))
       }
@@ -236,12 +250,6 @@ const MapProject = () => {
           const sheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
           setProjectFromData(data)
-          if(response?.data?.target_repo_url) {
-            APIService.new().overrideURL(response.data.target_repo_url).get().then(res => {
-              setRepo(res.data || {})
-              fetchVersions(res.data?.url, res.data?.version)
-            })
-          }
           setAlgo(response?.data?.matching_algorithm || algo)
           if (response?.data.columns?.length > 0) {
             const _columns = response.data.columns.map(col => ({...omit(col, ['hidden'])}))
@@ -1383,7 +1391,7 @@ const MapProject = () => {
 
   const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
 
-  return (
+  return permissionDenied ? <Error403/> : (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       {
         loadingProject &&
