@@ -132,7 +132,7 @@ const MapProject = () => {
   const [rowStatuses, setRowStatuses] = React.useState({reviewed: [], readyForReview: [], unmapped: []})
   const [decisions, setDecisions] = React.useState({})
   const [decisionFilters, setDecisionFilters] = React.useState([])
-  const [matchTypes, setMatchTypes] = React.useState({very_high: 0, high: 0, low: 0, no_match: 0})
+  const [matchTypes, setMatchTypes] = React.useState({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
@@ -460,7 +460,7 @@ const MapProject = () => {
     setRowStatuses({reviewed: [], readyForReview: [], unmapped: []})
     setDecisions({})
     setDecisionFilters([])
-    setMatchTypes({very_high: 0, high: 0, low: 0, no_match: 0})
+    setMatchTypes({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
     setMatchedConcepts([])
     setOtherMatchedConcepts([])
     setSearchedConcepts({})
@@ -769,8 +769,9 @@ const MapProject = () => {
             setMatchTypes(prev => ({
               very_high: prev.very_high + (counts?.very_high || 0),
               high: prev.high + (counts?.high || 0),
+              medium: prev.medium + (counts?.medium || 0),
               low: prev.low + (counts?.low || 0),
-              no_match: prev.no_match + (sum(values(omit(counts, ['very_high', 'high', 'low']))) || 0)
+              no_match: prev.no_match + (sum(values(omit(counts, ['very_high', 'high', 'medium', 'low']))) || 0)
             }));
             setRowStatuses(prev => {
               forEach(data, concept => {
@@ -940,7 +941,7 @@ const MapProject = () => {
     if(selectedMatchBucket) {
       let getIndex = concept => {
         if(selectedMatchBucket === 'no_match')
-          return (!concept?.results?.length || !['very_high', 'high', 'low'].includes(concept.results[0].search_meta.match_type)) ? concept.row.__index : null
+          return (!concept?.results?.length || !['very_high', 'high', 'medium', 'low'].includes(concept.results[0].search_meta.match_type)) ? concept.row.__index : null
         return (concept?.results?.length && concept.results[0].search_meta.match_type === selectedMatchBucket) ? concept.row.__index : null
       }
       const rowIndexes = map(matchedConcepts, getIndex)
@@ -1169,8 +1170,9 @@ const MapProject = () => {
     setMatchTypes({
       very_high: (counts?.very_high || 0),
       high: (counts?.high || 0),
+      medium: (counts?.medium || 0),
       low: (counts?.low || 0),
-      no_match: sum(values(omit(counts, ['very_high', 'high', 'low']))) || 0
+      no_match: sum(values(omit(counts, ['very_high', 'high', 'medium', 'low']))) || 0
     });
   }
 

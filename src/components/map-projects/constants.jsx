@@ -67,6 +67,11 @@ export const MATCH_TYPES = {
     icon: <MediumMatchIcon fontSize='small' color='warning' />,
     color: 'warning',
   },
+  medium: {
+    label: 'Medium Match',
+    icon: <LowMatchIcon fontSize='small' color='warning' />,
+    color: 'warning',
+  },
   low: {
     label: 'Low Match',
     icon: <LowMatchIcon fontSize='small' color='secondary' />,
