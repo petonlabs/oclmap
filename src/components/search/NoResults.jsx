@@ -2,7 +2,7 @@ import React from 'react';
 import SvgIcon from '@mui/material/SvgIcon';
 import { useTranslation } from 'react-i18next'
 
-const NoResults = ({searchedText, height}) => {
+const NoResults = ({searchedText, height, text}) => {
   const { t } = useTranslation()
   return (
     <div className='col-xs-12' style={{display: 'flex', height: height, alignItems: 'center', justifyContent: 'center', textAlign: 'center', flexDirection: 'column'}}>
@@ -17,7 +17,9 @@ const NoResults = ({searchedText, height}) => {
         </defs>
       </SvgIcon>
       <div className='col-xs-12' style={{marginTop: '16px'}}>
-        {t('search.no_results')} <b>{searchedText}</b>.
+        {
+          text ? text : <>{t('search.no_results')} <b>{searchedText}</b>.</>
+        }
     </div>
     </div>
   )

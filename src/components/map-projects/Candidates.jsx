@@ -16,6 +16,7 @@ import get from 'lodash/get'
 import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
 import { SCORES_COLOR } from './constants'
 import SearchResults from '../search/SearchResults';
+import NoResults from '../search/NoResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
 import IncludeRetired from './IncludeRetired'
@@ -184,6 +185,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     setOpenAIAnalysis(false)
   }, [rowIndex])
 
+  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
+
   return (
     <div className='col-xs-12 padding-0'>
       <Collapse in={Boolean(alert?.message)}>
@@ -205,6 +208,10 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
         </Alert>
       </Collapse>
       <div className='col-xs-12 padding-0'>
+        {
+          noCandidatesFound &&
+            <NoResults text='We could not find any candidates for this row.' height='300px' />
+        }
         <List
           sx={{
             marginTop: '4px',
