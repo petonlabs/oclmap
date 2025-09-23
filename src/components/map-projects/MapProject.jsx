@@ -55,6 +55,7 @@ import get from 'lodash/get'
 import countBy from 'lodash/countBy'
 import sum from 'lodash/sum'
 import omit from 'lodash/omit'
+import omitBy from 'lodash/omitBy'
 import reject from 'lodash/reject'
 import uniq from 'lodash/uniq'
 import compact from 'lodash/compact'
@@ -685,7 +686,7 @@ const MapProject = () => {
 
   const getFilters = () => {
     let defaultFilters = (repoVersion?.meta?.display?.default_filter || {})
-    let allFilters = {...filters, ...defaultFilters}
+    let allFilters = {...omitBy(filters, value => !value), ...defaultFilters}
     return includeDefaultFilter ? allFilters : omit(allFilters, Object.keys(defaultFilters))
   }
 

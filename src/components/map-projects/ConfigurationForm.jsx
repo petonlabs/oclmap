@@ -161,7 +161,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
             getOptionLabel={(option) => option}
             value={appliedLocales}
             onChange={(event, values) => {
-              setFilters({...filters, locale: values.join(',')})
+              setFilters(values?.length ? {...filters, locale: values.join(',')} : omit(filters, ['locale']))
             }}
             sx={{marginTop: '12px'}}
             renderInput={(params) => (
