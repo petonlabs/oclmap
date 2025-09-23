@@ -1,5 +1,6 @@
 import React from 'react'
 import Typography from '@mui/material/Typography'
+import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import FormHelperText from '@mui/material/FormHelperText'
 import Button from '@mui/material/Button'
@@ -21,6 +22,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import isEmpty from 'lodash/isEmpty'
+import omit from 'lodash/omit'
 
 import { toV3URL } from '../../common/utils'
 import NamespaceDropdown from '../common/NamespaceDropdown'
@@ -44,7 +46,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -54,6 +56,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
   }
 
   const isLLMAlgoNotAllowed = !repoVersion?.match_algorithms?.includes('llm')
+  const appliedLocales = filters?.locale ? filters?.locale?.split(',') : []
 
   return (
     <div className='col-xs-12' style={{padding: '8px 0', ...sx}}>
@@ -149,9 +152,47 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
           </FormHelperText>
       }
       {
+        locales?.length > 0 &&
+          <Autocomplete
+            multiple
+            size='small'
+            id="locale"
+            options={locales}
+            getOptionLabel={(option) => option}
+            value={appliedLocales}
+            onChange={(event, values) => {
+              setFilters({...filters, locale: values.join(',')})
+            }}
+            sx={{marginTop: '12px'}}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size='small'
+                label="Filter Name Locales"
+                helperText="Note: Restricting candidates to specific languages limits cross-lingual matching capabilities, but may improve the accuracy of results for certain datasets, especially if the input data is in the same language as a target repository's default language."
+              />
+            )}
+          />
+      }
+      {
         !isEmpty(repoVersion?.meta?.display?.default_filter) && repoVersion?.meta?.display?.default_filter &&
           <FormHelperText sx={{marginLeft: '8px'}}>
-            <FormControlLabel size='small' control={<Checkbox size='small' checked={includeDefaultFilter} onChange={event => setIncludeDefaultFilter(event.target.checked)} sx={{padding: '8px 4px'}} />} label="Default Filter" />
+            <FormControlLabel
+              size='small'
+              control={
+                <Checkbox
+                  size='small'
+                  checked={includeDefaultFilter}
+                  sx={{padding: '8px 4px'}}
+                  onChange={() => {
+                    const newValue = !includeDefaultFilter
+                    setIncludeDefaultFilter(newValue);
+                    setFilters(newValue ? {...filters, ...repoVersion.meta.display.default_filter} : omit(filters, Object.keys(repoVersion.meta.display.default_filter)))
+                  }}
+                />
+              }
+              label="Default Filter"
+            />
           <div style={{whiteSpace: 'pre'}}>{JSON.stringify(repoVersion.meta.display.default_filter, undefined, 2)}</div>
         </FormHelperText>
       }

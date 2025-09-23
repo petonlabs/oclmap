@@ -152,6 +152,7 @@ const MapProject = () => {
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 100, available: 70})
+  const [filters, setFilters] = React.useState({})
 
   const abortRef = React.useRef(false);
 
@@ -183,6 +184,7 @@ const MapProject = () => {
   const [repo, setRepo] = React.useState(false)
   const [repoVersion, setRepoVersion] = React.useState(false)
   const [mappedSources, setMappedSources] = React.useState([])
+  const [locales, setLocales] = React.useState([])
   const [versions, setVersions] = React.useState([])
   const [conceptCache, setConceptCache] = React.useState({})
   const [allMapTypes, setAllMapTypes] = React.useState([])
@@ -230,6 +232,11 @@ const MapProject = () => {
     setPermissionDenied(false)
   }, [params.projectId])
 
+  React.useEffect(() => {
+    const isDefaultApplied = isRepoDefaultFilterApplied(repoVersion)
+    setIncludeDefaultFilter(Boolean(isDefaultApplied))
+  }, [repoVersion, project])
+
 
   const fetchAndSetProject = () => {
     setLoadingProject(true)
@@ -241,6 +248,7 @@ const MapProject = () => {
         setLoadingProject(false)
         return
       }
+      setFilters(response.data?.filters || {})
       if(response.data.url) {
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => setLogs(response.data.logs || []))
       }
@@ -295,6 +303,11 @@ const MapProject = () => {
       setProject(response.data)
       setConfigure(false)
     })
+  }
+
+  const isRepoDefaultFilterApplied = version => {
+    const defaultFilter = version?.meta?.display?.default_filter || {};
+    return !isEmpty(defaultFilter) && Object.keys(defaultFilter).every(key => has((project.filters || {}), key));
   }
 
   const fetchMapTypes = () => APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
@@ -582,6 +595,7 @@ const MapProject = () => {
       formData.append('match_api_url', '')
       formData.append('match_api_token', '')
     }
+    formData.append('filters', JSON.stringify(getFilters()))
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
@@ -631,6 +645,12 @@ const MapProject = () => {
     recurse(0, 1, 0, [])
   }
 
+  const fetchLocaleDistribution = url => {
+    if(!url)
+      return
+    APIService.new().overrideURL(url).appendToUrl('summary/').get(null, null, {verbose: true, distribution: 'name_locale'}).then(response => setLocales(map(response?.data?.distribution?.name_locale, 'locale')))
+  }
+
   const _fetchMappedSources = (
     url, limit, offset, page, callback
   ) => {
@@ -640,6 +660,7 @@ const MapProject = () => {
   const onRepoVersionChange = version => {
     setRepoVersion(version)
     if(version?.version_url) {
+      fetchLocaleDistribution(version.version_url)
       fetchMappedSources(version.version_url)
       updateAlgosByRepoVersion(version)
     }
@@ -662,6 +683,12 @@ const MapProject = () => {
     setAlgoMenuAnchorEl(null)
   }
 
+  const getFilters = () => {
+    let defaultFilters = (repoVersion?.meta?.display?.default_filter || {})
+    let allFilters = {...filters, ...defaultFilters}
+    return includeDefaultFilter ? allFilters : omit(allFilters, Object.keys(defaultFilters))
+  }
+
   const getPayloadForMatching = (rows, _repo) => {
     return {
       rows: map(rows, row => prepareRow(row)),
@@ -673,7 +700,7 @@ const MapProject = () => {
         'source': _repo.short_code || _repo.id
       },
       map_config: getMapConfigs(),
-      filter: includeDefaultFilter ? repoVersion?.meta?.display?.default_filter || {} : {}
+      filter: getFilters()
     }
   }
 
@@ -1060,6 +1087,10 @@ const MapProject = () => {
 
     if(repo?.id) {
       fetchOtherCandidates(csvRow)
+      const _filters = getFilters()
+      if(!appliedFacets[csvRow.__index] && !isEmpty(_filters) && _filters) {
+        setAppliedFacets({...appliedFacets, [csvRow.__index]: getAppliedFacetFromQueryParam(_filters)})
+      }
     }
 
     const el = document.querySelector(`div[data-id="${csvRow.__index}"]`)
@@ -1149,7 +1180,7 @@ const MapProject = () => {
       fetchOtherCandidates()
     }
     if(newValue === 'search' && isEmpty(facets[rowIndex]))
-      getFacets()
+      getFacets(true)
   }
 
   const onDecisionChange = (event, newValue) => {
@@ -1282,7 +1313,6 @@ const MapProject = () => {
       q: searchStr,
       page: page || 1,
       includeRetired: includeRetired === undefined ? retired : includeRetired,
-      conceptFilterDefault: includeDefaultFilter,
       ...getFacetQueryParam(appliedFilters || appliedFacets[rowIndex]),
     }).then(response => {
       let items = response.data
@@ -1300,13 +1330,13 @@ const MapProject = () => {
     });
   }
 
-  const getFacets = _row => {
+  const getFacets = firstLoad => {
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
-      q: searchStr,
+      q: firstLoad ? '' : searchStr,
       includeRetired: retired,
       facetsOnly: true
     }).then(response => {
-      setFacets({...facets, [_row?.__index === undefined ? row.__index : _row.__index]: response?.data?.facets?.fields || {}})
+      setFacets({...facets, [row.__index]: response?.data?.facets?.fields || {}})
     })
   }
 
@@ -1322,6 +1352,15 @@ const MapProject = () => {
       queryParam['includeRetired'] = true
 
     return queryParam
+  }
+
+  const getAppliedFacetFromQueryParam = filters => {
+    const applied = {}
+    forEach(filters, (value, field) => {
+      applied[field] = {}
+      forEach(value.split(','), val => applied[field][val] = true)
+    })
+    return applied
   }
 
 
@@ -1458,6 +1497,9 @@ const MapProject = () => {
                     onScoreChange={setCandidatesScore}
                     includeDefaultFilter={includeDefaultFilter}
                     setIncludeDefaultFilter={setIncludeDefaultFilter}
+                    filters={filters}
+                    setFilters={setFilters}
+                    locales={locales}
                   />
                 </div>
           }
@@ -1828,6 +1870,9 @@ const MapProject = () => {
                 onScoreChange={setCandidatesScore}
                 includeDefaultFilter={includeDefaultFilter}
                 setIncludeDefaultFilter={setIncludeDefaultFilter}
+                filters={filters}
+                setFilters={setFilters}
+                locales={locales}
               />
             </div> :
           (
@@ -1953,6 +1998,7 @@ const MapProject = () => {
                       setSearchStr={setSearchStr}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
+                      filters={getFilters()}
                       isLoading={isLoadingInDecisionView}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
