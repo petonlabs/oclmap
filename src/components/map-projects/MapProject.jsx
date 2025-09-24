@@ -75,7 +75,7 @@ import isNumber from 'lodash/isNumber'
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion, getCurrentUser } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -259,7 +259,7 @@ const MapProject = () => {
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
-          setProjectFromData(data)
+          setProjectFromData(data, response.data)
           setAlgo(response?.data?.matching_algorithm || algo)
           if (response?.data.columns?.length > 0) {
             const _columns = response.data.columns.map(col => ({...omit(col, ['hidden'])}))
@@ -503,7 +503,7 @@ const MapProject = () => {
     reader.readAsBinaryString(file);
   };
 
-  const setProjectFromData = jsonData => {
+  const setProjectFromData = (jsonData, projectData) => {
     let _data = []
 
     const reservedKeys = ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__']
@@ -545,9 +545,12 @@ const MapProject = () => {
       setMapSelected(_mapSelected)
       setRowStatuses(_states)
       setProposed(_proposed)
-      if(_repo?.url) {
-        fetchRepo(_repo.url, _repo)
-        fetchVersions(_repo.url, _repo.version)
+
+      let repoURL = projectData.target_repo_url || _repo?.url
+      let repoVersion = projectData.target_repo_url ? URIToParentParams(projectData.target_repo_url, true)?.repoVersion || 'HEAD' : _repo.version
+      if(repoURL) {
+        fetchRepo(repoURL, _repo)
+        fetchVersions(repoURL, repoVersion)
       }
     }
 

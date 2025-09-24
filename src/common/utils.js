@@ -133,6 +133,7 @@ export const copyToClipboard = copyText => {
 export const copyURL = url => copyToClipboard(url, 'Copied URL to clipboard!');
 
 export const toParentURI = uri => uri.split('/').splice(0, 5).join('/') + '/';
+export const toParentVersionURI = uri => uri.split('/').splice(0, 6).join('/') + '/';
 
 export const toOwnerURI = uri => uri && uri.split('/').splice(0, 3).join('/') + '/';
 
@@ -739,8 +740,8 @@ export const URIToOwnerParams = uri => {
   return owner
 }
 
-export const URIToParentParams = uri => {
-  const parentURI = toParentURI(uri)
+export const URIToParentParams = (uri, includeVersion=false) => {
+  const parentURI = includeVersion ? toParentVersionURI(uri) : toParentURI(uri)
   let parent = {ownerType: undefined, owner: undefined, url: parentURI, repo: undefined, repoType: undefined}
   const parts = parentURI.split('/')
   if(parts[1] === 'orgs') {
@@ -751,6 +752,8 @@ export const URIToParentParams = uri => {
   parent.owner = parts[2]
   parent.repoType = upperFirst(parts[3]?.slice(0, -1))
   parent.repo = parts[4]
+  if(includeVersion)
+    parent.repoVersion = parts[5] || 'HEAD'
   return parent
 }
 
