@@ -89,7 +89,8 @@
     "target": "Target",
     "properties": "Properties",
     "custom": "Custom",
-    "apply": "Apply"
+    "apply": "Apply",
+    "checking_auth": "Checking auth..."
   },
   "errors": {
     "404": "Sorry your page could not be found.",

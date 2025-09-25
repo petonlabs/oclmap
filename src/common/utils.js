@@ -1026,3 +1026,12 @@ export const isV3URL = url => {
     return true
   return false
 }
+
+export const isRedirectingToLoginViaReferrer = location => {
+  const { search, hash } = location
+  const queryParams = new URLSearchParams(search)
+  const referrer = queryParams.get('referrer')
+  const parts = hash.split('?')
+  let params = new URLSearchParams(parts[1])
+  return referrer && isV3URL(referrer) && params.get('auth') === 'true'
+}

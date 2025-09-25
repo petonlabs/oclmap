@@ -2,12 +2,13 @@
 import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
 import {
-  recordGAPageView, isLoggedIn, getLoginURL, isV3URL
+  recordGAPageView, isLoggedIn, getLoginURL, isV3URL, isRedirectingToLoginViaReferrer
 } from '../../common/utils';
 import Error404 from '../errors/Error404';
 import Error403 from '../errors/Error403';
 import Error401 from '../errors/Error401';
 import ErrorBoundary from '../errors/ErrorBoundary';
+import CheckAuth from './CheckAuth'
 import Footer from './Footer';
 import DocumentTitle from "./DocumentTitle"
 import './App.scss';
@@ -23,7 +24,14 @@ import MapProjects from '../map-projects/MapProjects'
 const AuthenticationRequiredRoute = ({component: Component, ...rest}) => (
   <Route
     {...rest}
-    render={props => isLoggedIn() ? <Component {...props} /> : <Error401 />}
+    render={
+      props =>
+      isLoggedIn() ?
+        <Component {...props} /> :
+      isRedirectingToLoginViaReferrer(props.location) ?
+        <CheckAuth /> :
+        <Error401 />
+    }
   />
 )
 
