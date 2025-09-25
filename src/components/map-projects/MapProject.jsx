@@ -174,6 +174,7 @@ const MapProject = () => {
   const [showHighlights, setShowHighlights] = React.useState(false)
   const [showItem, setShowItem] = React.useState(false)
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
+  const [autoMatchLoadCandidates, setAutoMatchLoadCandidates] = React.useState(true)
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
@@ -292,6 +293,7 @@ const MapProject = () => {
       } else {
         setLoadingProject(false)
       }
+      setOtherMatchedConcepts(response?.data?.candidates || [])
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
@@ -580,8 +582,15 @@ const MapProject = () => {
         rowIndex: i
       }
     })
+    const candidates = []
+    forEach(otherMatchedConcepts, _candidates => {
+      if(_candidates?.results?.length) {
+        candidates.push({..._candidates, results: _candidates.results.splice(0, 10)})
+      }
+    })
     const formData = new FormData();
     formData.append('file', f);
+    formData.append('candidates', JSON.stringify(candidates))
     formData.append('matches', JSON.stringify(selected))
     formData.append('name', name || f.name)
     formData.append('description', description)
@@ -736,6 +745,15 @@ const MapProject = () => {
       if (abortRef.current) return [];
 
       const payload = getPayloadForMatching(rowBatch, _repo)
+      let extraParams = autoMatchLoadCandidates ? {
+        limit: 10,
+        verbose: true,
+        includeMappings: true,
+        mappingBrief: true,
+        mapTypes: 'SAME-AS,SAME AS,SAME_AS',
+      } : {
+        bestMatch: true
+      }
 
       try {
         const service = getMatchAPIService()
@@ -746,8 +764,8 @@ const MapProject = () => {
           {
             includeSearchMeta: true,
             semantic: ['llm', 'custom'].includes(algo),
-            bestMatch: true
-          }
+            ...extraParams
+         }
         );
 
         return response.data || [];
@@ -791,9 +809,16 @@ const MapProject = () => {
                   log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: mapType}}, concept.row.__index)
                 } else
                   prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
+
               })
               return prev
             })
+            if(autoMatchLoadCandidates)
+              forEach(data, concept => {
+                setOtherMatchedConcepts(prev => {
+                  return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
+                })
+              })
             setMatchedConcepts(prev => [...prev, ...data]);
             activeRequests.delete(promise); // Remove from active set after completion
           });
@@ -1250,6 +1275,11 @@ const MapProject = () => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
+      const existingCandidates = find(otherMatchedConcepts, c => c.row.__index === __row.__index)?.results
+      if(offset === 0 && !_retired && existingCandidates?.length> 0) {
+        setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+        return
+      }
       setIsLoadingInDecisionView(true)
       const payload = getPayloadForMatching([__row], repo)
       const service = getMatchAPIService()
@@ -1259,8 +1289,8 @@ const MapProject = () => {
         null,
         {
           includeSearchMeta: true,
-          includeMappings: true,
           includeRetired: isBoolean(_retired) ? _retired : retired,
+          includeMappings: true,
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
@@ -1806,8 +1836,16 @@ const MapProject = () => {
             </Button>
             <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
             <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
-            <FormControlLabel sx={{marginTop: '8px'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
+            <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
             {!autoMatchUnmappedOnly && <FormHelperText sx={{marginTop: '-4px'}}>This will not affect Approved Matches but will override other existing matches</FormHelperText>}
+            <FormControlLabel sx={{marginTop: '0px', width: '100%'}} control={<Checkbox checked={autoMatchLoadCandidates} onChange={event => setAutoMatchLoadCandidates(event.target.checked)} />} label="Load Candidates" />
+            <FormHelperText sx={{marginTop: '-4px'}}>
+              {
+                autoMatchLoadCandidates ?
+                  'This will pre-fetch 10 candidates as well, and will override existing candidates' :
+                  'This will only do auto-match and not load any additional candidates'
+              }
+            </FormHelperText>
           </DialogContent>
           <DialogActions sx={{padding: '16px'}}>
             <Button
