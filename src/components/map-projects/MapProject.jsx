@@ -310,7 +310,7 @@ const MapProject = () => {
 
   const isRepoDefaultFilterApplied = version => {
     const defaultFilter = version?.meta?.display?.default_filter || {};
-    return !isEmpty(defaultFilter) && Object.keys(defaultFilter).every(key => has((project.filters || {}), key));
+    return !isEmpty(defaultFilter) && Object.keys(defaultFilter).every(key => has((project?.filters || {}), key));
   }
 
   const fetchMapTypes = () => APIService.orgs('OCL').sources('MapTypes').appendToUrl('concepts/lookup/').get().then(response => setAllMapTypes(response.data?.map(d => d.id)))
