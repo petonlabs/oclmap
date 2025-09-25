@@ -32,6 +32,7 @@ import CloseIconButton from '../common/CloseIconButton';
 import ColumnMapTable from './ColumnMapTable'
 import ScoreConfiguration from './ScoreConfiguration'
 import { SCORES_COLOR, SEMANTIC_BATCH_SIZE } from './constants'
+import FilterTable from './FilterTable'
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -176,6 +177,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       }
       {
         !isEmpty(repoVersion?.meta?.display?.default_filter) && repoVersion?.meta?.display?.default_filter &&
+          <>
           <FormHelperText sx={{marginLeft: '8px'}}>
             <FormControlLabel
               size='small'
@@ -193,8 +195,9 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               }
               label="Default Filter"
             />
-          <div style={{whiteSpace: 'pre'}}>{JSON.stringify(repoVersion.meta.display.default_filter, undefined, 2)}</div>
-        </FormHelperText>
+          </FormHelperText>
+            <FilterTable filters={repoVersion.meta.display.default_filter} order={repoVersion.meta.display.concept_filter_order || []} sx={{marginLeft: '4px'}} />
+        </>
       }
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
