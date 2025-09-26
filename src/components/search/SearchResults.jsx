@@ -24,8 +24,9 @@ const ResultsToolbar = props => {
       sx={{
         bgcolor: '#FFF',
         borderRadius: 0,
-        pl: { sm: 1 },
-        pr: { xs: 1, sm: 1 },
+        p: 0,
+        pl: { sm: 0 },
+        pr: { xs: 0, sm: 0 },
         ...(numSelected > 0 && {
           bgcolor: (theme) =>
           alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),

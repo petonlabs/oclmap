@@ -17,6 +17,7 @@ const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, on
   const getControls = () => {
     return (
       <>
+        {extraControls}
         {
           sortableFields?.length > 0 &&
             <Button disabled={Boolean(disabled)} variant='contained' color='default' size='small' style={{textTransform: 'none'}} endIcon={<DownIcon fontSize='inherit' />} onClick={onSortClick}>
@@ -48,7 +49,6 @@ const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, on
           orderBy={orderBy}
           fields={sortableFields}
         />
-        {extraControls}
       </>
     )
   }

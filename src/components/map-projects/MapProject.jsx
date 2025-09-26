@@ -698,7 +698,7 @@ const MapProject = () => {
 
   const getFilters = () => {
     let defaultFilters = (repoVersion?.meta?.display?.default_filter || {})
-    let allFilters = {...omitBy(filters, value => !value), ...defaultFilters}
+    let allFilters = {...defaultFilters, ...omitBy(filters, value => !value)}
     return includeDefaultFilter ? allFilters : omit(allFilters, Object.keys(defaultFilters))
   }
 
@@ -1117,6 +1117,9 @@ const MapProject = () => {
 
     if(repo?.id) {
       fetchOtherCandidates(csvRow)
+      if(isEmpty(facets[csvRow.__index]))
+        getFacets(true, csvRow.__index)
+
       const _filters = getFilters()
       if(!appliedFacets[csvRow.__index] && !isEmpty(_filters) && _filters) {
         setAppliedFacets({...appliedFacets, [csvRow.__index]: getAppliedFacetFromQueryParam(_filters)})
@@ -1210,7 +1213,7 @@ const MapProject = () => {
     if(newValue === 'candidates' && repo?.id && !find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results?.length) {
       fetchOtherCandidates()
     }
-    if(newValue === 'search' && isEmpty(facets[rowIndex]))
+    if(['candidates', 'search'].includes(newValue) && isEmpty(facets[rowIndex]))
       getFacets(true)
   }
 
@@ -1258,17 +1261,6 @@ const MapProject = () => {
     })
     if(newValue !== 'map' && !logged)
       log({action: newValue || 'decision_changed', description: 'Desicion Changed to None', extras: newValue ? {} : {decision: 'None'}})
-  }
-
-  const toggleRetired = () => {
-    let newRetired = !retired
-    setRetired(newRetired)
-    if(decisionTab === 'search')
-      search(null, null, null, newRetired)
-    else if(decisionTab === 'candidates') {
-      setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index === row.__index)])
-      fetchOtherCandidates(null, 0, newRetired)
-    }
   }
 
   const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom) => {
@@ -1366,13 +1358,13 @@ const MapProject = () => {
     });
   }
 
-  const getFacets = firstLoad => {
+  const getFacets = (firstLoad, rowIndex) => {
     APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
       q: firstLoad ? '' : searchStr,
       includeRetired: retired,
       facetsOnly: true
     }).then(response => {
-      setFacets({...facets, [row.__index]: response?.data?.facets?.fields || {}})
+      setFacets({...facets, [isNumber(rowIndex) ? rowIndex : row.__index]: response?.data?.facets?.fields || {}})
     })
   }
 
@@ -1394,11 +1386,13 @@ const MapProject = () => {
     const applied = {}
     forEach(filters, (value, field) => {
       applied[field] = {}
-      forEach(value.split(','), val => applied[field][val] = true)
+      if(isBoolean(value)) {
+        applied[field][value.toString()] = true
+      } else
+        forEach(value.split(','), val => applied[field][val] = true)
     })
     return applied
   }
-
 
   const isSplitView = Boolean(rowIndex !== undefined) || (configure && file?.name)
   const rows = getRows()
@@ -2030,11 +2024,16 @@ const MapProject = () => {
                       onMap={onMap}
                       isLoading={isLoadingInDecisionView}
                       onFetchMore={onFetchMoreCandidates}
-                      retired={retired}
-                      setRetired={toggleRetired}
                       repoVersion={repoVersion}
                       onFetchRecommendation={fetchRecommendation}
                       analysis={analysis[rowIndex]}
+                      facets={facets[rowIndex]}
+                      appliedFacets={appliedFacets[rowIndex]}
+                      filters={getFilters(rowIndex)}
+                      setAppliedFacets={(filters) => {
+                        setAppliedFacets({...appliedFacets, [rowIndex]: filters})
+                        search(null, null, null, null, filters)
+                      }}
                     />
                 }
                 {
@@ -2052,10 +2051,10 @@ const MapProject = () => {
                       onMap={onMap}
                       searchStr={searchStr}
                       setSearchStr={setSearchStr}
+                      isLoading={isLoadingInDecisionView}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
                       filters={getFilters()}
-                      isLoading={isLoadingInDecisionView}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         search(null, null, null, null, filters)

@@ -23,7 +23,7 @@ import Concept from './Concept'
 import MapButton from './MapButton'
 
 const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters}) => {
-  const [openFilters, setOpenFilters] = React.useState(openFilters)
+  const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
   const results = {total: total, pageSize: max([parseInt(response?.headers?.num_returned), 5]), page: parseInt(response?.headers?.page_number), pages: parseInt(response?.headers?.pages), results: response?.data || []}
@@ -73,8 +73,8 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center'}}>
         <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} style={{marginRight: '4px'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
           <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
-    <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
-    </Badge>
+            <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
+          </Badge>
         </IconButton>
         <TextField
           autoFocus
@@ -129,7 +129,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
         }
         {
           isLoading && results?.total === 0 ?
-            <div style={{width: openFilters ? '66%' : '100%'}}>
+            <div style={{width: openFilters ? '66%' : '100%', paddingLeft: openFilters ? '8px' : 0}}>
               {
                 times(25, i => (
                   <Skeleton height={58} key={i} />
@@ -151,6 +151,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
             },
             '.MuiToolbar-root': {
               borderRadius: '10px 10px 0 0',
+              padding: '0 8px'
             }
           }}
           renderer={

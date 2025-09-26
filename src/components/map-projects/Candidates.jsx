@@ -6,20 +6,25 @@ import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import Button from '@mui/material/Button'
 import Skeleton from '@mui/material/Skeleton'
+import Badge from '@mui/material/Badge'
 
 import CloseIcon from '@mui/icons-material/Close';
 import AssistantIcon from '@mui/icons-material/Assistant';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 import find from 'lodash/find'
 import get from 'lodash/get'
+import isEmpty from 'lodash/isEmpty'
+import flatten from 'lodash/flatten'
+import values from 'lodash/values'
 
 import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
 import { SCORES_COLOR } from './constants'
 import SearchResults from '../search/SearchResults';
+import SearchFilters from '../search/SearchFilters'
 import NoResults from '../search/NoResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
-import IncludeRetired from './IncludeRetired'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 
@@ -124,8 +129,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, retired, setRetired, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets}) => {
   const inAIAssistantGroup = hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant')
+  const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   const [openAIAnalysis, setOpenAIAnalysis] = React.useState(false)
   const recommendedScore = candidatesScore?.recommended
@@ -207,7 +213,24 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
           {alert.message}
         </Alert>
       </Collapse>
-      <div className='col-xs-12 padding-0'>
+    <div className='col-xs-12 padding-0' style={{display: 'flex'}}>
+      {
+        !isEmpty(facets) &&
+          <div className='col-xs-4 padding-0' style={openFilters ? {borderRight: '1px solid lightgray'} : {width: 0, display: 'none'}}>
+            <SearchFilters
+              open={openFilters}
+              resource='concepts'
+              filters={facets}
+              appliedFilters={appliedFacets || {}}
+              onChange={setAppliedFacets}
+              repoDefaultFilters={filters}
+              properties={repoVersion?.meta?.display?.concept_summary_properties}
+              propertyFilters={repoVersion?.filters}
+              heightToSubtract={523}
+            />
+          </div>
+      }
+      <div className={openFilters ? 'col-xs-8' : 'col-xs-12'} style={{padding: 0, paddingLeft: openFilters ? '8px' : 0}}>
         {
           noCandidatesFound &&
             <NoResults text='We could not find any candidates for this row.' height='300px' />
@@ -228,7 +251,28 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={recommended} header='Recommended Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.recommended} bucketId={`${rowIndex}-recommended`} noToolbar={false} onDisplayChange={setDisplay} toolbarControl={<IncludeRetired checked={retired} onChange={setRetired} sx={{margin: '3px 0 0px 8px', float: 'right', '.MuiTypography-root': {fontSize: '12px'}}} />} alignToolbarLeft={inAIAssistantGroup} rightControl={getRightControls()} analysis={analysis} showAnalysis openAnalysis={openAIAnalysis} onCloseAnalysis={() => setOpenAIAnalysis(false)} />
+              <CandidateList
+                {...props}
+                candidates={recommended}
+                header='Recommended Candidates'
+                onFetchMore={onFetchMore}
+                bgColor={SCORES_COLOR.recommended}
+                bucketId={`${rowIndex}-recommended`}
+                noToolbar={false} onDisplayChange={setDisplay}
+                toolbarControl={
+                  <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+                    <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
+                      <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
+                    </Badge>
+                  </IconButton>
+                }
+                alignToolbarLeft={inAIAssistantGroup}
+                rightControl={getRightControls()}
+                analysis={analysis}
+                showAnalysis
+                openAnalysis={openAIAnalysis}
+                onCloseAnalysis={() => setOpenAIAnalysis(false)}
+              />
             }
           </li>
           <li>
@@ -255,6 +299,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             </div>
         }
       </div>
+    </div>
     </div>
 
   )
