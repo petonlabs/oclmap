@@ -920,6 +920,7 @@ const MapProject = () => {
     return false
   }
 
+  const getValidColumns = () => filter(columns, column => isValidColumnValue(column.label))
 
   const onGetCandidates = event => {
     event.stopPropagation()
@@ -2027,6 +2028,7 @@ const MapProject = () => {
                       repoVersion={repoVersion}
                       onFetchRecommendation={fetchRecommendation}
                       analysis={analysis[rowIndex]}
+                      columns={getValidColumns()}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
                       filters={getFilters(rowIndex)}
@@ -2052,6 +2054,7 @@ const MapProject = () => {
                       searchStr={searchStr}
                       setSearchStr={setSearchStr}
                       isLoading={isLoadingInDecisionView}
+                      columns={getValidColumns()}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
                       filters={getFilters()}

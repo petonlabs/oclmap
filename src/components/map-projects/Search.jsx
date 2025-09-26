@@ -22,7 +22,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import MapButton from './MapButton'
 
-const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters}) => {
+const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters, columns}) => {
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
@@ -124,6 +124,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
                 properties={repoVersion?.meta?.display?.concept_summary_properties}
                 propertyFilters={repoVersion?.filters}
                 heightToSubtract={523}
+                columns={columns}
             />
           </div>
         }

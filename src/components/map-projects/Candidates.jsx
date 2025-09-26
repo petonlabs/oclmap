@@ -129,7 +129,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns}) => {
   const inAIAssistantGroup = hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant')
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
@@ -227,6 +227,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               properties={repoVersion?.meta?.display?.concept_summary_properties}
               propertyFilters={repoVersion?.filters}
               heightToSubtract={523}
+              columns={columns}
             />
           </div>
       }

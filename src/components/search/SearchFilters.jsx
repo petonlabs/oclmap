@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {omit, omitBy, isEmpty, isObject, has, map, startCase, includes, get, without, forEach, flatten, values, pickBy, isEqual, filter, reject, cloneDeep, keys} from 'lodash';
+import {omit, omitBy, isEmpty, isObject, has, map, startCase, includes, get, without, forEach, flatten, values, pickBy, isEqual, filter, reject, cloneDeep, keys, find} from 'lodash';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
+import MappedIcon from '@mui/icons-material/Link';
 import Button from '@mui/material/Button';
 import Badge from '@mui/material/Badge';
 import Tooltip from '@mui/material/Tooltip';
@@ -18,7 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { URIToParentParams, currentUserHasAccess } from '../../common/utils'
 import { FACET_ORDER } from './ResultConstants';
 
-const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters, heightToSubtract, open}) => {
+const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters, heightToSubtract, open, columns}) => {
   const { t } = useTranslation()
   const [applied, setApplied] = React.useState({});
   const [count, setCount] = React.useState(0);
@@ -96,14 +97,22 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
     return label
   }
 
-  const formattedListSubheader = field => {
-    if(field.startsWith('properties__')){
-      const fields = field.split('__')
-      return startCase(fields[1])
-    } else if (isFixedConceptField(field)) {
-      return startCase(field)
+  const formattedListSubheader = field => field.startsWith('properties__') ? startCase(field.split('__')[1]) : startCase(field)
+
+  const getMappedToColumnName = field => {
+    let mappedColumnName;
+    if(columns?.length) {
+      let isProperty = field.startsWith('properties__')
+      if(isProperty) {
+        let name = field.split('__')[1]
+        mappedColumnName = find(columns, column => column.label.toLowerCase() === `Property: ${name}`.toLowerCase() || column.label.toLowerCase().includes(name.toLowerCase()))?.original
+        if(!mappedColumnName && name === 'concept_class')
+          mappedColumnName = find(columns, column => column.label.toLowerCase() === `Property: Class`.toLowerCase())?.original
+      } else {
+        mappedColumnName = find(columns, column => column.label.toLowerCase() === field.toLowerCase())?.original
+      }
     }
-    return startCase(field)
+    return mappedColumnName
   }
 
   const handleToggle = (field, value) => () => {
@@ -180,6 +189,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
   const getFilterList = (fieldFilters, field) => {
     const shouldShowExpand = fieldFilters.length > 5
     const isExpanded = expanded.includes(field)
+    const mappedColumnName = getMappedToColumnName(field)
     return (
       <ListItem key={field} sx={{padding: 0, flexDirection: 'column'}}>
         <List
@@ -193,8 +203,17 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
         >
           {
             !noSubheader &&
-              <ListSubheader sx={{padding: '0 8px 0 0px', fontWeight: 'bold', backgroundColor: bgColor, lineHeight: '30px'}}>
-                {formattedListSubheader(field)}
+              <ListSubheader sx={{padding: '0 8px 0 0px', fontWeight: 'bold', backgroundColor: bgColor, lineHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <span>{formattedListSubheader(field)}</span>
+                {
+                  mappedColumnName &&
+                    <Tooltip title={`Mapped to column ${mappedColumnName} from input sheet`}>
+                      <span style={{fontWeight: 'normal', fontSize: '12px', display: 'flex', alignItems: 'center'}}>
+                        <MappedIcon color='warning' sx={{marginRight: '4px', fontSize: '14px'}} />
+                        {mappedColumnName}
+                      </span>
+                    </Tooltip>
+                }
               </ListSubheader>
           }
           {
@@ -249,7 +268,6 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
   }
 
 
-  const isFixedConceptField = field => isConcept && ['conceptClass', 'datatype'].includes(field)
   const canUpdateDefaultFilters = nested && onSaveAsDefaultFilters && currentUserHasAccess()
   const topBarHeight = canUpdateDefaultFilters ? 60 : 30
   let totalFilters = {...propertyFacets, ...uiFilters}
