@@ -1467,6 +1467,14 @@ const MapProject = () => {
 
   const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
 
+  const formatCount = (label, count) => count > 0 ? `${count.toLocaleString()} ${label}` : label;
+
+  const getHelperTextForAutoMatchUnmapped = () => {
+    if (autoMatchUnmappedOnly)
+      return `Note: Skip ${formatCount("input rows that are already proposed", rowStatuses.readyForReview.length)}`;
+    return `Note: This will not affect ${formatCount("approved input rows", rowStatuses.reviewed.length)} but will override ${formatCount("proposed input rows", rowStatuses.readyForReview.length)}`;
+  };
+
   return permissionDenied ? <Error403/> : (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       {
@@ -1837,13 +1845,17 @@ const MapProject = () => {
             <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
             <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
             <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
-            {!autoMatchUnmappedOnly && <FormHelperText sx={{marginTop: '-4px'}}>This will not affect Approved Matches but will override other existing matches</FormHelperText>}
+            <FormHelperText sx={{marginTop: '-4px'}}>
+              {
+                getHelperTextForAutoMatchUnmapped()
+              }
+            </FormHelperText>
             <FormControlLabel sx={{marginTop: '0px', width: '100%'}} control={<Checkbox checked={autoMatchLoadCandidates} onChange={event => setAutoMatchLoadCandidates(event.target.checked)} />} label="Load Candidates" />
             <FormHelperText sx={{marginTop: '-4px'}}>
               {
                 autoMatchLoadCandidates ?
-                  'This will pre-fetch 10 candidates as well, and will override existing candidates' :
-                  'This will only do auto-match and not load any additional candidates'
+                  'Note: Enabling this feature retrieves 10 candidates per row, instead of just the top match, and saves them with the project' :
+                  'Note: This will only do auto-match and not load any additional candidates'
               }
             </FormHelperText>
           </DialogContent>
