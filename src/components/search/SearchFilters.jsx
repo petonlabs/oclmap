@@ -19,7 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { URIToParentParams, currentUserHasAccess } from '../../common/utils'
 import { FACET_ORDER } from './ResultConstants';
 
-const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters, heightToSubtract, open, columns}) => {
+const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters, heightToSubtract, open, columns, defaultFilters}) => {
   const { t } = useTranslation()
   const [applied, setApplied] = React.useState({});
   const [count, setCount] = React.useState(0);
@@ -134,12 +134,11 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
     setApplied(newApplied)
   };
 
-  const onClear = () => {
-    setApplied({})
-    setCount(0)
-    if(onSaveAsDefaultFilters)
-      onSaveAsDefaultFilters({})
-    onChange({})
+  const onReset = () => {
+    let __filters = defaultFilters || {}
+    setApplied(__filters)
+    onChange(__filters)
+    setCount(flatten(values(__filters).map(v => values(v))).length)
   }
 
   const onApply = () => {
@@ -285,8 +284,8 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
             <Button variant='text' color='primary' style={{textTransform: 'none'}} onClick={onApply} disabled={!unapplied}>
               {t('common.apply')}
             </Button>
-            <Button variant='text' style={{textTransform: 'none'}} onClick={onClear} disabled={!count} color='error'>
-              {t('common.clear')}
+            <Button variant='text' style={{textTransform: 'none'}} onClick={onReset} disabled={!count || isEqual(defaultFilters, appliedFilters)} color='error'>
+              {t('common.reset')}
             </Button>
           </span>
         </div>

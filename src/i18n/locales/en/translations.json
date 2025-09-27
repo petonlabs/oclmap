@@ -90,6 +90,7 @@
     "properties": "Properties",
     "custom": "Custom",
     "apply": "Apply",
+    "reset": "Reset",
     "checking_auth": "Checking auth..."
   },
   "errors": {

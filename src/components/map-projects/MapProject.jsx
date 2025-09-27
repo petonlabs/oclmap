@@ -135,6 +135,7 @@ const MapProject = () => {
   const [matchTypes, setMatchTypes] = React.useState({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
+  const [candidatesToSave, setCandidatesToSave] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [facets, setFacets] = React.useState({});
   const [appliedFacets, setAppliedFacets] = React.useState({});
@@ -294,6 +295,7 @@ const MapProject = () => {
         setLoadingProject(false)
       }
       setOtherMatchedConcepts(response?.data?.candidates || [])
+      setCandidatesToSave(response?.data?.candidates || [])
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
@@ -583,7 +585,7 @@ const MapProject = () => {
       }
     })
     const candidates = []
-    forEach(otherMatchedConcepts, _candidates => {
+    forEach(candidatesToSave, _candidates => {
       if(_candidates?.results?.length) {
         candidates.push({..._candidates, results: _candidates.results.splice(0, 10)})
       }
@@ -702,7 +704,7 @@ const MapProject = () => {
     return includeDefaultFilter ? allFilters : omit(allFilters, Object.keys(defaultFilters))
   }
 
-  const getPayloadForMatching = (rows, _repo) => {
+  const getPayloadForMatching = (rows, _repo, _filters) => {
     return {
       rows: map(rows, row => prepareRow(row)),
       target_repo_url: repoVersion?.version_url || _repo.version_url || _repo.url,
@@ -713,7 +715,7 @@ const MapProject = () => {
         'source': _repo.short_code || _repo.id
       },
       map_config: getMapConfigs(),
-      filter: getFilters()
+      filter: rows.length > 1 ? getFilters() : getFacetQueryParam(isEmpty(_filters) ? appliedFacets[rows[0].__index] : _filters)
     }
   }
 
@@ -816,6 +818,9 @@ const MapProject = () => {
             if(autoMatchLoadCandidates)
               forEach(data, concept => {
                 setOtherMatchedConcepts(prev => {
+                  return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
+                })
+                setCandidatesToSave(prev => {
                   return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
                 })
               })
@@ -1264,17 +1269,17 @@ const MapProject = () => {
       log({action: newValue || 'decision_changed', description: 'Desicion Changed to None', extras: newValue ? {} : {decision: 'None'}})
   }
 
-  const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom) => {
+  const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
       const existingCandidates = find(otherMatchedConcepts, c => c.row.__index === __row.__index)?.results
-      if(offset === 0 && !_retired && existingCandidates?.length> 0) {
+      if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
         setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
         return
       }
       setIsLoadingInDecisionView(true)
-      const payload = getPayloadForMatching([__row], repo)
+      const payload = getPayloadForMatching([__row], repo, _filters)
       const service = getMatchAPIService()
       service.post(
         payload,
@@ -2031,10 +2036,11 @@ const MapProject = () => {
                       columns={getValidColumns()}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
+                      defaultFilters={getAppliedFacetFromQueryParam(getFilters())}
                       filters={getFilters(rowIndex)}
                       setAppliedFacets={(filters) => {
-                        setAppliedFacets({...appliedFacets, [rowIndex]: filters})
-                        search(null, null, null, null, filters)
+                        setAppliedFacets(() => ({...appliedFacets, [rowIndex]: filters}))
+                        fetchOtherCandidates(null, 0, false, false, filters, true)
                       }}
                     />
                 }
@@ -2057,6 +2063,7 @@ const MapProject = () => {
                       columns={getValidColumns()}
                       facets={facets[rowIndex]}
                       appliedFacets={appliedFacets[rowIndex]}
+                      defaultFilters={getAppliedFacetFromQueryParam(getFilters())}
                       filters={getFilters()}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
