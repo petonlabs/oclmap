@@ -188,6 +188,7 @@ const MapProject = () => {
   const [repoVersion, setRepoVersion] = React.useState(false)
   const [mappedSources, setMappedSources] = React.useState([])
   const [locales, setLocales] = React.useState([])
+  const [isLoadingLocales, setIsLoadingLocales] = React.useState(false)
   const [versions, setVersions] = React.useState([])
   const [conceptCache, setConceptCache] = React.useState({})
   const [allMapTypes, setAllMapTypes] = React.useState([])
@@ -663,7 +664,11 @@ const MapProject = () => {
   const fetchLocaleDistribution = url => {
     if(!url)
       return
-    APIService.new().overrideURL(url).appendToUrl('summary/').get(null, null, {verbose: true, distribution: 'name_locale'}).then(response => setLocales(map(response?.data?.distribution?.name_locale, 'locale')))
+    setIsLoadingLocales(true)
+    APIService.new().overrideURL(url).appendToUrl('summary/').get(null, null, {verbose: true, distribution: 'name_locale'}).then(response => {
+      setLocales(map(response?.data?.distribution?.name_locale, 'locale'))
+      setIsLoadingLocales(false)
+    })
   }
 
   const _fetchMappedSources = (
@@ -1544,6 +1549,7 @@ const MapProject = () => {
                     filters={filters}
                     setFilters={setFilters}
                     locales={locales}
+                    isLoadingLocales={isLoadingLocales}
                   />
                 </div>
           }
@@ -1929,6 +1935,7 @@ const MapProject = () => {
                 filters={filters}
                 setFilters={setFilters}
                 locales={locales}
+                isLoadingLocales={isLoadingLocales}
               />
             </div> :
           (

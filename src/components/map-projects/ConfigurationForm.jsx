@@ -10,6 +10,7 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton'
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { styled } from '@mui/material/styles';
 
@@ -47,7 +48,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales }) => {
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -152,12 +153,11 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
             {`${repo?.owner}:${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
           </FormHelperText>
       }
-      {
-        locales?.length > 0 &&
           <Autocomplete
             multiple
             size='small'
             id="locale"
+            disabled={isLoadingLocales}
             options={locales}
             getOptionLabel={(option) => option}
             value={appliedLocales}
@@ -169,12 +169,18 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               <TextField
                 {...params}
                 size='small'
-                label="Filter Name Locales"
+                label={
+                  isLoadingLocales ?
+                    <span style={{display: 'flex'}}>
+                      Loading Name Locales...
+                      <CircularProgress sx={{marginLeft: '16px', width: '20px !important', height: '20px !important'}} />
+                    </span> :
+                    "Filter Name Locales"
+                }
                 helperText="Note: Restricting candidates to specific languages limits cross-lingual matching capabilities, but may improve the accuracy of results for certain datasets, especially if the input data is in the same language as a target repository's default language."
               />
             )}
           />
-      }
       {
         !isEmpty(repoVersion?.meta?.display?.default_filter) && repoVersion?.meta?.display?.default_filter &&
           <>
