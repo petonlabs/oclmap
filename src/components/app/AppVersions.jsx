@@ -39,7 +39,7 @@ class AppVersions extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <AppVersionChip tooltip='Web Version' label='TB-' version={VERSION} />
+        <AppVersionChip tooltip='Web Version' label='MAP-' version={VERSION} />
         {
           this.state.version &&
             <React.Fragment>
