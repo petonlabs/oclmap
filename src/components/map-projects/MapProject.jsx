@@ -1122,14 +1122,14 @@ const MapProject = () => {
 
 
     if(repo?.id) {
-      fetchOtherCandidates(csvRow)
-      if(isEmpty(facets[csvRow.__index]))
-        getFacets(true, csvRow.__index)
-
       const _filters = getFilters()
       if(!appliedFacets[csvRow.__index] && !isEmpty(_filters) && _filters) {
         setAppliedFacets({...appliedFacets, [csvRow.__index]: getAppliedFacetFromQueryParam(_filters)})
       }
+      fetchOtherCandidates(csvRow, 0, undefined, undefined, getAppliedFacetFromQueryParam(_filters))
+      if(isEmpty(facets[csvRow.__index]))
+        getFacets(true, csvRow.__index)
+
     }
 
     const el = document.querySelector(`div[data-id="${csvRow.__index}"]`)
