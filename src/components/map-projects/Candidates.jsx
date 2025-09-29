@@ -243,7 +243,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             width: '100%',
             position: 'relative',
             overflow: 'auto',
-            maxHeight: 'calc(100vh - 514px)',
+            maxHeight: 'calc(100vh - 522px)',
             '& ul': { padding: 0 },
           }}
           subheader={<li />}
