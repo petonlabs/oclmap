@@ -915,6 +915,11 @@ const MapProject = () => {
         }
       }
     })
+    if(row.name) {
+      row.synonyms = compact(flatten([row.synonyms]))
+      if(!row.synonyms.includes(row.name))
+        row.synonyms = [...row.synonyms, row.name]
+    }
     return row
   }
 
