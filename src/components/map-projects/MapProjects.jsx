@@ -10,16 +10,20 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Skeleton from '@mui/material/Skeleton';
 import ListItemText from '@mui/material/ListItemText'
 import AddIcon from '@mui/icons-material/Add'
 import FileIcon from '@mui/icons-material/AttachFile';
+import times from 'lodash/times'
 import APIService from '../../services/APIService'
 import { getCurrentUser } from '../../common/utils'
 import OwnerIcon from '../common/OwnerIcon'
+import NoResults from '../search/NoResults';
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 
 const MapProjects = () => {
   const user = getCurrentUser()
+  const [loading, setLoading] = React.useState([])
   const [projects, setProjects] = React.useState([])
   const [deleteProject, setDeleteProject] = React.useState(null)
   const fetchProjects = () => {
@@ -31,7 +35,10 @@ const MapProjects = () => {
 
   const fetchOrgProjects = () => APIService.users(user.username).appendToUrl('orgs/map-projects/?verbose=true').get().then(handleProjectsResponse)
 
-  const handleProjectsResponse = response => setProjects(prev => [...prev, ...(response?.data || [])])
+  const handleProjectsResponse = response => {
+    setProjects(prev => [...prev, ...(response?.data || [])])
+    setLoading(prev => [...prev, false])
+  }
 
 
   React.useEffect(() => {
@@ -46,6 +53,7 @@ const MapProjects = () => {
   }
 
   const isSplitView = false
+  const loaded = loading.length === 2
   return (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px'}}>
       <Paper component="div" className={isSplitView ? 'col-xs-6 split padding-0' : 'col-xs-12 split padding-0'} sx={{boxShadow: 'none', p: 0, backgroundColor: 'white', borderRadius: '10px', border: 'solid 0.3px', borderColor: 'surface.nv80', minHeight: 'calc(100vh - 100px) !important'}}>
@@ -54,7 +62,6 @@ const MapProjects = () => {
           <Typography component='span' sx={{fontSize: '28px', color: 'surface.dark', fontWeight: 600, display: 'flex', alignItems: 'center'}}>
             Mapping Projects
           </Typography>
-
             <Button variant='contained' color='primary' startIcon={<AddIcon />} href='#/map-projects/new' sx={{textTransform: 'none'}}>
               New Map Project
             </Button>
@@ -70,11 +77,34 @@ const MapProjects = () => {
                   <TableCell>Project Name</TableCell>
                   <TableCell>Created By</TableCell>
                   <TableCell>Updated By</TableCell>
-                  <TableCell></TableCell>
+                  <TableCell />
                 </TableRow>
               </TableHead>
               <TableBody>
-                {projects.map(project => (
+                {
+                  !loaded &&
+                    times(5, i => (
+                      <TableRow key={i}>
+                        {
+                          times(6, ri => (
+                            <TableCell key={ri}>
+                              <Skeleton height={70} sx={{'-webkit-transform': 'none', 'transform': 'none'}} />
+                            </TableCell>
+                          ))
+                        }
+                      </TableRow>
+                    ))
+                }
+                {
+                  loaded && projects.length === 0 &&
+                    <TableRow>
+                      <TableCell colSpan={6} align='center'>
+                        <NoResults text='No projects found.' height='300px' />
+                        </TableCell>
+                      </TableRow>
+                }
+                {
+                  projects.map(project => (
                   <TableRow key={project.id}>
                     <TableCell>{project.id}</TableCell>
                     <TableCell>
@@ -129,7 +159,8 @@ const MapProjects = () => {
                         </span>
                     </TableCell>
                     </TableRow>
-                ))}
+                  ))
+                }
               </TableBody>
             </Table>
             </TableContainer>
