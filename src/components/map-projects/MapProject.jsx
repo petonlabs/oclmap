@@ -1091,6 +1091,10 @@ const MapProject = () => {
       const rowStateLabel = VIEWS[rowState].label
       let concept = mapSelected[index]
       let _repo = concept?.repo
+      const aiRecommendation = get(analysis, `${index}.choices.0.message.content`)
+      const aiCandidate = get(aiRecommendation, 'primary_candidate')
+      const aiCandidateID = aiCandidate?.concept_id
+      const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
       let newRow = {
         ...row,
         '__Concept ID__': concept?.id,
@@ -1099,6 +1103,9 @@ const MapProject = () => {
         '__Map Type__': mapTypes[index],
         '__Match Score__': concept?.search_meta?.search_normalized_score,
         '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
+        '__AI Recommendation__': get(aiRecommendation, 'rationale.narrative') || null,
+        '__AI Recommendation Candidate__': aiCandidateID || null,
+        '__AI Recommendation Score__': aiScore || null,
         '__Decision__': decisions[index] || 'None',
         '__Note__': notes[index] || null,
         '__State__': rowStateLabel,
