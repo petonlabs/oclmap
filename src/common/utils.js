@@ -1047,3 +1047,9 @@ export const isRedirectingToLoginViaReferrer = location => {
   let params = new URLSearchParams(parts[1])
   return referrer && (isV3URL(referrer) || isV2URL(referrer)) && params.get('auth') === 'true'
 }
+
+export const toCamelCase = str => {
+  return str
+    .replace(/[-_\s]+(.)?/g, (_, c) => c ? c.toUpperCase() : '')
+    .replace(/^(.)/, (m) => m.toLowerCase());
+}

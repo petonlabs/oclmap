@@ -16,7 +16,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Checkbox from '@mui/material/Checkbox';
 import CircularProgress from '@mui/material/CircularProgress';
-import { URIToParentParams, currentUserHasAccess } from '../../common/utils'
+import { URIToParentParams, currentUserHasAccess, toCamelCase } from '../../common/utils'
 import { FACET_ORDER } from './ResultConstants';
 
 const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFilters, fieldOrder, noSubheader, disabledZero, filterDefinitions, nested, onSaveAsDefaultFilters, loading, repoDefaultFilters, propertyFilters, heightToSubtract, open, columns, defaultFilters}) => {
@@ -54,15 +54,26 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
 
   if((!isEmpty(filterOrder) || !isEmpty(propertyFilters)) && !isEmpty(uiFilters)) {
     const orderedUIFilters = {}
+    const keysTraversed = []
     let ordered = filterOrder?.length ? filterOrder : propertyFilters?.map(prop => prop?.code)
     forEach(ordered, attr => {
+      let key;
       if(has(uiFilters, attr))
-        orderedUIFilters[attr] = uiFilters[attr]
+        key = attr
+      if(has(uiFilters, toCamelCase(attr)))
+        key = toCamelCase(attr)
+      if(has(uiFilters, `properties__${attr}`))
+        key = `properties__${attr}`
+      if(key) {
+        orderedUIFilters[key] = uiFilters[key]
+        keysTraversed.push(attr)
+      }
     })
     if(isConcept) {
       let orderedKeys = keys(uiFilters).sort()
       orderedKeys.forEach(key => {
-        orderedUIFilters[key] = uiFilters[key]
+        if(!keysTraversed.includes(keys))
+          orderedUIFilters[key] = uiFilters[key]
       })
     }
     uiFilters = orderedUIFilters
@@ -322,7 +333,18 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
               <ListSubheader sx={{padding: '0 8px 0 0px', fontWeight: 'bold', backgroundColor: bgColor, lineHeight: 'normal', color: '#000'}}>
                 {t('repo.properties_filters_subheader')}
               </ListSubheader>
-              {map(propertyFacets, getFilterList)}
+              {
+                map(propertyFilters.map(prop => prop.code), code => {
+                  let field = `properties__${code}`
+                  let __filters = propertyFacets[field]
+                  if(!__filters){
+                    field = code
+                    __filters = propertyFacets[field]
+                  }
+                  if(__filters)
+                    return getFilterList(__filters, field)
+                })
+              }
             </List>
         }
         {
