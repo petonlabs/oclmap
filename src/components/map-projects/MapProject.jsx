@@ -2061,7 +2061,7 @@ const MapProject = () => {
                         setAppliedFacets(() => ({...appliedFacets, [rowIndex]: filters}))
                         fetchOtherCandidates(null, 0, false, false, filters, true)
                       }}
-                      locales={locales}
+                      locales={filters.locale || ''}
                     />
                 }
                 {
@@ -2089,7 +2089,7 @@ const MapProject = () => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         search(null, null, null, null, filters)
                       }}
-                      locales={locales}
+                      locales={filters.locale || ''}
                     />
                 }
                 {

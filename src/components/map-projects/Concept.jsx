@@ -2,6 +2,7 @@ import React from 'react'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
+import isString from 'lodash/isString'
 
 import Retired from '../common/Retired'
 import Score from './Score'
@@ -84,9 +85,10 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
   const nameHighlight = highlights?.name
   if(!nameHighlight?.length && synonymHighlight?.length && !noSynonymPrefix) {
     let bestMatch = getBestSynonym(synonymHighlight) || synonymHighlight[0]
-    if(locales) {
+    if(locales && bestMatch) {
       let raw = bestMatch.replaceAll("<em>", "").replaceAll("</em>", "")
-      if(locales?.length > 0 && !locales.includes(concept.names.find(name => name.name.startsWith(raw))?.locale))
+      let _locales = isString(locales) ? locales.split(',') : locales
+      if(_locales?.length > 0 && !_locales.includes(concept.names.find(name => name.name.startsWith(raw))?.locale))
         bestMatch = ''
     }
     synonymPrefix = bestMatch.replaceAll('<em>', "<b className='searchable'>").replaceAll('</em>', '</b>')
