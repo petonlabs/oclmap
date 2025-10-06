@@ -3,6 +3,7 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
 import isString from 'lodash/isString'
+import map from 'lodash/map'
 
 import Retired from '../common/Retired'
 import Score from './Score'
@@ -25,25 +26,34 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended}) => {
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping}) => {
+  let bridgeMappingPrefix = bridge && mapping?.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   return (
     <>
       <ListItemText
-        className='searchable'
         primary={
           <span>
             <span>
-              {`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}
-              <span style={{marginLeft: '4px'}}>
+              <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}</span>
+              <span style={{marginLeft: '4px'}} className='searchable'>
                 {
-                  synonymPrefix &&
-                    <span>
-                      <span dangerouslySetInnerHTML={{__html: synonymPrefix}} />
+                  !bridge && synonymPrefix &&
+                    <span className='searchable'>
+                      <span dangerouslySetInnerHTML={{__html: synonymPrefix}}/>
                       <span style={{margin: '0 5px'}}>&rarr;</span>
                     </span>
                 }
                 {concept.display_name}
               </span>
+              {
+                bridgeMappingPrefix &&
+                  <span>
+                    <span style={{margin: '0 5px'}}>&rarr;</span>
+                    <span>{`[${mapping.map_type}]`}</span>
+                    <span style={{margin: '0 5px'}}>&rarr;</span>
+                    <span className='searchable'>{bridgeMappingPrefix}</span>
+                  </span>
+              }
             </span>
           {
             concept.retired &&
@@ -63,6 +73,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
         isSelectedForMap &&
             <MapButton
               simple
+              disabled={bridge && !mapping.cascade_target_concept_url}
               selected={concept?.search_meta?.map_type}
               onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
               isMapped={isSelectedForMap(concept)}
@@ -75,7 +86,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable, noSynonymPrefix, locales}) => {
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable, noSynonymPrefix, locales, bridge}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -99,13 +110,27 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
     sx: {padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)', ...sx}
   }
 
+  if(bridge) {
+    return map(concept?.mappings, (mapping, index) => {
+      return notClickable ? (
+        <ListItem {...props} key={index}>
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
+        </ListItem>
+      ) : (
+        <ListItemButton {...props} key={index} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
+        </ListItemButton>
+      )
+    })
+  }
+
   return notClickable ? (
     <ListItem {...props}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} />
     </ListItem>
   ) : (
     <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} />
       </ListItemButton>
     )
 }

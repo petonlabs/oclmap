@@ -19,6 +19,7 @@ import flatten from 'lodash/flatten'
 import values from 'lodash/values'
 
 import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
+import { PRIMARY_COLORS } from '../../common/colors'
 import { SCORES_COLOR } from './constants'
 import SearchResults from '../search/SearchResults';
 import SearchFilters from '../search/SearchFilters'
@@ -28,7 +29,7 @@ import Concept from './Concept'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
 
   const getExtraColumns = () => {
@@ -93,12 +94,12 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
               </ListSubheader>
             </div>
           ) :
-          <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgba(0, 0, 0, 0.1)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px'}}>
+            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgba(0, 0, 0, 0.1)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
             <b>{header}</b>
           </ListSubheader>
         }
         title=' '
-        renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} locales={locales} />}
+    renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} locales={locales} bridge={bridge} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested
@@ -131,7 +132,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales}) => {
+    const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates}) => {
   const inAIAssistantGroup = hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant')
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
@@ -139,6 +140,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const recommendedScore = candidatesScore?.recommended
   const availableScore = candidatesScore?.available
   const results = find(candidates, c => c.row?.__index === rowIndex )?.results
+  const bridgeResults = find(bridgeCandidates, c => c.row?.__index === rowIndex )?.results || []
   const isNoneLoaded = results === null || results === undefined
   const concepts = results || []
   const canFetchMore = concepts?.length > 0
@@ -292,6 +294,13 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList {...props} candidates={unranked} header='Unranked Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} noToolbar />
+            }
+          </li>
+          <li>
+            {
+              (isLoading && isNoneLoaded) ?
+                <Skeleton height={60} /> :
+              <CandidateList {...props} candidates={bridgeResults} header='CIEL Bridge Terminology Candidates' onFetchMore={onFetchMore} bucketId={`${rowIndex}-bridge`} noToolbar bridge />
             }
           </li>
         </List>

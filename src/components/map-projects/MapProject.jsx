@@ -2,6 +2,7 @@ import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 import Split from 'react-split';
+import BridgeMatch from 'bridge/BridgeMatch';
 
 import { useParams, useHistory } from 'react-router-dom'
 
@@ -71,6 +72,7 @@ import isNaN from 'lodash/isNaN'
 import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
 import isNumber from 'lodash/isNumber'
+import times from 'lodash/times'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -120,6 +122,7 @@ const MapProject = () => {
   const user = getCurrentUser()
   const params = useParams()
   const history = useHistory()
+  const bridgeRef = React.useRef()
 
   // project state
   const [project, setProject] = React.useState(null)
@@ -135,6 +138,7 @@ const MapProject = () => {
   const [matchTypes, setMatchTypes] = React.useState({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
+  const [bridgeCandidates, setBridgeCandidates] = React.useState([]);
   const [candidatesToSave, setCandidatesToSave] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [facets, setFacets] = React.useState({});
@@ -816,7 +820,6 @@ const MapProject = () => {
                   log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: mapType}}, concept.row.__index)
                 } else
                   prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
-
               })
               return prev
             })
@@ -1084,6 +1087,26 @@ const MapProject = () => {
     return workbook
   }
 
+  const getTop10RowCandidates = (index, removeNull=false) => {
+    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === index)?.results || []
+    let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === index)?.results || []
+    let __all = [...times(10, i => _candidates[i]), ...times(10, i => _bridgeCandidates[i])]
+    return removeNull ? compact(__all) : __all
+  }
+
+  const getTop10RowCandidatesForDownload = index => {
+    let _candidatesTop10 = {};
+    let _bridgeCandidatesTop10 = {};
+    forEach(getTop10RowCandidates(index), (candidate, i) => {
+      if(i < 10)
+        _candidatesTop10[`__Candidate_Top_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
+      else if(bridgeRef?.current?.canBridge()) {
+        _bridgeCandidatesTop10[`__BridgeCandidate_Top_${i - 9}__`] = candidate ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
+      }
+    })
+    return {..._candidatesTop10, ..._bridgeCandidatesTop10}
+  }
+
   const getRowsForDownload = () => {
     return map(data, row => {
       const index = row.__index
@@ -1095,6 +1118,7 @@ const MapProject = () => {
       const aiCandidate = get(aiRecommendation, 'primary_candidate')
       const aiCandidateID = aiCandidate?.concept_id
       const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
+      let  candidates = getTop10RowCandidatesForDownload(index)
       let newRow = {
         ...row,
         '__Concept ID__': concept?.id,
@@ -1112,7 +1136,8 @@ const MapProject = () => {
         '__Proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
         '__Repo Version__': _repo?.version || _repo?.id,
         '__Repo ID__': _repo?.short_code || _repo?.id,
-        '__Repo URL__': _repo?.version_url || _repo?.url
+        '__Repo URL__': _repo?.version_url || _repo?.url,
+        ...candidates,
       }
       delete newRow.__index
       return newRow
@@ -1331,6 +1356,7 @@ const MapProject = () => {
             const synonyms = get(payload, 'rows.0.synonyms')
             setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
           }
+          fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload)
           if(scrollToBottom) {
             setTimeout(() => {
               const el = document.getElementById('candidates-list')
@@ -1343,6 +1369,52 @@ const MapProject = () => {
       setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
       setTimeout(() => setAlert(false), 6000)
     }
+  }
+
+  const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
+      let __row = isEmpty(_row) ? row : _row
+      const existingCandidates = find(bridgeCandidates, c => c.row.__index === __row.__index)?.results
+      if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
+        setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+        return
+      }
+      setIsLoadingInDecisionView(true)
+      const payload = getPayloadForMatching([__row], repo)
+    let __offset = offset || 0
+    bridgeRef.current?.fetchBridgeCandidates(
+      payload,
+      __offset,
+      isBoolean(_retired) ? _retired : retired,
+      (candidates) => {
+        if(__offset === 0)
+          setBridgeCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
+        else {
+          setBridgeCandidates(prev => {
+            const newMatches = [...prev]
+            const index = findIndex(newMatches, match => match.row.__index === __row.__index)
+            newMatches[index].results = [...newMatches[index].results, ...(candidates[0]?.results || [])]
+            return newMatches
+          })
+          setIsLoadingInDecisionView(false)
+          let items = get(candidates, '0.results') || []
+          if(items.length > 0){
+            const synonyms = get(payload, 'rows.0.synonyms')
+            setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
+          }
+          if(scrollToBottom) {
+            setTimeout(() => {
+              const el = document.getElementById('candidates-list')
+              if(el)
+                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            }, 100)
+          }
+        }
+      },
+      (response, errorMsg) => {
+          setAlert({message: response?.detail || errorMsg, severity: 'error'})
+          setIsLoadingInDecisionView(false)
+      }
+    );
   }
 
   const onFetchMoreCandidates = () => {
@@ -1462,12 +1534,18 @@ const MapProject = () => {
     return 'unranked'
   }
 
-  const fetchRecommendation = () => {
-    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === rowIndex)?.results || []
-    if(isNumber(rowIndex) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
+  const fetchRecommendation = _row => {
+    let __row = row;
+    let __index = rowIndex;
+    if(isNumber(_row?.__index)){
+      __row = _row
+      __index = _row.__index
+    }
+    let _candidates = getTop10RowCandidatesForDownload(__index, true)
+    if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       const payload = {
         target_repo_url: repo.version_url,
-        row: prepareRow(row),
+        row: prepareRow(__row),
         candidates: _candidates
       }
       APIService.new().overrideURL(project.url).appendToUrl('recommend-beta/').post(payload).then(response => {
@@ -1476,8 +1554,8 @@ const MapProject = () => {
           return
         }
         if(get(response.data, 'choices.0.message.content.rationale.narrative'))
-          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data})
-        setAnalysis({...analysis, [rowIndex]: response.data})
+          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data}, __index)
+        setAnalysis(prev => ({...prev, [__index]: response.data}))
       })
     }
   }
@@ -1494,6 +1572,18 @@ const MapProject = () => {
 
   return permissionDenied ? <Error403/> : (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
+      {
+        Boolean(repoVersion?.url) &&
+          <BridgeMatch
+            service={getMatchAPIService()}
+            repo={repoVersion}
+            bridgeRepoURL='/orgs/CIEL/sources/CIEL/'
+            token={(algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null}
+            limit={10}
+            user={user}
+            ref={bridgeRef}
+          />
+      }
       {
         loadingProject &&
           <LoaderDialog open message='Loading project...'/>
@@ -2039,6 +2129,7 @@ const MapProject = () => {
                       alert={alert}
                       setAlert={setAlert}
                       candidates={otherMatchedConcepts}
+                      bridgeCandidates={bridgeCandidates}
                       orderBy={candidatesOrderBy}
                       order={candidatesOrder}
                       onOrderChange={onCandidatesOrderChange}
@@ -2156,8 +2247,7 @@ const MapProject = () => {
             <ConceptHome
               style={{borderRadius: 0}}
               detailsStyle={{height: 'calc(100vh - 400px)'}}
-              source={repo}
-              repo={repoVersion}
+              repo={showItem.source === (repoVersion?.short_code || repoVersion?.id) ? repoVersion : null}
               url={showItem.url}
               concept={showItem}
               onClose={() => setShowItem(false)}
