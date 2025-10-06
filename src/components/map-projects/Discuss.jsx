@@ -75,10 +75,9 @@ const Discuss = ({ logs, onAdd }) => {
 
   return (
     <>
+      <div className='col-xs-12 padding-0' style={{maxHeight: 'calc(100vh - 560px)', overflow: 'auto'}}>
       <Timeline
         sx={{
-          maxHeight: 'calc(100vh - 560px)',
-          overflow: 'auto',
           padding: '4px 16px',
           marginBottom: 0,
           [`& .${timelineItemClasses.root}:before`]: {
@@ -113,7 +112,8 @@ const Discuss = ({ logs, onAdd }) => {
             )
           })
         }
-      </Timeline>
+    </Timeline>
+    </div>
       <div className='col-xs-12' style={{padding: '4px 16px'}}>
         <TextField
           autoFocus
