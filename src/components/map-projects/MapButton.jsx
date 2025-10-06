@@ -15,7 +15,7 @@ import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly, usedMapTypes}) => {
+const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly, usedMapTypes, disabled}) => {
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [mapType, setMapType] = React.useState(selected || 'SAME-AS');
@@ -62,6 +62,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
       {
         simple ?
           <Button
+            disabled={disabled}
             size='small'
             color={color || (isMapped ? 'error' : 'primary')}
             variant={variant || "contained"}
