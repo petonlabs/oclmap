@@ -49,7 +49,7 @@ const Search = props => {
 
   React.useEffect(() => {
     if(props.url)
-      setQueryParamsInState(true)
+      setQueryParamsInState(true, true)
   }, [props.url])
 
   React.useEffect(() => {
@@ -109,7 +109,7 @@ const Search = props => {
     return _filters
   }
 
-  const setQueryParamsInState = mustFetch => {
+  const setQueryParamsInState = (mustFetch, includeRepoDefaultFilters) => {
     const queryParams = new URLSearchParams(window.location.hash.split('?')[1])
     const value = queryParams.get('q') || ''
     const isDiffFromPrevInput = value !== input
@@ -135,6 +135,9 @@ const Search = props => {
     if(_filters) {
       _fetch = true
       _fetchFacets = true
+    }
+    if(includeRepoDefaultFilters && !_filters && props.repoDefaultFilters) {
+      _filters = getAppliedFacetFromQueryParam(props.repoDefaultFilters)
     }
     if(!isEqual(filters, _filters)) {
       setFilters(_filters)
