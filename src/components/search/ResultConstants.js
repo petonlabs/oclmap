@@ -1,5 +1,4 @@
 import React from 'react';
-import find from 'lodash/find'
 import {
   formatDate,
   formatWebsiteLink,
@@ -10,14 +9,6 @@ import RepoVersionButton from '../repos/RepoVersionButton';
 import FromAndTargetSource from '../mappings/FromAndTargetSource'
 import ConceptCell from '../mappings/ConceptCell'
 
-const getLocale = (concept, synonym) => {
-  let cleaned = synonym.replaceAll('<em>', '').replaceAll('</em>', '')
-  let locale = find(concept?.names, name => name?.name.toLowerCase() === cleaned.toLowerCase())
-
-  return <div>{locale?.locale ? `[${locale.locale}] ${[locale.name]}` : cleaned}</div>
-}
-
-
 export const ALL_COLUMNS = {
   concepts: [
     {id: 'id', labelKey: 'common.id', value: 'id', sortOn: 'id_lowercase', className: 'searchable', permanent: true},
@@ -25,14 +16,6 @@ export const ALL_COLUMNS = {
       <span>
         <React.Fragment>
           {item.retired && <Retired style={{marginRight: '8px'}}/>} {item.display_name}
-          {
-            item.search_meta?.search_highlight?.synonyms?.length && item?.names?.length &&
-              <div style={{marginTop: '6px', color: 'rgba(0, 0, 0, 0.5)', fontSize: '12px'}}>
-                {
-                  item.search_meta?.search_highlight?.synonyms.map(syn => <React.Fragment key={syn}>{getLocale(item, syn)}</React.Fragment>)
-                }
-              </div>
-          }
         </React.Fragment>
       </span>
     )

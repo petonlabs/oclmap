@@ -74,7 +74,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable}) => {
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable, noSynonymPrefix, locales}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -82,9 +82,14 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
   const highlights = concept?.search_meta?.search_highlight
   const synonymHighlight = highlights?.synonyms
   const nameHighlight = highlights?.name
-  if(!nameHighlight?.length && synonymHighlight?.length) {
-    const bestMatch = getBestSynonym(synonymHighlight) || synonymHighlight[0]
-    synonymPrefix = bestMatch.replace('<em>', "<b className='searchable'>").replace('</em>', '</b>')
+  if(!nameHighlight?.length && synonymHighlight?.length && !noSynonymPrefix) {
+    let bestMatch = getBestSynonym(synonymHighlight) || synonymHighlight[0]
+    if(locales) {
+      let raw = bestMatch.replaceAll("<em>", "").replaceAll("</em>", "")
+      if(locales?.length > 0 && !locales.includes(concept.names.find(name => name.name.startsWith(raw))?.locale))
+        bestMatch = ''
+    }
+    synonymPrefix = bestMatch.replaceAll('<em>', "<b className='searchable'>").replaceAll('</em>', '</b>')
   }
 
   const props = {

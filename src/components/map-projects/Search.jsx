@@ -22,7 +22,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import MapButton from './MapButton'
 
-const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters, columns, defaultFilters}) => {
+const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters, columns, defaultFilters, locales}) => {
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
@@ -139,6 +139,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
               }
             </div> :
           <SearchResults
+            locales={locales}
           resultsContainerId='search-results'
           resultSize='small'
           sx={{
@@ -160,7 +161,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
             props =>
             isLoading ?
               <Skeleton height={58} key={props?.key} /> :
-              <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} repoVersion={repoVersion} noScore />
+              <Concept {...props} onMap={onMap} isSelectedForMap={isSelectedForMap} repoVersion={repoVersion} noScore locales={locales} />
           }
           display={display}
           onDisplayChange={setDisplay}

@@ -415,7 +415,7 @@ const MapProject = () => {
       renderCell: params => {
         const targetConcept = mapSelected[params.row.__index]
         if(targetConcept?.url) {
-          return <Concept sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} />
+          return <Concept sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix />
         }
       }
     })
@@ -2061,6 +2061,7 @@ const MapProject = () => {
                         setAppliedFacets(() => ({...appliedFacets, [rowIndex]: filters}))
                         fetchOtherCandidates(null, 0, false, false, filters, true)
                       }}
+                      locales={locales}
                     />
                 }
                 {
@@ -2088,6 +2089,7 @@ const MapProject = () => {
                         setAppliedFacets({...appliedFacets, [rowIndex]: filters})
                         search(null, null, null, null, filters)
                       }}
+                      locales={locales}
                     />
                 }
                 {
