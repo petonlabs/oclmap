@@ -73,10 +73,12 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           borderRadius: '10px 10px 0 0',
           '.MuiTableCell-root': {
             padding: '6px !important',
+            verticalAlign: 'top',
           },
           '.MuiTableCell-head': {
             padding: '2px 6px !important',
-            whiteSpace: 'normal'
+            whiteSpace: 'normal',
+            verticalAlign: 'middle',
           },
           '.MuiToolbar-root': {
             borderRadius: '10px 10px 0 0',
