@@ -1397,7 +1397,6 @@ const MapProject = () => {
             newMatches[index].results = [...newMatches[index].results, ...(candidates[0]?.results || [])]
             return newMatches
           })
-          setIsLoadingInDecisionView(false)
           let items = get(candidates, '0.results') || []
           if(items.length > 0){
             const synonyms = get(payload, 'rows.0.synonyms')
@@ -1411,6 +1410,7 @@ const MapProject = () => {
             }, 100)
           }
         }
+        setIsLoadingInDecisionView(false)
       },
       (response, errorMsg) => {
           setAlert({message: response?.detail || errorMsg, severity: 'error'})
