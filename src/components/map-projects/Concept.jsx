@@ -27,7 +27,20 @@ const getBestSynonym = synonyms => {
 
 
 const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping}) => {
-  let bridgeMappingPrefix = bridge && mapping?.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
+  const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_url)
+  let bridgeMappingPrefix = isValidBridge ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
+  const conceptToMap = isValidBridge ?
+        {
+          id: mapping.cascade_target_concept_code,
+          name: mapping.cascade_target_concept_name,
+          display_name: mapping.cascade_target_concept_name,
+          url: mapping.cascade_target_concept_url,
+          source: mapping.cascade_target_source_name,
+          type: 'Concept',
+          search_meta: concept.search_meta
+        } :
+        concept
+  const mapTypeToApply = isValidBridge ? mapping?.map_type || concept?.search_meta?.map_type : concept?.search_meta?.map_type
   return (
     <>
       <ListItemText
@@ -74,9 +87,9 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
             <MapButton
               simple
               disabled={bridge && !mapping.cascade_target_concept_url}
-              selected={concept?.search_meta?.map_type}
-              onClick={(event, applied, mapType) => onMap(event, concept, !applied, mapType)}
-              isMapped={isSelectedForMap(concept)}
+              selected={mapTypeToApply}
+              onClick={(event, applied, mapType) => onMap(event, conceptToMap, !applied, mapping?.map_type || mapType)}
+              isMapped={isSelectedForMap(conceptToMap)}
               sx={{marginLeft: '8px'}}
             />
         }
