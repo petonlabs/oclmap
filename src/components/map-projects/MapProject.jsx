@@ -1572,8 +1572,8 @@ const MapProject = () => {
           setAlert({message: response.detail, severity: 'error'})
           return
         }
-        if(get(response.data, 'choices.0.message.content.rationale.narrative'))
-          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale.narrative'), extras: response.data}, __index)
+        if(get(response.data, 'choices.0.message.content.rationale'))
+          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale'), extras: response.data}, __index)
         setAnalysis(prev => ({...prev, [__index]: response.data}))
       })
     }
