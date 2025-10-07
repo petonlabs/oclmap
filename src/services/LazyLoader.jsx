@@ -23,7 +23,8 @@ const Lazy = React.lazy(async () => {
   const isOnline = process.env.OCL_ONLINE
   /*eslint no-undef: 0*/
   const bridgeComponentURL = process.env.BRIDGE_MATCH_URL || ''
-
+  console.log('isOnline', isOnline)
+  console.log('bridgeComponentURL', bridgeComponentURL)
   if(isOnline != 'true')
     return { default: BridgeMatchStub }
 
