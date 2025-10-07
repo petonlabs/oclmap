@@ -11,9 +11,9 @@ import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import FolderOpenIcon from '@mui/icons-material/FolderOutlined';
-import MapperIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import Divider from '@mui/material/Divider';
 import map from 'lodash/map'
+import { PRIMARY_COLORS } from '../../common/colors'
 import { getCurrentUser, refreshCurrentUserCache, getCurrentUserOrgs, toV3URL } from '../../common/utils';
 import Drawer from '../common/Drawer';
 import OrgIcon from '../orgs/OrgIcon';
@@ -130,7 +130,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
                 justifyContent: 'center',
               }}
             >
-              <MapperIcon color={location.pathname === '/' ? 'primary' : undefined} />
+              <i style={{fontSize: '1.25rem', color: location.pathname === '/' ?  PRIMARY_COLORS.main : undefined}} className="fa-solid fa-diagram-project"></i>
             </ListItemIcon>
             <ListItemText primary={t('user.my_mapping_projects')} />
           </ListItemButton>
