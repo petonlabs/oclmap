@@ -922,6 +922,8 @@ const MapProject = () => {
       row.synonyms = compact(flatten([row.synonyms]))
       if(!row.synonyms.includes(row.name))
         row.synonyms = [...row.synonyms, row.name]
+      if(row.name.includes('%') && !row.properties__property && !row.properties__PROPERTY && repoVersion.url === '/orgs/LOINC/sources/LOINC/')
+        row.properties__PROPERTY = 'NFr'
     }
     return row
   }
@@ -1541,12 +1543,14 @@ const MapProject = () => {
       __row = _row
       __index = _row.__index
     }
-    let _candidates = getTop10RowCandidatesForDownload(__index, true)
+    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === __index)?.results || []
+    let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       const payload = {
         target_repo_url: repo.version_url,
         row: prepareRow(__row),
-        candidates: _candidates
+        candidates: _candidates,
+        bridgeCandidates: _bridgeCandidates
       }
       APIService.new().overrideURL(project.url).appendToUrl('recommend-beta/').post(payload).then(response => {
         if(response?.detail) {
