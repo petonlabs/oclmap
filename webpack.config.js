@@ -117,6 +117,8 @@ module.exports = (env) => {
         'process.env.LOGIN_REDIRECT_URL': JSON.stringify(env.LOGIN_REDIRECT_URL),
         'process.env.OIDC_RP_CLIENT_ID': JSON.stringify(env.OIDC_RP_CLIENT_ID),
         'process.env.OIDC_RP_CLIENT_SECRET': JSON.stringify(env.OIDC_RP_CLIENT_SECRET),
+        'process.env.OCL_ONLINE': JSON.stringify(env.OCL_ONLINE) || 'false',
+        'process.env.BRIDGE_MATCH_URL': JSON.stringify(env.BRIDGE_MATCH_URL || '') || ''
       }),
       new IgnorePlugin({ resourceRegExp: /moment\/locale\// })
     ],

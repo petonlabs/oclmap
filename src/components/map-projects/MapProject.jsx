@@ -2,7 +2,7 @@ import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 import Split from 'react-split';
-import BridgeMatch from 'bridge/BridgeMatch';
+import BridgeMatch from '../../services/LazyLoader'
 
 import { useParams, useHistory } from 'react-router-dom'
 

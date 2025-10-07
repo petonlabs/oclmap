@@ -35,6 +35,12 @@ fi
 if [[ ! -z "${OIDC_RP_CLIENT_SECRET}" ]]; then
     echo "var OIDC_RP_CLIENT_SECRET = \"${OIDC_RP_CLIENT_SECRET}\";" >> ${ENV_FILE}
 fi
+if [[ ! -z "${OCL_ONLINE}" ]]; then
+    echo "var OCL_ONLINE = \"${OCL_ONLINE}\";" >> ${ENV_FILE}
+fi
+if [[ ! -z "${BRIDGE_MATCH_URL}" ]]; then
+    echo "var BRIDGE_MATCH_URL = \"${BRIDGE_MATCH_URL}\";" >> ${ENV_FILE}
+fi
 
 echo "Adjusting nginx configuration"
 envsubst '$WEB_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf

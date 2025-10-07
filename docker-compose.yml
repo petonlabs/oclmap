@@ -18,3 +18,5 @@ services:
       - ERRBIT_URL
       - ERRBIT_KEY
       - HOTJAR_ID
+      - OCL_ONLINE=${OCL_ONLINE-false}
+      - BRIDGE_MATCH_URL
