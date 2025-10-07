@@ -99,7 +99,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           </ListSubheader>
         }
         title=' '
-    renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} locales={locales} bridge={bridge} />}
+        renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} bridge={bridge} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested

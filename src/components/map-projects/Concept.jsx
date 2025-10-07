@@ -28,7 +28,7 @@ const getBestSynonym = synonyms => {
 
 const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping}) => {
   const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_url)
-  let bridgeMappingPrefix = isValidBridge ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
+  let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   const conceptToMap = isValidBridge ?
         {
           id: mapping.cascade_target_concept_code,
@@ -99,7 +99,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, sx, notClickable, noSynonymPrefix, locales, bridge}) => {
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, bridge}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -125,13 +125,14 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
 
   if(bridge) {
     return map(concept?.mappings, (mapping, index) => {
+      let _isAIRecommended = !isAIRecommended && AIRecommendedCandidateId === mapping?.cascade_target_concept_code
       return notClickable ? (
         <ListItem {...props} key={index}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
         </ListItem>
       ) : (
         <ListItemButton {...props} key={index} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} />
         </ListItemButton>
       )
     })

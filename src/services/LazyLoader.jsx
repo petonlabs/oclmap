@@ -20,11 +20,8 @@ if (!window.React) window.React = React
 
 const Lazy = React.lazy(async () => {
   /*eslint no-undef: 0*/
-  const isOnline = process.env.OCL_ONLINE
   /*eslint no-undef: 0*/
   let bridgeComponentURL = process.env.BRIDGE_MATCH_URL || ''
-  console.log('isOnline', isOnline)
-  console.log('bridgeComponentURL', bridgeComponentURL)
   if(!bridgeComponentURL && ['https://map.staging.openconceptlab.org', 'https://map.openconceptlab.org'].includes(window.location.origin) )
     bridgeComponentURL = 'https://ocl-dev-s3.s3.us-east-2.amazonaws.com/bridge-match.umd.cjs'
   if(!bridgeComponentURL)

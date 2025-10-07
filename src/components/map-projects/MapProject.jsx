@@ -883,8 +883,9 @@ const MapProject = () => {
     }
   }
 
-  const prepareRow = csvRow => {
+  const prepareRow = (csvRow, additional=false) => {
     let row = {}
+    let metadata = {}
     forEach(csvRow,  (value, key) => {
       if((value === 0 || value) && !has(csvRow, key + '__updated')) {
         const column = find(columns, {original: key.replace('__updated', '')}) || find(columns, {dataKey: key.replace('__updated', '')})
@@ -915,6 +916,8 @@ const MapProject = () => {
             row[newKey] = [...(row[newKey] || []), ...newValue]
           else
             row[newKey] = newValue
+        } else if(additional) {
+          metadata[key] = value
         }
       }
     })
@@ -922,10 +925,10 @@ const MapProject = () => {
       row.synonyms = compact(flatten([row.synonyms]))
       if(!row.synonyms.includes(row.name))
         row.synonyms = [...row.synonyms, row.name]
-      if(row.name.includes('%') && !row.properties__property && !row.properties__PROPERTY && repoVersion.url === '/orgs/LOINC/sources/LOINC/')
+      if(row.name.includes('%') && !row.properties__property && !row.properties__PROPERTY && repoVersion.url === '/orgs/Regenstrief/sources/LOINC/')
         row.properties__PROPERTY = 'NFr'
     }
-    return row
+    return additional ? {row: row, metadata: metadata} : row
   }
 
   const isAnyValidColumn = () => Boolean(find(columns, column => isValidColumnValue(column.label)))
@@ -1121,6 +1124,12 @@ const MapProject = () => {
       const aiCandidateID = aiCandidate?.concept_id
       const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
       let  candidates = getTop10RowCandidatesForDownload(index)
+      const getOutOfScopeSuggestions = () => {
+        let suggestions = get(aiRecommendation, 'out_of_scope_suggestions') || []
+        return map(suggestions, sugg => {
+          return [`Suggested: ${sugg.suggested_concept}`, `Rationale: ${sugg.rationale}`].join('\n')
+        }).join('\n\n\n')
+      }
       let newRow = {
         ...row,
         '__Concept ID__': concept?.id,
@@ -1129,9 +1138,13 @@ const MapProject = () => {
         '__Map Type__': mapTypes[index],
         '__Match Score__': concept?.search_meta?.search_normalized_score,
         '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
-        '__AI Recommendation__': get(aiRecommendation, 'rationale.narrative') || null,
+        '__AI Recommendation__': get(aiRecommendation, 'recommendation') || null,
         '__AI Recommendation Candidate__': aiCandidateID || null,
+        '__AI Recommendation Candidate Name__': get(aiCandidate, 'name') || null,
         '__AI Recommendation Score__': aiScore || null,
+        '__AI Recommendation Rationale__': get(aiRecommendation, 'rationale') || null,
+        '__AI Recommendation Alternative Candidates__': map(get(aiRecommendation, 'alternative_candidates', []), 'concept_id').join('\n') || null,
+        '__AI Recommendation Out Of Scope Suggestions__': getOutOfScopeSuggestions() || null,
         '__Decision__': decisions[index] || 'None',
         '__Note__': notes[index] || null,
         '__State__': rowStateLabel,
@@ -1546,9 +1559,11 @@ const MapProject = () => {
     let _candidates = find(otherMatchedConcepts, c => c.row?.__index === __index)?.results || []
     let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
+      let rowData = prepareRow(__row, true)
       const payload = {
         target_repo_url: repo.version_url,
-        row: prepareRow(__row),
+        row: rowData.row,
+        metadata: rowData.metadata,
         candidates: _candidates,
         bridgeCandidates: _bridgeCandidates
       }

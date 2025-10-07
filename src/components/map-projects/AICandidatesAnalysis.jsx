@@ -42,7 +42,11 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
           analysis === undefined ?
             <Skeleton height={75} sx={{'-webkit-transform': 'none', 'transform': 'none'}} /> :
           <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
-            {get(analysis, 'choices.0.message.content.rationale.narrative')}
+            {
+              get(analysis, 'choices.0.message.content.recommendation') &&
+                <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'choices.0.message.content.recommendation')}:</span>
+            }
+            {get(analysis, 'choices.0.message.content.rationale.narrative') || get(analysis, 'choices.0.message.content.rationale')}
           </Typography>
         }
       </CardContent>
