@@ -1236,11 +1236,11 @@ const MapProject = () => {
     const newRowStatuses = {...rowStatuses, reviewed: uniq([...rowStatuses.reviewed, rowIndex]), readyForReview: without(rowStatuses.readyForReview, rowIndex), unmapped: without(rowStatuses.unmapped, rowIndex)}
     setRowStatuses(newRowStatuses)
     updateMatchTypeCounts('reviewed', newRowStatuses)
+    log({'action': 'approved'})
     if(next){
       const nextRow = data[selectedRowStatus === 'all' ? rowIndex + 1 : find(rowStatuses[selectedRowStatus], idx => idx > rowIndex)]
       if(nextRow !== undefined)
         setTimeout(() => onCSVRowSelect(nextRow), 300)
-      log({'action': 'approved'})
     }
   }
 

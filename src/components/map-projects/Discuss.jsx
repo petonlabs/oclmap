@@ -15,8 +15,10 @@ import CommentIcon from '@mui/icons-material/Message';
 import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import RejectIcon from '@mui/icons-material/Clear';
+import ExcludeIcon from '@mui/icons-material/Block';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import AssistantIcon from '@mui/icons-material/Assistant';
+import ReviewedIcon from '@mui/icons-material/FactCheckOutlined';
 
 import map from 'lodash/map'
 import startCase from 'lodash/startCase'
@@ -27,12 +29,20 @@ const Discuss = ({ logs, onAdd }) => {
   const [comment, setComment] = React.useState('')
   const getTitle = log => {
     if(['mapped', 'unmapped', 'auto-matched', 'rejected'].includes(log.action)) {
-      let description = `${startCase(log.action)}: ${log.extras.name}`
+      if(log.action === 'rejected' && log.description)
+        return log.description
+      let description = startCase(log.action)
+      if(log.extras?.name)
+        description += `: ${log.extras?.name}`
       if(log?.extras?.map_type || log?.extras?.mapType) {
+        if(description?.includes(':'))
+          description += ':'
         description += ` (${log.extras.map_type || log.extras.mapType})`
       }
       return description
     }
+    if (log.action === 'exclude')
+      return 'Excluded'
     if(['AIRecommendation'].includes(log.action))
       return `${log.action}: ${log.description}`
     if(['commented'].includes(log.action)) {
@@ -46,6 +56,8 @@ const Discuss = ({ logs, onAdd }) => {
       return <AssistantIcon fontSize='small' color={color} />
     if(log.action === 'commented')
       return <CommentIcon fontSize='small' color={color} />
+    if(log.action === 'approved' || log.action === 'reviewed')
+      return <ReviewedIcon fontSize='small' color={color} />
     if(['mapped'].includes(log.action))
       return <MapIcon fontSize='small' color={color} />
     if(['auto-matched'].includes(log.action))
@@ -54,15 +66,17 @@ const Discuss = ({ logs, onAdd }) => {
       return <UnmapIcon fontSize='small' color={color} />
     if(log.action === 'rejected')
       return <RejectIcon fontSize='small' color={color} />
+    if(log.action === 'exclude')
+      return <ExcludeIcon fontSize='small' color={color} />
     return log.user.slice(0, 2).toUpperCase()
   }
 
   const getDotColor = log => {
-    if(['unmapped', 'rejected'].includes(log.action))
+    if(['unmapped', 'rejected', 'exclude'].includes(log.action))
       return 'error'
     if(['proposed'].includes(log.action))
       return 'warning'
-    if(['mapped', 'auto-matched', 'AIRecommendation'].includes(log.action))
+    if(['mapped', 'auto-matched', 'AIRecommendation', 'approved', 'reviewed'].includes(log.action))
       return 'primary'
     return undefined
   }
