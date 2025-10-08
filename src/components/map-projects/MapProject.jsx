@@ -250,7 +250,6 @@ const MapProject = () => {
     }
   }, [repoVersion, project])
 
-
   const fetchAndSetProject = () => {
     setLoadingProject(true)
     let url = ['', params.ownerType, params.owner, 'map-projects', params.projectId, ''].join('/')
@@ -1392,14 +1391,16 @@ const MapProject = () => {
   }
 
   const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
-      let __row = isEmpty(_row) ? row : _row
-      const existingCandidates = find(bridgeCandidates, c => c.row.__index === __row.__index)?.results
-      if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
-        setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
-        return
-      }
-      setIsLoadingInDecisionView(true)
-      const payload = getPayloadForMatching([__row], repo)
+    let __row = isEmpty(_row) ? row : _row
+    const existingCandidates = find(bridgeCandidates, c => c.row.__index === __row.__index)?.results
+    if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
+      setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+      return
+    }
+    if(!bridgeRef?.current?.canBridge())
+      return
+    setIsLoadingInDecisionView(true)
+    const payload = getPayloadForMatching([__row], repo)
     let __offset = offset || 0
     bridgeRef.current?.fetchBridgeCandidates(
       payload,
@@ -1431,8 +1432,8 @@ const MapProject = () => {
         setIsLoadingInDecisionView(false)
       },
       (response, errorMsg) => {
-          setAlert({message: response?.detail || errorMsg, severity: 'error'})
-          setIsLoadingInDecisionView(false)
+        setAlert({message: response?.detail || errorMsg, severity: 'error'})
+        setIsLoadingInDecisionView(false)
       }
     );
   }

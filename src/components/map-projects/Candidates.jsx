@@ -89,12 +89,12 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           (showAnalysis && openAnalysis) ? (
             <div className='col-xs-12 padding-0' style={{display: 'inline-flex', flexDirection: 'column'}}>
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
-              <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgba(0, 0, 0, 0.1)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px'}}>
+              <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px'}}>
                 <b>{header}</b>
               </ListSubheader>
             </div>
           ) :
-            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgba(0, 0, 0, 0.1)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
+            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
             <b>{header}</b>
           </ListSubheader>
         }
