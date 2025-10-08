@@ -242,7 +242,12 @@ const MapProject = () => {
 
   React.useEffect(() => {
     const isDefaultApplied = isRepoDefaultFilterApplied(repoVersion)
-    setIncludeDefaultFilter(Boolean(isDefaultApplied))
+    if(project?.id)
+      setIncludeDefaultFilter(Boolean(isDefaultApplied))
+    else if(!isDefaultApplied && !isEmpty(repoVersion?.meta?.display?.default_filter || {})) {
+      setProject({...project, filters: repoVersion?.meta?.display?.default_filter})
+      setIncludeDefaultFilter(true)
+    }
   }, [repoVersion, project])
 
 
