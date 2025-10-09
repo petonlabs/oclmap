@@ -8,7 +8,7 @@ import {
 import Error404 from '../errors/Error404';
 import Error403 from '../errors/Error403';
 import Error401 from '../errors/Error401';
-import Waitlisting from '../errors/Waitlisting'
+import WaitListing from '../errors/WaitListing'
 import NetworkError from '../errors/NetworkError'
 import ErrorBoundary from '../errors/ErrorBoundary';
 import CheckAuth from './CheckAuth'
@@ -34,12 +34,12 @@ const AuthenticationRequiredRoute = ({component: Component, ...rest}) => {
         isLoggedIn() ?
           (
             isInWaitlist() ?
-              <Waitlisting /> :
+              <WaitListing /> :
             <Component {...props} />
           ) :
           isRedirectingToLoginViaReferrer(props.location) ?
           <CheckAuth /> :
-          (toggles?.MAPPER_WAITLIST_TOGGLE === true ? <Waitlisting /> : <Error401 />)
+          (toggles?.MAPPER_WAITLIST_TOGGLE === true ? <WaitListing /> : <Error401 />)
       }
     />
   )

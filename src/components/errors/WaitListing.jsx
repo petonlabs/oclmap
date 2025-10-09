@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 
-const Waitlisting = ({ onSignup }) => {
+const WaitListing = ({ onSignup }) => {
   return (
     <Box
       sx={{
@@ -110,4 +110,4 @@ const Waitlisting = ({ onSignup }) => {
 };
 
 
-export default Waitlisting;
+export default WaitListing;
