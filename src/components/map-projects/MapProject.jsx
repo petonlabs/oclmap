@@ -920,7 +920,7 @@ const MapProject = () => {
             row[newKey] = [...(row[newKey] || []), ...newValue]
           else
             row[newKey] = newValue
-        } else if(additional) {
+        } else if(additional && !key?.startsWith('__')) {
           metadata[key] = value
         }
       }
