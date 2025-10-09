@@ -3,7 +3,7 @@ import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
 import {
   recordGAPageView, isLoggedIn, getLoginURL, isV3URL, isV2URL, isRedirectingToLoginViaReferrer,
-  isInWaitlist
+  isInWaitlist, getEnv
 } from '../../common/utils';
 import Error404 from '../errors/Error404';
 import Error403 from '../errors/Error403';
@@ -26,6 +26,7 @@ import MapProjects from '../map-projects/MapProjects'
 
 const AuthenticationRequiredRoute = ({component: Component, ...rest}) => {
   const { toggles } = React.useContext(OperationsContext);
+  const env = getEnv()
   return (
     <Route
       {...rest}
@@ -39,7 +40,7 @@ const AuthenticationRequiredRoute = ({component: Component, ...rest}) => {
           ) :
           isRedirectingToLoginViaReferrer(props.location) ?
           <CheckAuth /> :
-          (toggles?.MAPPER_WAITLIST_TOGGLE === true ? <WaitListing /> : <Error401 />)
+          ((toggles?.MAPPER_WAITLIST_TOGGLE === true || ['staging', 'production', 'development'].includes(env)) ? <WaitListing /> : <Error401 />)
       }
     />
   )
