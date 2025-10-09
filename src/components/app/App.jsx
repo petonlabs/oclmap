@@ -2,11 +2,13 @@
 import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
 import {
-  recordGAPageView, isLoggedIn, getLoginURL, isV3URL, isV2URL, isRedirectingToLoginViaReferrer
+  recordGAPageView, isLoggedIn, getLoginURL, isV3URL, isV2URL, isRedirectingToLoginViaReferrer,
+  isInWaitlist
 } from '../../common/utils';
 import Error404 from '../errors/Error404';
 import Error403 from '../errors/Error403';
 import Error401 from '../errors/Error401';
+import Waitlisting from '../errors/Waitlisting'
 import NetworkError from '../errors/NetworkError'
 import ErrorBoundary from '../errors/ErrorBoundary';
 import CheckAuth from './CheckAuth'
@@ -22,19 +24,26 @@ import Alert from '../common/Alert';
 import MapProject from '../map-projects/MapProject'
 import MapProjects from '../map-projects/MapProjects'
 
-const AuthenticationRequiredRoute = ({component: Component, ...rest}) => (
-  <Route
-    {...rest}
-    render={
-      props =>
-      isLoggedIn() ?
-        <Component {...props} /> :
-      isRedirectingToLoginViaReferrer(props.location) ?
-        <CheckAuth /> :
-        <Error401 />
-    }
-  />
-)
+const AuthenticationRequiredRoute = ({component: Component, ...rest}) => {
+  const { toggles } = React.useContext(OperationsContext);
+  return (
+    <Route
+      {...rest}
+      render={
+        props =>
+        isLoggedIn() ?
+          (
+            isInWaitlist() ?
+              <Waitlisting /> :
+            <Component {...props} />
+          ) :
+          isRedirectingToLoginViaReferrer(props.location) ?
+          <CheckAuth /> :
+          (toggles?.MAPPER_WAITLIST_TOGGLE === true ? <Waitlisting /> : <Error401 />)
+      }
+    />
+  )
+}
 
 const App = props => {
   const [networkError, setNetworkError] = React.useState(false)
