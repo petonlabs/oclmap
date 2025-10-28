@@ -1,0 +1,178 @@
+import React from 'react'
+
+import Button from '@mui/material/Button'
+import ButtonGroup from '@mui/material/ButtonGroup'
+import Grow from '@mui/material/Grow';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import ListSubheader from '@mui/material/ListSubheader';
+import ListItemText from '@mui/material/ListItemText';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+
+import AssistantIcon from '@mui/icons-material/Assistant';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+
+import find from 'lodash/find'
+import filter from 'lodash/filter'
+import orderBy from 'lodash/orderBy'
+
+const Model = ({ model, selected, onClick }) => {
+  return (
+    <MenuItem
+      key={model.id}
+      selected={model?.id === selected}
+      onClick={event => onClick(event, model)}
+    >
+      <ListItemText primary={model.name} secondary={model.id} />
+      {
+        model.default &&
+          <Chip sx={{margin: '0 2px'}} size='small' label='default' variant='contained' color='success' />
+      }
+      {
+        model.hugging_face_id &&
+          <IconButton size='small' sx={{margin: '0 2px', color: 'yellow'}} onClick={event => {
+            event.preventDefault()
+            event.stopPropagation()
+            window.open(`https://huggingface.co/${model.hugging_face_id}`, '_blank')
+            return false
+          }} href={`https://huggingface.co/${model.hugging_face_id}`} target='_blank' rel='noreferrer noopener'>
+            <img src='https://huggingface.co/front/assets/huggingface_logo-noborder.svg' style={{width: '30px'}} />
+          </IconButton>
+      }
+    </MenuItem>
+  )
+}
+
+
+const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }) => {
+  const [open, setOpen] = React.useState(false);
+  const anchorRef = React.useRef(null);
+  const [model, setModel] = React.useState(selected || find(models, {default: true})?.id || '')
+
+  React.useEffect(() => {
+    setModel(selected || find(models, {default: true})?.id || '')
+  }, [selected])
+
+  const handleToggle = event => {
+    event.stopPropagation()
+    event.preventDefault()
+    setOpen((prevOpen) => !prevOpen)
+  };
+
+  const handleClose = (event) => {
+    event.stopPropagation()
+    event.preventDefault()
+
+    if (anchorRef.current && anchorRef.current.contains(event.target))
+      return;
+
+    setOpen(false);
+  };
+
+  const handleMenuItemClick = (
+    event,
+    newValue
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.persist()
+
+    setModel(newValue?.id || '');
+    onModelChange(newValue?.id)
+    setOpen(false);
+  };
+
+
+  const recommendedOptions = filter(models, {recommended: true})
+  const otherOptions = filter(models, {recommended: false})
+
+
+  return (
+    <React.Fragment>
+              <ButtonGroup
+            size='small'
+            variant="outlined"
+            ref={anchorRef}
+            aria-label="Button group AI models"
+            color='primary'
+                {...rest}
+          >
+            <Button
+              size='small'
+              sx={{textTransform: 'none', whiteSpace: 'nowrap'}}
+              onClick={event => onClick(event, model)}
+              startIcon={<AssistantIcon fontSize='inherit' />}
+            >
+              {`AI Assistant - ${model}`}
+            </Button>
+            <Button
+              size="small"
+              aria-controls={open ? 'split-button-menu' : undefined}
+              aria-expanded={open ? 'true' : undefined}
+              aria-label="select merge strategy"
+              aria-haspopup="menu"
+              onClick={handleToggle}
+            >
+              <ArrowDropDownIcon />
+            </Button>
+              </ButtonGroup>
+      <Popper
+        sx={{
+          zIndex: 3,
+        }}
+        open={open}
+        anchorEl={anchorRef.current}
+        role={undefined}
+        transition
+        disablePortal
+      >
+        {({ TransitionProps, placement }) => (
+          <Grow
+            {...TransitionProps}
+            style={{
+              transformOrigin:
+              placement === 'bottom' ? 'center top' : 'center bottom',
+            }}
+          >
+            <Paper>
+              <ClickAwayListener onClickAway={handleClose}>
+                <MenuList id="split-button-menu" autoFocusItem sx={{textAlign: 'left', maxHeight: '400px', overflow: 'auto', paddingTop: 0, paddingBottom: 0, maxWidth: '500px'}}>
+                  {
+                    orderBy(recommendedOptions, 'name').length > 0 &&
+                      <>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Recommended</ListSubheader>
+                        {
+                          recommendedOptions.map(option => (
+                            <Model key={option.id} model={option} selected={model} onClick={handleMenuItemClick} />
+                          ))
+                        }
+                      </>
+                  }
+                  {
+                    otherOptions.length > 0 &&
+                      <>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>All Options</ListSubheader>
+                        {
+                          orderBy(otherOptions, 'name').map(option => (
+                            <Model key={option.id} model={option} selected={model} onClick={handleMenuItemClick} />
+                          ))
+                        }
+                      </>
+                  }
+                </MenuList>
+              </ClickAwayListener>
+            </Paper>
+          </Grow>
+        )}
+      </Popper>
+    </React.Fragment>
+
+  )
+}
+
+
+export default AIAssistantButton;

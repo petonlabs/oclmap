@@ -161,6 +161,7 @@ const MapProject = () => {
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 100, available: 70})
   const [filters, setFilters] = React.useState({})
+  const [AIModel, setAIModel] = React.useState('')
 
   const abortRef = React.useRef(false);
 
@@ -204,6 +205,7 @@ const MapProject = () => {
   const [isSaving, setIsSaving] = React.useState(false)
   const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
   const [analysis, setAnalysis] = React.useState({})
+  const [AIModels, setAIModels] = React.useState([])
 
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
@@ -1169,6 +1171,8 @@ const MapProject = () => {
     if(edit?.length > 0)
       return
 
+    fetchAIModels()
+
     const matched = get(find(matchedConcepts, concept => concept.row.__index === csvRow.__index), 'results.0') || mapSelected[csvRow.__index]
     let url = matched?.url
     if(url && !conceptCache[url])
@@ -1557,6 +1561,26 @@ const MapProject = () => {
     return 'unranked'
   }
 
+
+  const fetchAIModels = () => {
+    if(!AIModels.length) {
+      /*eslint no-undef: 0*/
+      let AI_ASSISTANT_API_URL = process.env.AI_ASSISTANT_API_URL
+      if(!AI_ASSISTANT_API_URL) {
+        return
+      }
+      const service = APIService.new()
+      service.URL = AI_ASSISTANT_API_URL
+      service.appendToUrl('/match/models/').get().then(response => {
+        if(response?.detail) {
+          return
+        }
+        setAIModels(response.data)
+        setAIModel(find(response.data, {default: true})?.id)
+      })
+    }
+  }
+
   const fetchRecommendation = _row => {
     /*eslint no-undef: 0*/
     let AI_ASSISTANT_API_URL = process.env.AI_ASSISTANT_API_URL
@@ -1594,7 +1618,8 @@ const MapProject = () => {
         row: rowData.row,
         metadata: rowData.metadata,
         candidates: _candidates,
-        bridgeCandidates: _bridgeCandidates
+        bridgeCandidates: _bridgeCandidates,
+        model: AIModel
       }
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
@@ -1604,8 +1629,8 @@ const MapProject = () => {
           return
         }
         if(get(response.data, 'rationale'))
-          log({action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: response.data}, __index)
-        setAnalysis(prev => ({...prev, [__index]: response.data}))
+          log({action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
+        setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel}}))
       })
     }
   }
@@ -2203,6 +2228,9 @@ const MapProject = () => {
                         fetchOtherCandidates(null, 0, false, false, filters, true)
                       }}
                       locales={filters.locale || ''}
+                      models={AIModels}
+                      selectedModel={AIModel}
+                      onModelChange={setAIModel}
                     />
                 }
                 {

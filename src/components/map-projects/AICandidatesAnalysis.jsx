@@ -25,7 +25,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
       <CardContent sx={{padding: '8px !important'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-6px'}}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
-            AI Candidates Analysis
+            AI Candidates Analysis {analysis?.model ? ` - ${analysis.model}` : ''}
             <Tooltip title='View Raw JSON' placement='right'>
             <span>
               <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>

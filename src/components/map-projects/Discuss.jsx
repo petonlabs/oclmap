@@ -120,7 +120,15 @@ const Discuss = ({ logs, onAdd }) => {
                   <Typography component="span" sx={{fontSize: '14px'}}>
                     {getTitle(log)}
                   </Typography>
-                  <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>{log.user} at {moment(log.created_at).format('ll LTS')}</Typography>
+                  {
+                    log.action === 'AIRecommendation' && log?.extras?.model?.id &&
+                      <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
+                        {log.extras.model.name}
+                      </Typography>
+                  }
+                  <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
+                    {log.user} at {moment(log.created_at).format('ll LTS')}
+                  </Typography>
                 </TimelineContent>
               </TimelineItem>
             )

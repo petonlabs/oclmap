@@ -11,7 +11,6 @@ import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
 
 import CloseIcon from '@mui/icons-material/Close';
-import AssistantIcon from '@mui/icons-material/Assistant';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 import find from 'lodash/find'
@@ -30,6 +29,7 @@ import Mappings from './Mappings'
 import Concept from './Concept'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
+import AIAssistantButton from './AIAssistantButton'
 
 const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
@@ -134,7 +134,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange}) => {
   /*eslint no-undef: 0*/
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && process.env.AI_ASSISTANT_API_URL)
   const [openFilters, setOpenFilters] = React.useState(false)
@@ -187,9 +187,13 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const getRightControls = () => {
     if(inAIAssistantGroup)
       return (
-        <Button size='small' variant={'outlined'} startIcon={<AssistantIcon color={results?.length ? 'primary' : undefined} />} sx={{textTransform: 'none', margin: '0 8px'}} disabled={!results?.length} onClick={onRecommend}>
-          AI Assistant
-        </Button>
+        <AIAssistantButton
+          models={models}
+          selected={selectedModel}
+          onClick={onRecommend}
+          sx={{margin: '0 8px'}}
+          onModelChange={onModelChange}
+        />
       )
 
     return ''
