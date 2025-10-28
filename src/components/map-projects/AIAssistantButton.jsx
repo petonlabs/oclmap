@@ -103,9 +103,9 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }
           >
             <Button
               size='small'
-              sx={{textTransform: 'none', whiteSpace: 'nowrap'}}
+              sx={{textTransform: 'none', whiteSpace: 'nowrap', paddingTop: '5px'}}
               onClick={event => onClick(event, model)}
-              startIcon={<AssistantIcon fontSize='inherit' />}
+              startIcon={<AssistantIcon fontSize='inherit' sx={{marginTop: '-1px'}} />}
             >
               {`AI Assistant - ${model}`}
             </Button>
@@ -144,7 +144,9 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }
                   {
                     orderBy(recommendedOptions, 'name').length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Recommended</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px', backgroundColor: 'rgb(237, 237, 237)'}}>
+                          Recommended
+                        </ListSubheader>
                         {
                           recommendedOptions.map(option => (
                             <Model key={option.id} model={option} selected={model} onClick={handleMenuItemClick} />
@@ -155,7 +157,9 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }
                   {
                     otherOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>All Options</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px', backgroundColor: 'rgb(237, 237, 237)'}}>
+                          All Options
+                        </ListSubheader>
                         {
                           orderBy(otherOptions, 'name').map(option => (
                             <Model key={option.id} model={option} selected={model} onClick={handleMenuItemClick} />
