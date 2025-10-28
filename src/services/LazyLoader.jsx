@@ -22,8 +22,6 @@ const Lazy = React.lazy(async () => {
   /*eslint no-undef: 0*/
   /*eslint no-undef: 0*/
   let bridgeComponentURL = process.env.BRIDGE_MATCH_URL || ''
-  if(!bridgeComponentURL && ['https://map.staging.openconceptlab.org', 'https://map.openconceptlab.org'].includes(window.location.origin) )
-    bridgeComponentURL = 'https://ocl-dev-s3.s3.us-east-2.amazonaws.com/bridge-match.umd.cjs'
   if(!bridgeComponentURL)
     return { default: BridgeMatchStub }
 
