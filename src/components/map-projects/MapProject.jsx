@@ -1,3 +1,5 @@
+/*eslint no-process-env: 0*/
+
 import React from 'react'
 import * as XLSX from 'xlsx';
 import moment from 'moment'
@@ -1123,7 +1125,7 @@ const MapProject = () => {
       const rowStateLabel = VIEWS[rowState].label
       let concept = mapSelected[index]
       let _repo = concept?.repo
-      const aiRecommendation = get(analysis, `${index}.choices.0.message.content`)
+      const aiRecommendation = get(analysis, index)
       const aiCandidate = get(aiRecommendation, 'primary_candidate')
       const aiCandidateID = aiCandidate?.concept_id
       const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
@@ -1556,6 +1558,12 @@ const MapProject = () => {
   }
 
   const fetchRecommendation = _row => {
+    /*eslint no-undef: 0*/
+    let AI_ASSISTANT_API_URL = process.env.AI_ASSISTANT_API_URL
+    if(!AI_ASSISTANT_API_URL) {
+      console.error('AI ASSISTANT is not enabled for you.')
+      return
+    }
     let __row = row;
     let __index = rowIndex;
     if(isNumber(_row?.__index)){
@@ -1566,20 +1574,37 @@ const MapProject = () => {
     let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       let rowData = prepareRow(__row, true)
+      let cols = filter(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
+        return !has(col, 'hidden') || col['hidden'] === false && col?.label
+      })
+      cols = compact(map(cols, col => {
+        if(['id', 'description', 'mapping: list', 'mapping: code', 'concept_class', 'class', 'datatype', 'name', 'synonyms'].includes(col.label.toLowerCase()) || col.label.toLowerCase().startsWith('property:'))
+          return col.label
+      }))
       const payload = {
-        target_repo_url: repo.version_url,
+        project: {
+          ...project,
+          name: name,
+          description: description,
+          filters: filters,
+          fields_mapped: cols,
+          score_configuration: candidatesScore,
+          target_repo: repo
+        },
         row: rowData.row,
         metadata: rowData.metadata,
         candidates: _candidates,
         bridgeCandidates: _bridgeCandidates
       }
-      APIService.new().overrideURL(project.url).appendToUrl('recommend-beta/').post(payload).then(response => {
+      const service = APIService.new()
+      service.URL = AI_ASSISTANT_API_URL
+      service.appendToUrl('/match/recommend/').post(payload, null, ).then(response => {
         if(response?.detail) {
           setAlert({message: response.detail, severity: 'error'})
           return
         }
-        if(get(response.data, 'choices.0.message.content.rationale'))
-          log({action: 'AIRecommendation', description: get(response.data, 'choices.0.message.content.rationale'), extras: response.data}, __index)
+        if(get(response.data, 'rationale'))
+          log({action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: response.data}, __index)
         setAnalysis(prev => ({...prev, [__index]: response.data}))
       })
     }

@@ -43,10 +43,10 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
             <Skeleton height={75} sx={{'-webkit-transform': 'none', 'transform': 'none'}} /> :
           <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
             {
-              get(analysis, 'choices.0.message.content.recommendation') &&
-                <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'choices.0.message.content.recommendation')}:</span>
+              get(analysis, 'recommendation') &&
+                <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'recommendation')}:</span>
             }
-            {get(analysis, 'choices.0.message.content.rationale.narrative') || get(analysis, 'choices.0.message.content.rationale')}
+            {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
           </Typography>
         }
       </CardContent>

@@ -1,3 +1,5 @@
+/*eslint no-process-env: 0*/
+
 import React from 'react'
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
@@ -132,8 +134,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-    const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates}) => {
-  const inAIAssistantGroup = hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant')
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates}) => {
+  /*eslint no-undef: 0*/
+  const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && process.env.AI_ASSISTANT_API_URL)
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   const [openAIAnalysis, setOpenAIAnalysis] = React.useState(false)
@@ -147,7 +150,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   let recommended = []
   let available = []
   let unranked = []
-  let AIRecommendedCandidateId = get(analysis, 'choices.0.message.content.primary_candidate.concept_id')
+  let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
 
   concepts.forEach(concept => {
     let score = concept?.search_meta?.search_normalized_score || 0

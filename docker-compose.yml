@@ -20,3 +20,4 @@ services:
       - HOTJAR_ID
       - OCL_ONLINE=${OCL_ONLINE-false}
       - BRIDGE_MATCH_URL
+      - AI_ASSISTANT_API_URL
