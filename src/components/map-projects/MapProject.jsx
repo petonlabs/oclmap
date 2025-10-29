@@ -1619,11 +1619,11 @@ const MapProject = () => {
         metadata: rowData.metadata,
         candidates: _candidates,
         bridgeCandidates: _bridgeCandidates,
-        model: AIModel
+        model: AIModel,
       }
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
-      service.appendToUrl('/match/recommend/').post(payload, null, ).then(response => {
+      service.appendToUrl('/match/recommend/').post(payload).then(response => {
         if(response?.detail) {
           setAlert({message: response.detail, severity: 'error'})
           return
