@@ -209,6 +209,10 @@ const MapProject = () => {
 
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
+  /*eslint no-undef: 0*/
+  let AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
+
+
   // algos
   const [algos, setAlgos] = React.useState([
     {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
@@ -1564,8 +1568,6 @@ const MapProject = () => {
 
   const fetchAIModels = () => {
     if(!AIModels.length) {
-      /*eslint no-undef: 0*/
-      let AI_ASSISTANT_API_URL = process.env.AI_ASSISTANT_API_URL
       if(!AI_ASSISTANT_API_URL) {
         return
       }
@@ -1582,8 +1584,6 @@ const MapProject = () => {
   }
 
   const fetchRecommendation = _row => {
-    /*eslint no-undef: 0*/
-    let AI_ASSISTANT_API_URL = process.env.AI_ASSISTANT_API_URL
     if(!AI_ASSISTANT_API_URL) {
       console.error('AI ASSISTANT is not enabled for you.')
       return

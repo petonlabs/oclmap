@@ -21,7 +21,7 @@ if (!window.React) window.React = React
 const Lazy = React.lazy(async () => {
   /*eslint no-undef: 0*/
   /*eslint no-undef: 0*/
-  let bridgeComponentURL = process.env.BRIDGE_MATCH_URL || ''
+  let bridgeComponentURL = window.BRIDGE_MATCH_URL || process.env.BRIDGE_MATCH_URL || ''
   if(!bridgeComponentURL)
     return { default: BridgeMatchStub }
 
