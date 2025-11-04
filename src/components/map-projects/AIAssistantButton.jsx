@@ -48,7 +48,7 @@ const Model = ({ model, selected, onClick }) => {
 }
 
 
-const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }) => {
+const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperProps, ...rest }) => {
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [model, setModel] = React.useState(selected || find(models, {default: true})?.id || '')
@@ -93,33 +93,33 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }
 
   return (
     <React.Fragment>
-              <ButtonGroup
-            size='small'
-            variant="outlined"
-            ref={anchorRef}
-            aria-label="Button group AI models"
-            color='primary'
-                {...rest}
-          >
-            <Button
-              size='small'
-              sx={{textTransform: 'none', whiteSpace: 'nowrap', paddingTop: '5px'}}
-              onClick={event => onClick(event, model)}
-              startIcon={<AssistantIcon fontSize='inherit' sx={{marginTop: '-1px'}} />}
-            >
-              {`AI Assistant - ${model}`}
-            </Button>
-            <Button
-              size="small"
-              aria-controls={open ? 'split-button-menu' : undefined}
-              aria-expanded={open ? 'true' : undefined}
-              aria-label="select merge strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
-            >
-              <ArrowDropDownIcon />
-            </Button>
-              </ButtonGroup>
+      <ButtonGroup
+        size='small'
+        variant="outlined"
+        ref={anchorRef}
+        aria-label="Button group AI models"
+        color='primary'
+        {...rest}
+      >
+        <Button
+          size='small'
+          sx={{textTransform: 'none', whiteSpace: 'nowrap', paddingTop: '5px'}}
+          onClick={event => onClick(event, model)}
+          startIcon={<AssistantIcon fontSize='inherit' sx={{marginTop: '-1px'}} />}
+        >
+          {`AI Assistant - ${model}`}
+        </Button>
+        <Button
+          size="small"
+          aria-controls={open ? 'split-button-menu' : undefined}
+          aria-expanded={open ? 'true' : undefined}
+          aria-label="select merge strategy"
+          aria-haspopup="menu"
+          onClick={handleToggle}
+        >
+          <ArrowDropDownIcon />
+        </Button>
+      </ButtonGroup>
       <Popper
         sx={{
           zIndex: 3,
@@ -128,7 +128,7 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, ...rest }
         anchorEl={anchorRef.current}
         role={undefined}
         transition
-        disablePortal
+        {...popperProps}
       >
         {({ TransitionProps, placement }) => (
           <Grow

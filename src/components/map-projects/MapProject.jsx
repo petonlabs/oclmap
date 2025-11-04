@@ -42,6 +42,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import ClearIcon from '@mui/icons-material/Clear';
+import AssistantIcon from '@mui/icons-material/Assistant';
+import PendingIcon from '@mui/icons-material/HourglassBottom';
 
 import orderBy from 'lodash/orderBy'
 import filter from 'lodash/filter'
@@ -79,7 +81,7 @@ import times from 'lodash/times'
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -106,6 +108,7 @@ import Search from './Search'
 import Discuss from './Discuss'
 import ScoreBucketButton from './ScoreBucketButton'
 import Concept from './Concept'
+import AIAssistantButton from './AIAssistantButton'
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
@@ -153,6 +156,8 @@ const MapProject = () => {
   const [mapSelected, setMapSelected] = React.useState({})
   const [startMatchingAt, setStartMatchingAt] = React.useState(false)
   const [endMatchingAt, setEndMatchingAt] = React.useState(false)
+  const [bulkAIAnalysisStartedAt, setBulkAIAnalysisStartedAt] = React.useState(false)
+  const [bulkAIAnalysisEndedAt, setBulkAIAnalysisEndedAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
@@ -183,6 +188,7 @@ const MapProject = () => {
   const [showItem, setShowItem] = React.useState(false)
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
   const [autoMatchLoadCandidates, setAutoMatchLoadCandidates] = React.useState(true)
+  const [autoRunAIAnalysis, setAutoRunAIAnalysis] = React.useState(false)
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
@@ -211,6 +217,7 @@ const MapProject = () => {
 
   /*eslint no-undef: 0*/
   let AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
+  const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
 
 
   // algos
@@ -242,6 +249,7 @@ const MapProject = () => {
     if(params.projectId && params.owner) {
       fetchAndSetProject()
     }
+    fetchAIModels()
   }, [])
 
   React.useEffect(() => {
@@ -493,6 +501,8 @@ const MapProject = () => {
     setMapSelected({})
     setStartMatchingAt(false)
     setEndMatchingAt(false)
+    setBulkAIAnalysisStartedAt(false)
+    setBulkAIAnalysisEndedAt(false)
     setSearchStr('')
     setRow(false)
     setLoadingMatches(false)
@@ -864,7 +874,24 @@ const MapProject = () => {
     await processWithConcurrency(repo);
     setEndMatchingAt(moment())
     setLoadingMatches(false)
+    if(inAIAssistantGroup)
+      setTimeout(runBulkAIAnalysis, 1000)
   };
+
+  const runBulkAIAnalysis = async () => {
+    setBulkAIAnalysisStartedAt(moment())
+    for (let index = 0; index < rows.length; index++) {
+      if (abortRef.current) break;
+
+      const row = rows[index];
+      await fetchRecommendation(row); // wait for completion
+      await new Promise(resolve => setTimeout(resolve, 15000)); // 15s delay
+    }
+
+    setBulkAIAnalysisEndedAt(moment())
+  }
+
+  const isRunningBulkAnalysis = bulkAIAnalysisEndedAt ? moment().isBetween(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt) : Boolean(bulkAIAnalysisStartedAt)
 
   const fetchVersions = (url, _selectedVersion) => {
     APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/?verbose=true').get().then(response => {
@@ -1174,8 +1201,6 @@ const MapProject = () => {
   const onCSVRowSelect = csvRow => {
     if(edit?.length > 0)
       return
-
-    fetchAIModels()
 
     const matched = get(find(matchedConcepts, concept => concept.row.__index === csvRow.__index), 'results.0') || mapSelected[csvRow.__index]
     let url = matched?.url
@@ -1759,7 +1784,22 @@ const MapProject = () => {
                     {getCandidatesButtonLabel()}
                   </Button>
                   {
-                    loadingMatches &&
+                    isRunningBulkAnalysis &&
+                      <Button
+                        variant='contained'
+                        size='small'
+                        sx={{textTransform: 'none', margin: '5px'}}
+                        startIcon={<AssistantIcon />}
+                        endIcon={<PendingIcon />}
+                        disabled
+                        loading
+                        loadingPosition="start"
+                      >
+                        AI Analysis
+                      </Button>
+                  }
+                  {
+                    (loadingMatches || isRunningBulkAnalysis) &&
                       <Button
                         variant='text'
                         size='small'
@@ -2041,6 +2081,39 @@ const MapProject = () => {
                   'Note: This will only do auto-match and not load any additional candidates'
               }
             </FormHelperText>
+            {
+              inAIAssistantGroup &&
+                <>
+                  <FormControlLabel
+                    sx={{marginTop: '0px', width: '100%'}}
+                    control={
+                      <Checkbox
+                        checked={autoRunAIAnalysis}
+                        onChange={event => setAutoRunAIAnalysis(event.target.checked)}
+                      />
+                    }
+                    label={
+                      <span style={{display: 'flex', alignItems: 'center'}}>
+                        <span>Run AI Analysis</span>
+                        <AIAssistantButton
+                          models={AIModels}
+                          selected={AIModel}
+                          onClick={() => {}}
+                          sx={{margin: '0 16px'}}
+                          onModelChange={setAIModel}
+                          popperProps={{
+                            sx: {zIndex: 1500}
+                          }}
+                          disabled={!autoRunAIAnalysis}
+                        />
+                      </span>
+                    }
+                  />
+                  <FormHelperText sx={{marginTop: '-4px'}}>
+                    Note: Enabling this feature will run AI Analysis on results of each row. This has direct cost implications.
+                  </FormHelperText>
+                </>
+            }
           </DialogContent>
           <DialogActions sx={{padding: '16px'}}>
             <Button

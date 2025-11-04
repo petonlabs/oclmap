@@ -140,7 +140,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
-  const [openAIAnalysis, setOpenAIAnalysis] = React.useState(false)
+  const [openAIAnalysis, setOpenAIAnalysis] = React.useState(undefined)
   const recommendedScore = candidatesScore?.recommended
   const availableScore = candidatesScore?.available
   const results = find(candidates, c => c.row?.__index === rowIndex )?.results
@@ -201,7 +201,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   }
 
   React.useEffect(() => {
-    setOpenAIAnalysis(false)
+    setOpenAIAnalysis(isEmpty(analysis) ? false : (openAIAnalysis !== false))
   }, [rowIndex])
 
   const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
@@ -285,7 +285,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                 rightControl={getRightControls()}
                 analysis={analysis}
                 showAnalysis
-                openAnalysis={openAIAnalysis}
+                openAnalysis={Boolean(openAIAnalysis)}
                 onCloseAnalysis={() => setOpenAIAnalysis(false)}
               />
             }
