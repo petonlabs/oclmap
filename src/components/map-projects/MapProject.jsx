@@ -875,16 +875,15 @@ const MapProject = () => {
     setEndMatchingAt(moment())
     setLoadingMatches(false)
     if(inAIAssistantGroup)
-      setTimeout(runBulkAIAnalysis, 1000)
+      setTimeout(() => runBulkAIAnalysis(rows), 1000)
   };
 
-  const runBulkAIAnalysis = async () => {
+  const runBulkAIAnalysis = async (_rows) => {
     setBulkAIAnalysisStartedAt(moment())
-    for (let index = 0; index < rows.length; index++) {
+    for (let index = 0; index < _rows.length; index++) {
       if (abortRef.current) break;
 
-      const row = rows[index];
-      await fetchRecommendation(row); // wait for completion
+      await fetchRecommendation(_rows[index]); // wait for completion
       await new Promise(resolve => setTimeout(resolve, 15000)); // 15s delay
     }
 
@@ -996,6 +995,8 @@ const MapProject = () => {
     setAlert(false)
     if(isAnyValidColumn()){
       setStartMatchingAt(moment())
+      setBulkAIAnalysisStartedAt(null)
+      setBulkAIAnalysisEndedAt(null)
       setLoadingMatches(true)
       getRowsResults(data)
     } else {
