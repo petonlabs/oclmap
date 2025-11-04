@@ -16,7 +16,7 @@ import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 import MapButton from './MapButton'
 import Score from './Score'
 
-const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns, repoVersion}) => {
+const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns, repoVersion, onTargetClick}) => {
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
   const hasClass = has(row, 'Class') || has(row, 'Concept Class') || has(row, 'Property: Class')
   const hasDatatype = has(row, 'Datatype') || has(row, 'datatype') || has(row, 'Property: Datatype')
@@ -137,7 +137,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Relationship</Typography>
               <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, targetConcept, !applied, mapType)} isMapped sx={{marginTop: '6px'}} mapOnly usedMapTypes={compact(values(mapTypes))} />
             </div>
-            <div style={{marginLeft: '24px', maxWidth: '45%'}}>
+            <div style={{marginLeft: '24px', maxWidth: '45%', cursor: 'pointer'}} onClick={() => onTargetClick(targetConcept)}>
               <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Target Code</Typography>
               <div className='col-xs-12 padding-0'>
                 <ListItemText

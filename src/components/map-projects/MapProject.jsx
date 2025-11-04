@@ -2210,6 +2210,7 @@ const MapProject = () => {
                   onMap={onMap}
                   proposed={proposed[rowIndex]}
                   columns={columns}
+                  onTargetClick={setShowItem}
                 />
                 <Divider sx={{width: '100%'}} />
                 <DecisionSelector
