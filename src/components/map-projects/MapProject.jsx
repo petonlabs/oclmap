@@ -158,6 +158,8 @@ const MapProject = () => {
   const [endMatchingAt, setEndMatchingAt] = React.useState(false)
   const [bulkAIAnalysisStartedAt, setBulkAIAnalysisStartedAt] = React.useState(false)
   const [bulkAIAnalysisEndedAt, setBulkAIAnalysisEndedAt] = React.useState(false)
+  const [bridgeCandidatesStartedAt, setBridgeCandidatesStartedAt] = React.useState(false)
+  const [bridgeCandidatesEndedAt, setBridgeCandidatesEndedAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
@@ -503,6 +505,8 @@ const MapProject = () => {
     setEndMatchingAt(false)
     setBulkAIAnalysisStartedAt(false)
     setBulkAIAnalysisEndedAt(false)
+    setBridgeCandidatesStartedAt(false)
+    setBridgeCandidatesEndedAt(false)
     setSearchStr('')
     setRow(false)
     setLoadingMatches(false)
@@ -872,25 +876,67 @@ const MapProject = () => {
       return prev
     })
     await processWithConcurrency(repo);
-    setEndMatchingAt(moment())
-    setLoadingMatches(false)
-    if(inAIAssistantGroup)
-      setTimeout(() => runBulkAIAnalysis(rows), 1000)
+
+    setTimeout(() => {
+      if(bridgeRef?.current?.canBridge() && autoMatchLoadCandidates)
+        fetchBulkBridgeCandidates(rows)
+      else if(inAIAssistantGroup && autoRunAIAnalysis)
+        setTimeout(() => runBulkAIAnalysis(rows), 1000)
+      else {
+        setLoadingMatches(false)
+        setEndMatchingAt(moment())
+      }
+    }, 1000)
   };
 
+  const otherMatchedConceptsRef = React.useRef([]);
+  const bridgeCandidatesRef = React.useRef([]);
+
+  React.useEffect(() => {
+    otherMatchedConceptsRef.current = otherMatchedConcepts;
+  }, [otherMatchedConcepts]);
+
+  React.useEffect(() => {
+    bridgeCandidatesRef.current = bridgeCandidates;
+  }, [bridgeCandidates]);
+
   const runBulkAIAnalysis = async (_rows) => {
+    setLoadingMatches(true)
     setBulkAIAnalysisStartedAt(moment())
     for (let index = 0; index < _rows.length; index++) {
       if (abortRef.current) break;
 
       await fetchRecommendation(_rows[index]); // wait for completion
-      await new Promise(resolve => setTimeout(resolve, 15000)); // 15s delay
+      if(index !== _rows.length -1)
+        await new Promise(resolve => setTimeout(resolve, 10000)); // 10s delay
     }
+    const now = moment()
+    setBulkAIAnalysisEndedAt(now)
+    setEndMatchingAt(now)
+    setLoadingMatches(false)
+  }
 
-    setBulkAIAnalysisEndedAt(moment())
+  const fetchBulkBridgeCandidates = async (_rows) => {
+    setLoadingMatches(true)
+    setBridgeCandidatesStartedAt(moment())
+    for (let index = 0; index < _rows.length; index++) {
+      if (abortRef.current) break;
+
+      await fetchBridgeCandidates(_rows[index]); // wait for completion
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+    }
+    const now = moment()
+    setBridgeCandidatesEndedAt(now)
+    if(inAIAssistantGroup && autoRunAIAnalysis)
+      setTimeout(() => runBulkAIAnalysis(_rows), 1000)
+    else {
+      setEndMatchingAt(now)
+      setLoadingMatches(false)
+    }
   }
 
   const isRunningBulkAnalysis = bulkAIAnalysisEndedAt ? moment().isBetween(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt) : Boolean(bulkAIAnalysisStartedAt)
+  const isRunningBulkBridgeCandidates = bridgeCandidatesEndedAt ? moment().isBetween(bridgeCandidatesStartedAt, bridgeCandidatesEndedAt) : Boolean(bridgeCandidatesStartedAt)
 
   const fetchVersions = (url, _selectedVersion) => {
     APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/?verbose=true').get().then(response => {
@@ -997,6 +1043,8 @@ const MapProject = () => {
       setStartMatchingAt(moment())
       setBulkAIAnalysisStartedAt(null)
       setBulkAIAnalysisEndedAt(null)
+      setBridgeCandidatesStartedAt(null)
+      setBridgeCandidatesEndedAt(null)
       setLoadingMatches(true)
       getRowsResults(data)
     } else {
@@ -1007,9 +1055,7 @@ const MapProject = () => {
   }
 
   const showMatchSummary = Boolean(data?.length && (loadingMatches || matchedConcepts?.length))
-  const getMatchingDuration = () => {
-    let start = startMatchingAt
-    let end = endMatchingAt
+  const getMatchingDuration = (start, end) => {
     if(!end)
       end = moment()
     if(!start)
@@ -1018,10 +1064,24 @@ const MapProject = () => {
   }
 
   const getCandidatesButtonLabel = () => {
-    const matchingDuration = getMatchingDuration()
+    const matchingDuration = getMatchingDuration(startMatchingAt, endMatchingAt)
     if(loadingMatches || matchedConcepts?.length)
       return `Auto Match (${matchingDuration})`
     return 'Auto Match'
+  }
+
+  const getBulkBridgeCandidatesButtonLabel = () => {
+    const matchingDuration = getMatchingDuration(bridgeCandidatesStartedAt, bridgeCandidatesEndedAt)
+    if(loadingMatches || bridgeCandidates?.length)
+      return `Bridge Candidates (${matchingDuration})`
+    return 'Bridge Candidates'
+  }
+
+  const getBulkAIAnalysisButtonLabel = () => {
+    const matchingDuration = getMatchingDuration(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt)
+    if(loadingMatches || !isEmpty(analysis))
+      return `AI Analysis (${matchingDuration})`
+    return 'AI Analysis'
   }
 
   const onMatchTypeChange = bucket => setSelectedMatchBucket(prev => prev === bucket ? false : bucket)
@@ -1620,8 +1680,8 @@ const MapProject = () => {
       __row = _row
       __index = _row.__index
     }
-    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === __index)?.results || []
-    let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === __index)?.results || []
+    let _candidates = find(otherMatchedConceptsRef.current, c => c.row?.__index === __index)?.results || []
+    let _bridgeCandidates = find(bridgeCandidatesRef.current, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       let rowData = prepareRow(__row, true)
       let cols = filter(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
@@ -1785,22 +1845,34 @@ const MapProject = () => {
                     {getCandidatesButtonLabel()}
                   </Button>
                   {
-                    isRunningBulkAnalysis &&
+                    bridgeCandidatesStartedAt &&
                       <Button
-                        variant='contained'
+                        variant='outlined'
                         size='small'
-                        sx={{textTransform: 'none', margin: '5px'}}
-                        startIcon={<AssistantIcon />}
-                        endIcon={<PendingIcon />}
-                        disabled
-                        loading
+                        sx={{textTransform: 'none', margin: '5px', pointerEvents: 'none', display: 'none'}}
+                        endIcon={isRunningBulkBridgeCandidates ? <PendingIcon color='warning' /> : <DoneIcon color='primary' />}
+                        loading={isRunningBulkBridgeCandidates || isRunningBulkAnalysis}
                         loadingPosition="start"
                       >
-                        AI Analysis
+                        {getBulkBridgeCandidatesButtonLabel()}
                       </Button>
                   }
                   {
-                    (loadingMatches || isRunningBulkAnalysis) &&
+                    bulkAIAnalysisStartedAt &&
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        sx={{textTransform: 'none', margin: '5px', pointerEvents: 'none', display: 'none'}}
+                        startIcon={<AssistantIcon />}
+                        endIcon={isRunningBulkAnalysis ? <PendingIcon color='warning' /> : <DoneIcon color='primary' />}
+                        loading={isRunningBulkAnalysis}
+                        loadingPosition="start"
+                      >
+                        {getBulkAIAnalysisButtonLabel()}
+                      </Button>
+                  }
+                  {
+                    (loadingMatches || isRunningBulkAnalysis || isRunningBulkBridgeCandidates) &&
                       <Button
                         variant='text'
                         size='small'
