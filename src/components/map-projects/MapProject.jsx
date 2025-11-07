@@ -618,7 +618,7 @@ const MapProject = () => {
     const candidates = []
     forEach(candidatesToSave, _candidates => {
       if(_candidates?.results?.length) {
-        candidates.push({..._candidates, results: _candidates.results.splice(0, 10)})
+        candidates.push({..._candidates, results: _candidates.results.slice(0, 10)})
       }
     })
     const formData = new FormData();
