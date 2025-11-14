@@ -2263,7 +2263,7 @@ const MapProject = () => {
             </div> :
           (
             <>
-              <div className='col-xs-12' style={{padding: '8px 16px'}}>
+              <div className='col-xs-12' style={{padding: '8px 16px', minWidth: '500px'}}>
                 <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                   <Typography component='span' sx={{fontSize: '20px', color: 'surface.dark', fontWeight: 600}}>
                     Mapping Decisions
