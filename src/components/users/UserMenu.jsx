@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import { useTranslation } from 'react-i18next';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
@@ -31,6 +32,7 @@ const UserMenu = ({ isOpen, onClose }) => {
   const user = getCurrentUser()
   const onLanguageSelect = locale => {
     i18n.changeLanguage(locale)
+    moment.locale(locale)
     setLanguageOpen(false)
   }
   return (
