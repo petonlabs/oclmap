@@ -8,9 +8,11 @@ import Dialog from '../common/Dialog'
 import DialogTitle from '../common/DialogTitle'
 import APIService from '../../services/APIService'
 import { OperationsContext } from '../app/LayoutContext';
+import { useTranslation } from 'react-i18next';
 
 
 const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
+  const { t } = useTranslation();
   const { setAlert } = React.useContext(OperationsContext);
   const history = useHistory()
   const [value, setValue] = React.useState('')
@@ -20,7 +22,7 @@ const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
       if(response.status === 204) {
         onClose(true)
         history.push('/')
-        setAlert({severity: 'success', message: 'Successfully Deleted.', duration: 2000})
+        setAlert({severity: 'success', message: t('map_project.successfully_deleted'), duration: 2000})
       }
     })
   }
@@ -28,14 +30,16 @@ const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
   return (
     <Dialog open={open} onClose={() => onClose()}>
       <DialogTitle onClose={() => onClose()}>
-        Delete Map Project - {project.name}
+        {t('map_project.delete_map_project')} - {project.name}
       </DialogTitle>
       <DialogContent sx={{paddingTop: '20px !important'}}>
-        This will delete the map project and its decisions and uploaded file.
-        Are you sure want to permanently delete this map project <b>{project.name}</b>?
+        {t('map_project.delete_map_project_warning')}
         <br/>
         <br/>
-        Please type in <b>{project.name}</b> to confirm
+        {t('map_project.delete_map_project_confirm', {name: project.name})}
+        <br/>
+        <br/>
+        {t('map_project.delete_map_project_type_to_confirm', {name: project.name})}
         <br/>
         <br/>
 
@@ -48,7 +52,7 @@ const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
       </DialogContent>
       <DialogActions>
         <Button sx={{textTransform: 'none'}} variant='contained' color='error' disabled={value !== project.name} onClick={onDelete}>
-          Delete
+          {t('common.delete')}
         </Button>
       </DialogActions>
     </Dialog>

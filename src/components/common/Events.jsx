@@ -112,7 +112,7 @@ const Events = ({ user, events, onLoadMore, showAvatar, maxHeight, dashboard }) 
           onLoadMore &&
             <TimelineItem sx={dashboard ? {height: '34px', minHeight: '34px'} : {}}>
               <TimelineSeparator>
-                <Tooltip title='Show more'>
+                <Tooltip title={t('map_project.show_more')}>
                   <TimelineDot sx={{backgroundColor: 'transparent', boxShadow: 'none', cursor: 'pointer', marginTop: 0}} onClick={onLoadMore}>
                     <MoreIcon sx={{color: 'primary.60'}} />
                   </TimelineDot>

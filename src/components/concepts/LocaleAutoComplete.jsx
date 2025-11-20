@@ -4,34 +4,29 @@ import {
 } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Add as AddIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { get, isEmpty, uniqBy, compact, map, find, filter } from 'lodash'
 import GroupHeader from '../common/GroupHeader';
 import GroupItems from '../common/GroupItems';
 
-const SITE_TITLE = 'OCL'
-
-const CUSTOM_MODEL_CONFIG = {
-  multiple: {
-    title: 'Add custom language code(s)',
-    warning: 'OCL is optimized for 2-letter and 4-letter language codes (e.g. “en” or “en-GB”). Only use custom codes if absolutely necessary.',
-    label: 'Custom language code(s)',
-    helperText: 'Custom language codes may only have letters and hyphens, e.g. "eng". Use a comma or space to separate multiple custom codes',
-    validation: 'Letters and “-” are allowed for language codes. Comma or space can be used to separate custom codes if applicable. No other characters e.g. numbers are accepted.',
-    tooltip: 'Language codes in OCL use the syntax “en” or “en-GB” in accordance with ISO 639-1, with an optional 2-letter country code following BCP47. OCL allows language codes in other formats, however these codes may limit certain features or be incompatible with client systems, like OpenMRS. Letters and “-” are allowed for language codes.'
-  },
-  single: {
-    title: 'Add custom language code',
-    warning: 'OCL is optimized for 2-letter and 4-letter language codes (e.g. “en” or “en-GB”). Only use custom codes if absolutely necessary.',
-    helperText: 'Custom language code may only have letters and hyphens, e.g. "eng".',
-    label: 'Custom language code',
-    validation: 'Letters and “-” are allowed for language code. No other characters e.g. numbers are accepted.',
-    tooltip: 'Language codes in OCL use the syntax “en” or “en-GB” in accordance with ISO 639-1, with an optional 2-letter country code following BCP47. OCL allows language codes in other formats, however these codes may limit certain features or be incompatible with client systems, like OpenMRS. Letters and “-” are allowed for language codes.'
-  }
-}
-
 const CustomLocaleDialog = ({ open, onClose, onSave, isMultiple }) => {
+  const { t } = useTranslation();
   const [input, setInput] = React.useState('')
-  const config = isMultiple ? CUSTOM_MODEL_CONFIG.multiple : CUSTOM_MODEL_CONFIG.single
+  const config = isMultiple ? {
+    title: t('locale.add_custom_language_codes'),
+    warning: t('locale.custom_language_code_warning'),
+    label: t('locale.custom_language_codes'),
+    helperText: t('locale.custom_language_code_helper_multiple'),
+    validation: t('locale.custom_language_code_validation_multiple'),
+    tooltip: t('locale.custom_language_code_tooltip')
+  } : {
+    title: t('locale.add_custom_language_code'),
+    warning: t('locale.custom_language_code_warning'),
+    label: t('locale.custom_language_code'),
+    helperText: t('locale.custom_language_code_helper_single'),
+    validation: t('locale.custom_language_code_validation_single'),
+    tooltip: t('locale.custom_language_code_tooltip')
+  }
   const [error, setError] = React.useState(false)
   const onChange = event => {
     const isValid = event.target.checkValidity()
@@ -72,14 +67,15 @@ const CustomLocaleDialog = ({ open, onClose, onSave, isMultiple }) => {
         </div>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant='text'>Cancel</Button>
-        <Button onClick={() => onSave(input)} variant='contained' disabled={error}>Save</Button>
+        <Button onClick={onClose} variant='text'>{t('common.cancel')}</Button>
+        <Button onClick={() => onSave(input)} variant='contained' disabled={error}>{t('common.save')}</Button>
       </DialogActions>
     </Dialog>
   )
 }
 
 const LocaleAutoComplete = ({ cachedLocales, id, multiple, required, onChange, label, error, size, fullWidth, placeholder, custom, limit, disabled, value, optionsLimit, ...rest }) => {
+  const { t } = useTranslation();
   const [locales, setLocales] = React.useState(cachedLocales || [])
   const _fullWidth = !(fullWidth === false)
   const [input, setInput] = React.useState('')
@@ -163,7 +159,7 @@ const LocaleAutoComplete = ({ cachedLocales, id, multiple, required, onChange, l
       result = result.slice(0, _limit)
 
       if(custom)
-        result.push({id: 'custom', name: 'Add custom code'})
+        result.push({id: 'custom', name: t('locale.add_custom_code')})
     }
     return result
   };
@@ -213,7 +209,7 @@ const LocaleAutoComplete = ({ cachedLocales, id, multiple, required, onChange, l
                         <span className='flex-vertical-center' style={{cursor: 'pointer'}}>
                           <AddIcon fontSize='small' style={{marginRight: '5px'}}/>
                           <span>
-                            Add custom code
+                            {t('locale.add_custom_code')}
                           </span>
                         </span> :
                       <span style={{width: '100%', display: 'flex'}}>
@@ -264,7 +260,7 @@ const LocaleAutoComplete = ({ cachedLocales, id, multiple, required, onChange, l
               tagValue.map((option, index) => {
                 const isValid = isValidOption(option)
                 return (
-                  <Tooltip key={index} title={isValid ? 'ISO-639-1 language code' : `${SITE_TITLE}'s data model supports ISO-639-1 (two digit) codes as standard. Consider updating.`}>
+                  <Tooltip key={index} title={isValid ? t('locale.iso_639_1_language_code') : t('locale.iso_639_1_support_note')}>
                     <Chip
                       size='small'
                       label={getOptionLabel(option)}

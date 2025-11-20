@@ -1,6 +1,7 @@
 export const LANGUAGES = [
   {locale: 'en', name: 'English'},
-  {locale: 'es', name: "Español"}
+  {locale: 'es', name: "Español"},
+  {locale: 'zh', name: "中文"}
 ]
 
 

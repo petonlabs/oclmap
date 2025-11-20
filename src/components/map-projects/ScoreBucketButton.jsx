@@ -5,10 +5,11 @@ import SortIcon from '@mui/icons-material/SwapVertRounded';
 import ButtonGroup from '@mui/material/ButtonGroup'
 import Button from '@mui/material/Button'
 import Badge from '@mui/material/Badge'
-import startCase from 'lodash/startCase'
 import { SCORES_COLOR } from './constants'
+import { useTranslation } from 'react-i18next';
 
 const BucketButton = ({id, selected, onClick, count}) => {
+  const { t } = useTranslation();
   const isSelected = selected === id && count
   return <Badge badgeContent={count} color='primary' max={999} sx={{'.MuiBadge-badge': {backgroundColor: SCORES_COLOR[id]}}}>
   <Button
@@ -20,7 +21,7 @@ const BucketButton = ({id, selected, onClick, count}) => {
              backgroundColor: isSelected ? SCORES_COLOR[id] : undefined,
              borderBottom: count ? `2px solid ${SCORES_COLOR[id]} !important` : undefined,
            }}>
-           {startCase(id)}
+           {t('map_project.' + id)}
   </Button>
   </Badge>
 }

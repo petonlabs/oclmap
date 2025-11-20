@@ -240,7 +240,7 @@ const Associations = ({concept, mappings, reverseMappings, ownerMappings, revers
                       <AssociationRow
                         mappings={orderedMappings?.children?.hierarchy}
                         id='has-child'
-                        mapType='Has child'
+                        mapType={t('mapping.has_child')}
                         isHierarchy
                       />
                   }
@@ -249,7 +249,7 @@ const Associations = ({concept, mappings, reverseMappings, ownerMappings, revers
                       <AssociationRow
                         mappings={orderedMappings?.parent?.reverseHierarchy}
                         id='has-parent'
-                        mapType='Has parent'
+                        mapType={t('mapping.has_parent')}
                         isHierarchy
                         isIndirect
                       />

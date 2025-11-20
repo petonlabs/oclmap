@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextField, CircularProgress, Divider } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
+import { useTranslation } from 'react-i18next';
 import { get, debounce, map, find } from 'lodash'
 import APIService from '../../services/APIService';
 import AutocompleteLoading from '../common/AutocompleteLoading';
@@ -10,10 +11,11 @@ import GroupItems from '../common/GroupItems'
 
 
 const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersForSearch, size, suggested, sx, value}) => {
+  const { t } = useTranslation();
   const minLength = minCharactersForSearch || 2;
   const [input, setInput] = React.useState('')
   const [open, setOpen] = React.useState(false)
-  const [sources, setSources] = React.useState(map(suggested || [], instance => ({...instance, resultType: 'Suggested Sources'})))
+  const [sources, setSources] = React.useState(map(suggested || [], instance => ({...instance, resultType: t('repo.suggested_sources')})))
   const [selected, setSelected] = React.useState(undefined)
   const [loading, setLoading] = React.useState(false)
 
@@ -47,7 +49,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
     const query = {limit: 25, q: searchStr, includeSummary: true}
     APIService.sources().get(null, null, query).then(response => {
       const sources = response.data
-      setSources(map(sources, source => ({...source, resultType: 'Search Results'})))
+      setSources(map(sources, source => ({...source, resultType: t('search.search_results')})))
       setLoading(false)
     })
   }
@@ -70,9 +72,9 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
       loadingText={
         loading ?
           <AutocompleteLoading text={input} /> :
-        `Type atleast ${minLength} characters to search`
+        t('map_project.type_atleast_characters', {count: minLength})
       }
-      noOptionsText={(isSearchable && !loading) ? "No results" : 'Start typing...'}
+      noOptionsText={(isSearchable && !loading) ? t('map_project.no_results') : t('map_project.start_typing')}
       getOptionLabel={option => option ? (option.name || option.id) : ''}
       fullWidth
       required={required}
@@ -91,7 +93,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
             {...params}
             value={input || ''}
             required
-            label={label || "Source"}
+            label={label || t('map_project.source')}
             variant="outlined"
             fullWidth
             size={size || 'medium'}

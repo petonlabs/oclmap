@@ -217,7 +217,7 @@ const SearchFilters = ({filters, resource, onChange, kwargs, bgColor, appliedFil
                 <span>{formattedListSubheader(field)}</span>
                 {
                   mappedColumnName &&
-                    <Tooltip title={`Mapped to column ${mappedColumnName} from input sheet`}>
+                    <Tooltip title={t('map_project.mapped_to_column', {columnName: mappedColumnName})}>
                       <span style={{fontWeight: 'normal', fontSize: '12px', display: 'flex', alignItems: 'center'}}>
                         <MappedIcon color='warning' sx={{marginRight: '4px', fontSize: '14px'}} />
                         {mappedColumnName}

@@ -2,18 +2,20 @@ import React from 'react'
 import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
 import CheckIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
+import { useTranslation } from 'react-i18next';
 
 const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) => {
+  const { t } = useTranslation();
   let width = '25%'
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', alignItems: 'center'}}>
       <Typography component='span' sx={{color: 'surface.dark', fontWeight: 600, marginRight: '24px', fontSize: '14px'}}>
-        Decision
+        {t('map_project.decision')}
       </Typography>
       <div style={{display: 'flex', alignItems: 'center', width: 'calc(100% - 80px)'}}>
         <Chip
           sx={{margin: '0 5px', width: width}}
-          label='None'
+          label={t('map_project.decision_none')}
           color='secondary'
           variant={!selected || selected === 'none' ? 'contained' : 'outlined'}
           onClick={event => onChange(event, undefined)}
@@ -21,7 +23,7 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
         />
         <Chip
           sx={{margin: '0 5px', width: width}}
-          label='Map'
+          label={t('map_project.decision_map')}
           color='primary'
           variant={selected === 'map' ? 'contained' : 'outlined'}
           onClick={event => onChange(event, 'map')}
@@ -30,7 +32,7 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
         />
         <Chip
           sx={{margin: '0 5px', width: width}}
-          label='Propose'
+          label={t('map_project.decision_propose')}
           color='warning'
           variant={selected === 'propose' ? 'contained' : 'outlined'}
           onClick={event => onChange(event, 'propose')}
@@ -39,7 +41,7 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
         />
         <Chip
           sx={{margin: '0 5px', width: width}}
-          label='Exclude'
+          label={t('map_project.decision_exclude')}
           color='error'
           variant={selected === 'exclude' ? 'contained' : 'outlined'}
           onClick={event => onChange(event, 'exclude')}

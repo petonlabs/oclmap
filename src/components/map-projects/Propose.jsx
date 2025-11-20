@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import times from 'lodash/times'
 import get from 'lodash/get'
 import { find, forEach} from 'lodash'
@@ -7,6 +8,7 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
 const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
+  const { t } = useTranslation();
   const [attributes, setAttributes] = React.useState(1)
   const repoLabel = `${repo?.short_code || repo?.id}:${repo?.version || repo.id}`
 
@@ -80,30 +82,30 @@ const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
   return (
     <div className='col-xs-12 padding-0' style={{margin: '12px 0'}}>
       <div className='col-xs-12 padding-0'>
-        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Target Source' value={state.source || ''} onChange={_onChange}/>
-        <TextField id='id' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Concept ID' value={state?.id || ''} onChange={_onChange}/>
-        <TextField id='name' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Name' value={state?.name || ''} onChange={_onChange}/>
-        <TextField id='map_type' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label='Map Type' value={state?.map_type || 'SAME-AS'} onChange={_onChange}/>
-        <Typography sx={{fontWeight: 'bold', margin: '10px 10px 4px'}}>Attributes</Typography>
+        <TextField id='source' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label={t('map_project.target_source')} value={state.source || ''} onChange={_onChange}/>
+        <TextField id='id' sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label={t('map_project.concept_id')} value={state?.id || ''} onChange={_onChange}/>
+        <TextField id='name' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label={t('common.name')} value={state?.name || ''} onChange={_onChange}/>
+        <TextField id='map_type' sx={{width: 'calc(50% - 12px)', margin: '4px 6px',}} label={t('map_project.map_type')} value={state?.map_type || 'SAME-AS'} onChange={_onChange}/>
+        <Typography sx={{fontWeight: 'bold', margin: '10px 10px 4px'}}>{t('common.attributes')}</Typography>
         {
           times(attributes, i => {
             return (
               <div className='col-xs-12 padding-0' key={i}>
-                <TextField id={`attributes.${i}.name`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Name' value={get(state, `attributes.${i}.name`) || ''} onChange={_onChange}/>
-                <TextField id={`attributes.${i}.value`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label='Attribute Value' value={get(state, `attributes.${i}.value`) || ''} onChange={_onChange}/>
+                <TextField id={`attributes.${i}.name`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label={t('map_project.attribute_name')} value={get(state, `attributes.${i}.name`) || ''} onChange={_onChange}/>
+                <TextField id={`attributes.${i}.value`} sx={{width: 'calc(50% - 12px)', margin: '4px 6px'}} label={t('map_project.attribute_value')} value={get(state, `attributes.${i}.value`) || ''} onChange={_onChange}/>
               </div>
             )
           })
         }
         <Button sx={{marginLeft: '8px', textTransform: 'none'}} size='small' variant='text' onClick={() => setAttributes(attributes + 1)}>
-          Add more
+          {t('map_project.add_more')}
         </Button>
       </div>
       <div className='col-xs-12 padding-0' style={{margin: '16px 0'}}>
         <TextField
           fullWidth
           id="note"
-          label="Proposal note"
+          label={t('map_project.proposal_note')}
           multiline
           rows={5}
           value={state?.note || ''}
@@ -112,7 +114,7 @@ const Propose = ({onChange, proposed, onSubmit, repo, row, columns}) => {
       </div>
       <div className='col-xs-12 padding-0' style={{margin: '16px 0', display: 'flex', alignItems: 'center'}}>
         <Button color='primary' onClick={_onSubmit} variant='contained' sx={{textTransform: 'none'}}>
-          Propose
+          {t('map_project.propose')}
         </Button>
       </div>
     </div>

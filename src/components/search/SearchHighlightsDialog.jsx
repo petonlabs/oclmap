@@ -75,7 +75,7 @@ const SearchHighlightsDialog = ({onClose, highlight, score, open}) => {
                 '.MuiListItemText-primary': {color: 'surface.dark', fontSize: '12px'},
                 '.MuiListItemText-secondary': {color: 'default.light', fontSize: '14px'}
               }}
-              primary='Search Score'
+              primary={t('search.search_score')}
               secondary={
                 <Typography
                   component="span"

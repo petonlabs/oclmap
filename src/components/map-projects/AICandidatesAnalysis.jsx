@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography';
@@ -17,6 +18,7 @@ import get from 'lodash/get'
 
 
 const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
+  const { t } = useTranslation();
   const [openDetails, setOpenDetails] = React.useState(false)
 
   return (
@@ -26,7 +28,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-6px'}}>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
             AI Candidates Analysis {analysis?.model ? ` - ${analysis.model}` : ''}
-            <Tooltip title='View Raw JSON' placement='right'>
+            <Tooltip title={t('map_project.view_raw_json')} placement='right'>
             <span>
               <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
                 <DataObjectIcon fontSize='inherit' />

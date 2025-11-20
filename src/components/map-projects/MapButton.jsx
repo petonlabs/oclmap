@@ -14,8 +14,10 @@ import ListSubheader from '@mui/material/ListSubheader';
 import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useTranslation } from 'react-i18next';
 
 const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, simple, mapOnly, usedMapTypes, disabled}) => {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [mapType, setMapType] = React.useState(selected || 'SAME-AS');
@@ -70,7 +72,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
             onClick={event => onClick(event, !isMapped, mapType)}
             startIcon={isMapped ? <UnmapIcon fontSize='inherit' /> : <MapIcon fontSize='inherit' />}
           >
-            {isMapped ? 'Un-Map' : 'Map'}
+            {isMapped ? t('map_project.un_map') : t('map_project.map')}
           </Button> :
         (
           mapOnly && isMapped ?
@@ -143,7 +145,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
                   {
                     usedOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Used in this Project</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>{t('map_project.used_in_this_project')}</ListSubheader>
                         {
                           usedOptions.map(option => (
                             <MenuItem
@@ -160,7 +162,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
                   {
                     recommendedOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>Recommended</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>{t('map_project.recommended')}</ListSubheader>
                         {
                           recommendedOptions.map(option => (
                             <MenuItem
@@ -177,7 +179,7 @@ const MapButton = ({options, isMapped, onClick, selected, sx, color, variant, si
                   {
                     otherOptions.length > 0 &&
                       <>
-                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>All Options</ListSubheader>
+                        <ListSubheader sx={{fontSize: '12px', lineHeight: '32px'}}>{t('map_project.all_options')}</ListSubheader>
                         {
                           otherOptions.map(option => (
                             <MenuItem

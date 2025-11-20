@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -49,6 +50,7 @@ const VisuallyHiddenInput = styled('input')({
 
 
 const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales }) => {
+  const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -64,7 +66,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
     <div className='col-xs-12' style={{padding: '8px 0', ...sx}}>
       <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px'}}>
         <Typography component='span' sx={{fontSize: '22px', color: 'surface.dark', fontWeight: 600, display: 'flex', alignItems: 'center'}}>
-          Configure Mapping Project
+          {t('map_project.configure_mapping_project')}
           <IconButton sx={{marginLeft: '8px'}} color={configure ? 'primary' : 'secondary'} onClick={() => file?.name ? setConfigure(!configure) : null}>
             <SettingsIcon fontSize='inherit' />
           </IconButton>
@@ -75,13 +77,13 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         }
         </div>
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '45px'}}>
-        Project Ownership and Name
+        {t('map_project.project_ownership_and_name')}
       </Typography>
       <NamespaceDropdown
         required
         id='owner'
         owner={owner}
-        label='Project Owner'
+        label={t('map_project.project_owner')}
         size='small'
         onChange={(event, item) => setOwner(item?.url || '')}
         asOwner
@@ -91,14 +93,14 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         required
         fullWidth
         sx={{marginTop: '12px'}}
-        label='Name'
+        label={t('common.name')}
         value={name}
         onChange={event => setName(event.target.value || '')}
       />
       <TextField
         fullWidth
         sx={{marginTop: '12px'}}
-        label='Description'
+        label={t('common.description')}
         value={description}
         onChange={event => setDescription(event.target.value || '')}
         multiline
@@ -106,10 +108,10 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       />
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-        Input Data
+        {t('map_project.input_data')}
       </Typography>
       <FormHelperText sx={{marginTop: 0}}>
-        Upload a spreadsheet (.csv, .xls, .xlsx) that contains the input data to be mapped.
+        {t('map_project.upload_file_description')}
       </FormHelperText>
 
       <Button
@@ -123,7 +125,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         disabled={Boolean(project?.id && project.input_file_name)}
       >
         {
-          file?.name ? file.name : "Upload file"
+          file?.name ? file.name : t('map_project.upload_file')
         }
         <VisuallyHiddenInput
           type="file"
@@ -133,7 +135,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       </Button>
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-        Target Repository
+        {t('map_project.target_repository')}
         {
           (repo?.version_url || repo?.url) &&
             <IconButton size='small' sx={{marginLeft: '8px'}} href={toV3URL(repo.version_url || repo.url)} target='_blank' rel='noopener noreferrer' color='primary'>
@@ -142,15 +144,15 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         }
       </Typography>
       <FormHelperText sx={{marginTop: 0}}>
-        Select the repository that you want to map your input data to.
+        {t('map_project.target_repository_description')}
       </FormHelperText>
 
-      <RepoSearchAutocomplete label='Repository' size='small' onChange={(id, item) => onRepoChange(item)} value={repo}  sx={{marginTop: '12px'}}/>
-      <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '12px'}} />
+      <RepoSearchAutocomplete label={t('map_project.repository')} size='small' onChange={(id, item) => onRepoChange(item)} value={repo}  sx={{marginTop: '12px'}}/>
+      <RepoVersionSearchAutocomplete versions={versions} label={t('common.version')} size='small' onChange={(id, item) => setRepoVersion(item)} value={repoVersion} sx={{marginTop: '12px'}} />
       {
         isLLMAlgoNotAllowed && repoVersion?.version_url &&
           <FormHelperText sx={{marginTop: '4px', marginLeft: '8px', color: 'warning.main'}}>
-            {`${repo?.owner}:${repo?.short_code || repo?.id}:${repoVersion?.id || repo?.version || repo?.id} is not configured to run Semantic Search`}
+            {t('map_project.semantic_search_not_configured', {owner: repo?.owner, repo: repo?.short_code || repo?.id, version: repoVersion?.id || repo?.version || repo?.id})}
           </FormHelperText>
       }
           <Autocomplete
@@ -172,12 +174,12 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
                 label={
                   isLoadingLocales ?
                     <span style={{display: 'flex'}}>
-                      Loading Name Locales...
+                      {t('map_project.loading_name_locales')}
                       <CircularProgress sx={{marginLeft: '16px', width: '20px !important', height: '20px !important'}} />
                     </span> :
-                    "Filter Name Locales"
+                    t('map_project.filter_name_locales')
                 }
-                helperText="Note: Restricting candidates to specific languages limits cross-lingual matching capabilities, but may improve the accuracy of results for certain datasets, especially if the input data is in the same language as a target repository's default language."
+                helperText={t('map_project.filter_name_locales_helper')}
               />
             )}
           />
@@ -199,7 +201,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
                   }}
                 />
               }
-              label="Default Filter"
+              label={t('map_project.default_filter')}
             />
           </FormHelperText>
             <FilterTable filters={repoVersion.meta.display.default_filter} order={repoVersion.meta.display.concept_filter_order || []} sx={{marginLeft: '4px'}} />
@@ -207,10 +209,10 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       }
 
       <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-        Matching Algorithm
+        {t('map_project.matching_algorithm')}
       </Typography>
       <FormHelperText sx={{marginTop: 0}}>
-        Select a matching algorithm. Learn more
+        {t('map_project.matching_algorithm_description')}
       </FormHelperText>
       <Button
         component="label"
@@ -249,24 +251,24 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         algo === 'custom' &&
           <>
             <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-              Custom Match API
+              {t('map_project.custom_match_api')}
             </Typography>
             <FormHelperText sx={{marginTop: 0}}>
-              Configure External Match API URL and Token
+              {t('map_project.custom_match_api_description')}
             </FormHelperText>
             <TextField
               fullWidth
               sx={{marginTop: '12px'}}
-              label='Match API URL'
-              placeholder='e.g. https://api.openconceptlab.org/concepts/$match/?includeSearchMeta=true'
+              label={t('map_project.match_api_url')}
+              placeholder={t('map_project.match_api_url_placeholder')}
               value={matchAPI}
               onChange={event => setMatchAPI(event.target.value || '')}
             />
             <TextField
               fullWidth
               sx={{marginTop: '12px', width: 'calc(100% - 160px)'}}
-              label='Match API Token'
-              placeholder='e.g. XXXXXXXXXXX'
+              label={t('map_project.match_api_token')}
+              placeholder={t('map_project.match_api_token_placeholder')}
               value={matchAPIToken}
               onChange={event => setMatchAPIToken(event.target.value || '')}
             />
@@ -276,31 +278,31 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               type='number'
               inputProps={{min: 1, max: 100, step: 1}}
               sx={{marginTop: '12px', width: '160px', paddingLeft: '8px', '.MuiFormHelperText-root': {marginLeft: '4px'}, '.MuiInputLabel-root': {left: '6px'}}}
-              label=' Batch Size'
+              label={t('map_project.batch_size')}
               value={semanticBatchSize}
               onChange={event => setSemanticBatchSize(event.target.value || '')}
               onBlur={() => semanticBatchSize ? undefined : setSemanticBatchSize(SEMANTIC_BATCH_SIZE)}
-              helperText='Rows per $match API'
+              helperText={t('map_project.rows_per_match_api')}
             />
           </>
       }
       <>
         <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-          Score Configuration
+          {t('map_project.score_configuration')}
         </Typography>
         <FormHelperText sx={{marginTop: 0}}>
-          Configure Score threshold to group candidates recommendations
+          {t('map_project.score_configuration_description')}
         </FormHelperText>
         <ScoreConfiguration scores={candidatesScore} onChange={onScoreChange} />
         <div className='col-xs-12' style={{fontSize: '12px', margin: '-4px 0 16px 0'}}>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.unranked}}>
-            {`Not Recommended (<${candidatesScore.available}%)`}
+            {`${t('map_project.not_recommended')} (<${candidatesScore.available}%)`}
           </div>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.available}}>
-            {`Available (≥${candidatesScore.available}%, <${candidatesScore.recommended}%)`}
+            {`${t('map_project.available')} (≥${candidatesScore.available}%, <${candidatesScore.recommended}%)`}
           </div>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.recommended}}>
-            {`Recommended (≥${candidatesScore.recommended}%)`}
+            {t('map_project.recommended')} (≥{candidatesScore.recommended}%)
           </div>
         </div>
       </>
@@ -308,10 +310,10 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         file?.name &&
           <>
             <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-              Field Configuration
+              {t('map_project.field_configuration')}
             </Typography>
             <FormHelperText sx={{marginTop: 0}}>
-              Associate fields in the input data to fields that the matching algorithms are able to understand. Assign input fields that contain concept codes or mappings to specific repositories. Learn more
+              {t('map_project.field_configuration_description')}
             </FormHelperText>
             <ColumnMapTable
               sx={{marginTop: '12px'}}
@@ -339,7 +341,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         loadingPosition="start"
       >
         {
-          isSaving ? 'Saving...' : 'Save & Close'
+          isSaving ? t('map_project.saving') : t('map_project.save_and_close')
         }
       </Button>
         </div>

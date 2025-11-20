@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button';
 import Badge from '@mui/material/Badge';
@@ -23,6 +24,7 @@ import Concept from './Concept'
 import MapButton from './MapButton'
 
 const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts, setShowItem, showItem, isSelectedForMap, onMap, response, facets, appliedFacets, setAppliedFacets, isLoading, filters, columns, defaultFilters, locales}) => {
+  const { t } = useTranslation();
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   let total = parseInt(response?.headers?.num_found) || concepts?.length || 0
@@ -78,7 +80,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
         </IconButton>
         <TextField
           autoFocus
-          label='Search'
+          label={t('common.search')}
           sx={{width: 'calc(100% - 132px)'}}
           required
           id="search"
@@ -107,7 +109,7 @@ const Search = ({searchStr, setSearchStr, onSearch, repo, repoVersion, concepts,
           disabled={!repo?.id || !repoVersion?.id || !searchStr}
           onClick={onSearch}
         >
-          Search
+          {t('common.search')}
         </Button>
       </div>
       <div className='col-xs-12 padding-0' style={{display: 'flex'}}>

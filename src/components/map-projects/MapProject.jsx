@@ -1,6 +1,7 @@
 /*eslint no-process-env: 0*/
 
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 import Split from 'react-split';
@@ -123,6 +124,7 @@ import '../common/ResizablePanel.scss'
 // }
 
 const MapProject = () => {
+  const { t } = useTranslation();
   const { toggles, setAlert: baseSetAlert } = React.useContext(OperationsContext);
   const user = getCurrentUser()
   const params = useParams()
@@ -222,12 +224,18 @@ const MapProject = () => {
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
 
 
-  // algos
-  const [algos, setAlgos] = React.useState([
-    {id: 'es', label: 'Generic Elastic Search Matching', description: "Token and Keyword based search using ES"},
-    {id: 'llm', label: 'Semantic Search (all-MiniLM-L6-v2)', description: "Vector based search powered by MiniLM", disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
-    {id: 'custom', label: 'Custom API', description: 'Custom $match API'}
-  ])
+  // algos - computed based on current language
+  const baseAlgos = React.useMemo(() => [
+    {id: 'es', label: t('map_project.algorithm_es_label'), description: t('map_project.algorithm_es_description')},
+    {id: 'llm', label: t('map_project.algorithm_llm_label'), description: t('map_project.algorithm_llm_description'), disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
+    {id: 'custom', label: t('map_project.algorithm_custom_label'), description: t('map_project.algorithm_custom_description')}
+  ], [t, toggles?.SEMANTIC_SEARCH_TOGGLE])
+  
+  const [algos, setAlgos] = React.useState(baseAlgos)
+  
+  React.useEffect(() => {
+    setAlgos(baseAlgos)
+  }, [baseAlgos])
 
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
@@ -398,7 +406,7 @@ const MapProject = () => {
                        <span style={{ flexGrow: 1 }}>{column.original}</span>
                        {
                        isFiltered &&
-                           <Tooltip title="Clear Filter">
+                           <Tooltip title={t('map_project.clear_filter')}>
                              <IconButton
                                size="small"
                                onClick={(e) => {
@@ -436,7 +444,7 @@ const MapProject = () => {
     })
     cols.push({
       field: '_targetCode_',
-      headerName: 'Target Code',
+      headerName: t('map_project.target_code'),
       width: columnWidth['_targetCode_'] || 300,
       renderCell: params => {
         const targetConcept = mapSelected[params.row.__index]
@@ -565,7 +573,7 @@ const MapProject = () => {
         let state = keys(pickBy(VIEWS, info => info.label === rowStateLabel))[0]
         _states[state] = _states[state] || []
         _states[state].push(index)
-        _decisions[index] = data['__Decision__'] === 'None' ? undefined : data['__Decision__']
+        _decisions[index] = data['__Decision__'] === t('map_project.none') ? undefined : data['__Decision__']
         _notes[index] = data['__Note__']
         _mapTypes[index] = data['__Map Type__']
         _proposed[index] = data['__Proposed__'] ? JSON.parse(data['__Proposed__']) : undefined
@@ -655,7 +663,7 @@ const MapProject = () => {
         setProject(response.data)
         if(response.data.url)
           history.push(response.data.url)
-        baseSetAlert({severity: 'success', message: 'Successfully Saved.', duration: 2000})
+        baseSetAlert({severity: 'success', message: t('map_project.successfully_saved'), duration: 2000})
 
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: logs}).then(() => {})
       }
@@ -1048,7 +1056,7 @@ const MapProject = () => {
       setLoadingMatches(true)
       getRowsResults(data)
     } else {
-      setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
+      setAlert({message: t('map_project.no_valid_columns_for_matching')})
       setTimeout(() => setAlert(false), 10000)
     }
     setMatchDialog(false)
@@ -1066,22 +1074,22 @@ const MapProject = () => {
   const getCandidatesButtonLabel = () => {
     const matchingDuration = getMatchingDuration(startMatchingAt, endMatchingAt)
     if(loadingMatches || matchedConcepts?.length)
-      return `Auto Match (${matchingDuration})`
-    return 'Auto Match'
+      return `${t('map_project.auto_match')} (${matchingDuration})`
+    return t('map_project.auto_match')
   }
 
   const getBulkBridgeCandidatesButtonLabel = () => {
     const matchingDuration = getMatchingDuration(bridgeCandidatesStartedAt, bridgeCandidatesEndedAt)
     if(loadingMatches || bridgeCandidates?.length)
-      return `Bridge Candidates (${matchingDuration})`
-    return 'Bridge Candidates'
+      return `${t('map_project.bridge_candidates')} (${matchingDuration})`
+    return t('map_project.bridge_candidates')
   }
 
   const getBulkAIAnalysisButtonLabel = () => {
     const matchingDuration = getMatchingDuration(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt)
     if(loadingMatches || !isEmpty(analysis))
-      return `AI Analysis (${matchingDuration})`
-    return 'AI Analysis'
+      return `${t('map_project.ai_analysis')} (${matchingDuration})`
+    return t('map_project.ai_analysis')
   }
 
   const onMatchTypeChange = bucket => setSelectedMatchBucket(prev => prev === bucket ? false : bucket)
@@ -1171,7 +1179,7 @@ const MapProject = () => {
 
   const onDownloadClick = () => {
     const workbook = getWorkbook()
-    XLSX.writeFile(workbook, `${name || 'Matched'}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
+    XLSX.writeFile(workbook, `${name || t('map_project.matched')}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
   }
 
   const getFileObjectFromRows = name => {
@@ -1188,7 +1196,7 @@ const MapProject = () => {
   const getWorkbook = () => {
     const worksheet = XLSX.utils.json_to_sheet(getRowsForDownload());
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+    XLSX.utils.book_append_sheet(workbook, worksheet, t('map_project.dates'));
     return workbook
   }
 
@@ -1387,7 +1395,7 @@ const MapProject = () => {
       selected = getConcept(selected) || selected
       if(selected?.id) {
         let conceptLabel = getConceptLabel(selected)
-        let comment = `Rejected ${conceptLabel}`
+        let comment = `${t('map_project.rejected')} ${conceptLabel}`
         if(notes[rowIndex])
           comment = notes[rowIndex] + '\n' + comment
         setNotes({...notes, [rowIndex]: comment})
@@ -1405,7 +1413,7 @@ const MapProject = () => {
 
     setDecisions(prev => ({...prev, [rowIndex]: newValue || undefined}))
     if(newValue === 'propose') {
-      setAlert({message: 'Proposed successfully.', duration: 2, severity: 'success'})
+      setAlert({message: t('map_project.proposed_successfully'), duration: 2, severity: 'success'})
       log({action: 'proposed'})
         logged = true
     }
@@ -1423,7 +1431,7 @@ const MapProject = () => {
       return prev
     })
     if(newValue !== 'map' && !logged)
-      log({action: newValue || 'decision_changed', description: 'Desicion Changed to None', extras: newValue ? {} : {decision: 'None'}})
+      log({action: newValue || 'decision_changed', description: t('map_project.decision_changed_to_none'), extras: newValue ? {} : {decision: t('map_project.none')}})
   }
 
   const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
@@ -1481,7 +1489,7 @@ const MapProject = () => {
           }
         });
     } else {
-      setAlert({message: 'None of the columns are valid for matching, please edit and assign valid columns.'})
+      setAlert({message: t('map_project.no_valid_columns_for_matching')})
       setTimeout(() => setAlert(false), 6000)
     }
   }
@@ -1723,12 +1731,24 @@ const MapProject = () => {
 
   const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
 
-  const formatCount = (label, count) => count > 0 ? `${count.toLocaleString()} ${label}` : label;
 
   const getHelperTextForAutoMatchUnmapped = () => {
-    if (autoMatchUnmappedOnly)
-      return `Note: Skip ${formatCount("input rows that are already proposed", rowStatuses.readyForReview.length)}`;
-    return `Note: This will not affect ${formatCount("approved input rows", rowStatuses.reviewed.length)} but will override ${formatCount("proposed input rows", rowStatuses.readyForReview.length)}`;
+    if (autoMatchUnmappedOnly) {
+      const count = rowStatuses.readyForReview.length;
+      if (count > 0) {
+        return t('map_project.auto_match_unmapped_only_note', {count: count.toLocaleString()});
+      }
+      return t('map_project.auto_match_unmapped_only_note_no_count');
+    }
+    const approvedCount = rowStatuses.reviewed.length;
+    const proposedCount = rowStatuses.readyForReview.length;
+    if (approvedCount > 0 && proposedCount > 0) {
+      return t('map_project.auto_match_note', {
+        approvedCount: approvedCount.toLocaleString(),
+        proposedCount: proposedCount.toLocaleString()
+      });
+    }
+    return t('map_project.auto_match_note_no_counts');
   };
 
   return permissionDenied ? <Error403/> : (
@@ -1747,7 +1767,7 @@ const MapProject = () => {
       }
       {
         loadingProject &&
-          <LoaderDialog open message='Loading project...'/>
+          <LoaderDialog open message={t('map_project.loading_project')}/>
       }
       <Split
         sizes={isSplitView ? [50, 50] : [100, 0]} // initial % widths
@@ -1826,7 +1846,7 @@ const MapProject = () => {
                         {name}
                       </span>
                   }
-                  <Tooltip title='Configure Mapping Project'>
+                  <Tooltip title={t('map_project.configure_mapping_project_tooltip')}>
                     <IconButton color={configure ? 'primary' : 'secondary'} onClick={() => setConfigure(!configure)} sx={{textTransform: 'none', margin: '5px 5px 5px 0'}}>
                       <SettingsIcon fontSize='inherit' />
                     </IconButton>
@@ -1884,7 +1904,7 @@ const MapProject = () => {
                         }}
                         disabled={abortRef.current}
                       >
-                        {abortRef.current ? 'Stopping gracefully...' : 'Stop Processing'}
+                        {abortRef.current ? t('map_project.stopping_gracefully') : t('map_project.stop_processing')}
                       </Button>
                   }
                 </span>
@@ -1950,7 +1970,7 @@ const MapProject = () => {
                     '.MuiFormControlLabel-label': {fontSize: '0.8125rem'}
                   }}
                   control={<Switch disabled={!showMatchSummary || selectedRowStatus === 'unmapped'} size="small" checked={selectedMatchBucket === 'very_high'} onChange={() => onMatchTypeChange('very_high')} />}
-                  label='Auto Match'
+                  label={t('map_project.auto_match')}
                 />
                   </Badge>
                 <ScoreBucketButton
@@ -1966,7 +1986,7 @@ const MapProject = () => {
                 {
                   selectedRowStatus === 'unmapped' &&
                     <Chip
-                      label={`Rejected (${keys(pickBy(decisions, value => value === 'rejected')).length})`}
+                      label={`${t('map_project.rejected')} (${keys(pickBy(decisions, value => value === 'rejected')).length})`}
                       color='error'
                       size='small'
                       variant={decisionFilters.includes('rejected') ? 'contained' : 'outlined'}
@@ -2000,7 +2020,7 @@ const MapProject = () => {
                             <Chip
                               key={_decision}
                               disabled={!count}
-                              label={`${startCase(_decision)} (${count})`}
+                              label={`${t(`map_project.decision_${_decision}`) || startCase(_decision)} (${count})`}
                               color={isExclude ? 'error' : (isNone ? 'secondary' : (isPropose ? 'warning' : 'primary'))}
                               size='small'
                               variant={isApplied ? 'contained' : 'outlined'}
@@ -2123,7 +2143,7 @@ const MapProject = () => {
           }}
         >
           <DialogTitle sx={{padding: '12px 24px', color: 'surface.dark', fontSize: '22px', textAlign: 'left'}}>
-            Auto Match
+            {t('map_project.auto_match')}
           </DialogTitle>
           <DialogContent sx={{paddingTop: '12px !important'}}>
             <Button
@@ -2138,20 +2158,20 @@ const MapProject = () => {
             >
               {algos.find(_algo => _algo.id === algo).label}
             </Button>
-            <RepoSearchAutocomplete label='Map Target' size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
-            <RepoVersionSearchAutocomplete versions={versions} label='Version' size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
-            <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label="Unmapped Only" />
+            <RepoSearchAutocomplete label={t('map_project.map_target')} size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
+            <RepoVersionSearchAutocomplete versions={versions} label={t('common.version')} size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
+            <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label={t('map_project.unmapped_only')} />
             <FormHelperText sx={{marginTop: '-4px'}}>
               {
                 getHelperTextForAutoMatchUnmapped()
               }
             </FormHelperText>
-            <FormControlLabel sx={{marginTop: '0px', width: '100%'}} control={<Checkbox checked={autoMatchLoadCandidates} onChange={event => setAutoMatchLoadCandidates(event.target.checked)} />} label="Load Candidates" />
+            <FormControlLabel sx={{marginTop: '0px', width: '100%'}} control={<Checkbox checked={autoMatchLoadCandidates} onChange={event => setAutoMatchLoadCandidates(event.target.checked)} />} label={t('map_project.load_candidates')} />
             <FormHelperText sx={{marginTop: '-4px'}}>
               {
                 autoMatchLoadCandidates ?
-                  'Note: Enabling this feature retrieves 10 candidates per row, instead of just the top match, and saves them with the project' :
-                  'Note: This will only do auto-match and not load any additional candidates'
+                  t('map_project.load_candidates_note_enabled') :
+                  t('map_project.load_candidates_note_disabled')
               }
             </FormHelperText>
             {
@@ -2167,7 +2187,7 @@ const MapProject = () => {
                     }
                     label={
                       <span style={{display: 'flex', alignItems: 'center'}}>
-                        <span>Run AI Analysis</span>
+                        <span>{t('map_project.run_ai_analysis')}</span>
                         <AIAssistantButton
                           models={AIModels}
                           selected={AIModel}
@@ -2183,7 +2203,7 @@ const MapProject = () => {
                     }
                   />
                   <FormHelperText sx={{marginTop: '-4px'}}>
-                    Note: Enabling this feature will run AI Analysis on results of each row. This has direct cost implications.
+                    {t('map_project.run_ai_analysis_note')}
                   </FormHelperText>
                 </>
             }
@@ -2196,7 +2216,7 @@ const MapProject = () => {
               sx={{textTransform: 'none'}}
               onClick={() => setMatchDialog(false)}
             >
-              Close
+              {t('common.close')}
             </Button>
             <Button
               variant='contained'
@@ -2206,7 +2226,7 @@ const MapProject = () => {
               disabled={!repo?.url}
               onClick={onGetCandidatesSubmit}
             >
-              Submit
+              {t('common.submit')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2266,7 +2286,7 @@ const MapProject = () => {
               <div className='col-xs-12' style={{padding: '8px 16px', minWidth: '500px'}}>
                 <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                   <Typography component='span' sx={{fontSize: '20px', color: 'surface.dark', fontWeight: 600}}>
-                    Mapping Decisions
+                    {t('map_project.mapping_decisions')}
                     <Chip sx={{padding: '0 6px', marginLeft: '12px'}} variant='outlined' label={startCase(getStateFromIndex(rowIndex))} {...VIEWS[getStateFromIndex(rowIndex)]} />
                   </Typography>
                   <CloseIconButton color='secondary' onClick={onCloseDecisions} />
@@ -2298,13 +2318,13 @@ const MapProject = () => {
                 />
                 <div className='col-xs-12' style={{padding: '0 0 8px 78px'}}>
                   <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex) || decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='primary' onClick={() => onReviewDone(true)} variant='contained' sx={{textTransform: 'none'}}>
-                    Approve and Next
+                    {t('map_project.approve_and_next')}
                   </Button>
                   <Button size='small' disabled={rowStatuses.reviewed.includes(rowIndex) || decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='primary' onClick={() => onReviewDone(false)} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
-                    Approve
+                    {t('map_project.approve')}
                   </Button>
                   <Button size='small' disabled={decisions[rowIndex] === 'none' || !decisions[rowIndex]} color='error' onClick={(event) => onDecisionChange(event, 'rejected')} variant='outlined' sx={{textTransform: 'none', marginLeft: '8px'}}>
-                    Reject
+                    {t('map_project.reject')}
                   </Button>
                 </div>
                 <Divider sx={{width: '100%'}} />
@@ -2321,7 +2341,7 @@ const MapProject = () => {
                             sx={{padding: '2px 6px !important', textTransform: 'none', fontWeight: 'bold'}}
                             value={_tab}
                             key={_tab}
-                            label={startCase(_tab)}
+                            label={t('map_project.decision_tab_' + _tab)}
                           />
                         )
                       })

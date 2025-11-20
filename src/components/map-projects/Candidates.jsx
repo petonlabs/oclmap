@@ -1,6 +1,7 @@
 /*eslint no-process-env: 0*/
 
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/Button';
@@ -135,6 +136,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
 }
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange}) => {
+  const { t } = useTranslation();
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
@@ -269,7 +271,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               <CandidateList
                 {...props}
                 candidates={recommended}
-                header='Recommended Candidates'
+                header={t('map_project.recommended_candidates')}
                 onFetchMore={onFetchMore}
                 bgColor={SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
@@ -294,21 +296,21 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={available} header='Available Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} bucketId={`${rowIndex}-available`} noToolbar />
+              <CandidateList {...props} candidates={available} header={t('map_project.available_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} bucketId={`${rowIndex}-available`} noToolbar />
             }
           </li>
           <li>
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={unranked} header='Unranked Candidates' onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} noToolbar />
+              <CandidateList {...props} candidates={unranked} header={t('map_project.unranked_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} noToolbar />
             }
           </li>
           <li>
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={bridgeResults} header='CIEL Bridge Terminology Candidates' onFetchMore={onFetchMore} bucketId={`${rowIndex}-bridge`} noToolbar bridge />
+              <CandidateList {...props} candidates={bridgeResults} header={t('map_project.ciel_bridge_terminology_candidates')} onFetchMore={onFetchMore} bucketId={`${rowIndex}-bridge`} noToolbar bridge />
             }
           </li>
         </List>
@@ -316,7 +318,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
           onFetchMore && canFetchMore &&
             <div className='col-xs-12' style={{textAlign: 'right', marginTop: '4px'}}>
               <Button disabled={isLoading} size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
-                {isLoading ? 'Fetching...' : 'Fetch More'}
+                {isLoading ? t('map_project.fetching') : t('map_project.fetch_more')}
               </Button>
             </div>
         }

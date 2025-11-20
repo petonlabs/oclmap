@@ -1,6 +1,7 @@
 /*eslint no-process-env: 0*/
 
 import React from 'react';
+import { withTranslation } from 'react-i18next';
 import { Tooltip, Divider } from '@mui/material';
 import APIService from '../../services/APIService';
 import { isFHIRServer, toFullAPIURL } from '../../common/utils';
@@ -37,16 +38,17 @@ class AppVersions extends React.Component {
   }
 
   render() {
+    const { t } = this.props
     return (
       <React.Fragment>
-        <AppVersionChip tooltip='Web Version' label='MAP-' version={VERSION} />
+        <AppVersionChip tooltip={t('app.web_version')} label='MAP-' version={VERSION} />
         {
           this.state.version &&
             <React.Fragment>
           <Divider orientation='vertical' className='footer-divider-vertical' />
 
           <a href={SWAGGER_URL} target='_blank' rel="noopener noreferrer">
-            <AppVersionChip tooltip='API Version' label='API-' version={this.state.version} />
+            <AppVersionChip tooltip={t('app.api_version')} label='API-' version={this.state.version} />
           </a>
           </React.Fragment>
         }
@@ -55,4 +57,4 @@ class AppVersions extends React.Component {
   }
 }
 
-export default AppVersions;
+export default withTranslation()(AppVersions);

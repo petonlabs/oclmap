@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography'
 import ListItemText from '@mui/material/ListItemText'
 import has from 'lodash/has'
@@ -17,6 +18,7 @@ import MapButton from './MapButton'
 import Score from './Score'
 
 const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTypes, onMap, proposed, columns, repoVersion, onTargetClick}) => {
+  const { t } = useTranslation();
   const parentParams = targetConcept?.url ? URIToParentParams(targetConcept.url) : {}
   const hasClass = has(row, 'Class') || has(row, 'Concept Class') || has(row, 'Property: Class')
   const hasDatatype = has(row, 'Datatype') || has(row, 'datatype') || has(row, 'Property: Datatype')
@@ -105,7 +107,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', justifyContent: 'space-between'}}>
       <div style={{maxWidth: '45%'}}>
-        <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Source Code</Typography>
+        <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>{t('map_project.source_code')}</Typography>
         <div className='col-xs-12 padding-0'>
           <ListItemText
             primary={getLeftTitle()}
@@ -113,12 +115,12 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
               <span style={{fontSize: '12px'}}>
                 {
                   hasClass &&
-                    <>Class: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i></>
+                    <>{t('map_project.class')}: <i>{getValue('Property: Class') || getValue('Class') || getValue('concept_class')}</i></>
                 }
                 {hasClass && hasDatatype && ','}
                 {
                   hasDatatype &&
-                    <>Datatype: <i>{getValue('Property: Datatype') || getValue('datatype')}</i></>
+                    <>{t('map_project.datatype')}: <i>{getValue('Property: Datatype') || getValue('datatype')}</i></>
                 }
                 {
                   leftMappings &&
@@ -134,7 +136,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
         targetConcept?.url &&
           <>
             <div style={{marginLeft: '8px'}}>
-              <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Relationship</Typography>
+              <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>{t('mapping.relationship')}</Typography>
               <MapButton options={allMapTypes} selected={mapTypes[rowIndex]} onClick={(event, applied, mapType) => onMap(event, targetConcept, !applied, mapType)} isMapped sx={{marginTop: '6px'}} mapOnly usedMapTypes={compact(values(mapTypes))} />
             </div>
             <div style={{marginLeft: '24px', maxWidth: '45%', cursor: 'pointer'}} onClick={() => onTargetClick(targetConcept)}>
@@ -189,8 +191,8 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                   primary={`${proposed?.source || ''}:${proposed?.id || ''} ${proposed?.name || ''}`}
                   secondary={
                     <span className='searchable' style={{fontSize: '12px'}}>
-                      Class: <i>{getFieldFromProposed('class')}</i>,
-                      Datatype: <i>{getFieldFromProposed('datatype')}</i>
+                      {t('map_project.class')}: <i>{getFieldFromProposed('class')}</i>,
+                      {t('map_project.datatype')}: <i>{getFieldFromProposed('datatype')}</i>
                     </span>
                   }
                   sx={{marginTop: 0, '.MuiListItemText-secondary': {marginTop: '-4px'}}}

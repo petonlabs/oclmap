@@ -20,8 +20,10 @@ import { getCurrentUser } from '../../common/utils'
 import OwnerIcon from '../common/OwnerIcon'
 import NoResults from '../search/NoResults';
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
+import { useTranslation } from 'react-i18next';
 
 const MapProjects = () => {
+  const { t } = useTranslation();
   const user = getCurrentUser()
   const [loading, setLoading] = React.useState([])
   const [projects, setProjects] = React.useState([])
@@ -60,10 +62,10 @@ const MapProjects = () => {
         <Paper component="div" className='col-xs-12' sx={{backgroundColor: 'surface.main', boxShadow: 'none', padding: '16px', borderRadius: '10px 10px 0 0'}}>
           <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
           <Typography component='span' sx={{fontSize: '28px', color: 'surface.dark', fontWeight: 600, display: 'flex', alignItems: 'center'}}>
-            Mapping Projects
+            {t('map_project.mapping_projects')}
           </Typography>
             <Button variant='contained' color='primary' startIcon={<AddIcon />} href='#/map-projects/new' sx={{textTransform: 'none'}}>
-              New Map Project
+              {t('map_project.new_map_project')}
             </Button>
           </div>
         </Paper>
@@ -72,11 +74,11 @@ const MapProjects = () => {
             <Table stickyHeader sx={{ minWidth: 650 }} size='small'>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Owner</TableCell>
-                  <TableCell>Project Name</TableCell>
-                  <TableCell>Created By</TableCell>
-                  <TableCell>Updated By</TableCell>
+                  <TableCell>{t('common.id')}</TableCell>
+                  <TableCell>{t('common.owner')}</TableCell>
+                  <TableCell>{t('map_project.project_name')}</TableCell>
+                  <TableCell>{t('common.created_by')}</TableCell>
+                  <TableCell>{t('common.updated_by')}</TableCell>
                   <TableCell />
                 </TableRow>
               </TableHead>
@@ -99,7 +101,7 @@ const MapProjects = () => {
                   loaded && projects.length === 0 &&
                     <TableRow>
                       <TableCell colSpan={6} align='center'>
-                        <NoResults text='No projects found.' height='300px' />
+                        <NoResults text={t('map_project.no_projects_found')} height='300px' />
                         </TableCell>
                       </TableRow>
                 }
@@ -151,10 +153,10 @@ const MapProjects = () => {
                     <TableCell align='right'>
                       <span style={{display: 'flex', alignItems: 'center'}}>
                         <Button size='small' color='primary' variant='contained' sx={{textTransform: 'none'}} href={`#${project.url}`}>
-                          Open
+                          {t('common.open')}
                         </Button>
                         <Button size='small' color='error' variant='text' sx={{marginLeft: '8px', textTransform: 'none'}} onClick={() => setDeleteProject(project)}>
-                          Delete
+                          {t('common.delete')}
                         </Button>
                         </span>
                     </TableCell>

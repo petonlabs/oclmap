@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 
 import Button from '@mui/material/Button'
 import ButtonGroup from '@mui/material/ButtonGroup'
@@ -21,6 +22,7 @@ import filter from 'lodash/filter'
 import orderBy from 'lodash/orderBy'
 
 const Model = ({ model, selected, onClick }) => {
+  const { t } = useTranslation();
   return (
     <MenuItem
       key={model.id}
@@ -30,7 +32,7 @@ const Model = ({ model, selected, onClick }) => {
       <ListItemText primary={model.name} secondary={model.id} />
       {
         model.default &&
-          <Chip sx={{margin: '0 2px'}} size='small' label='default' variant='contained' color='success' />
+          <Chip sx={{margin: '0 2px'}} size='small' label={t('common.default')} variant='contained' color='success' />
       }
       {
         model.hugging_face_id &&

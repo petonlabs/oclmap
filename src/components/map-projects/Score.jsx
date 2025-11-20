@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import { MATCH_TYPES } from './constants'
 import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
@@ -11,6 +12,7 @@ import isNaN from 'lodash/isNaN'
 
 
 const Score = ({concept, setShowHighlights, sx, isAIRecommended}) => {
+  const { t } = useTranslation();
   let percentile = concept?.search_meta?.search_normalized_score
   if(percentile && !isNumber(percentile))
     percentile = parseFloat(percentile)
@@ -34,7 +36,7 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended}) => {
         <ListItemIcon sx={{minWidth: 'auto', marginRight: '6px'}}>
           {
             isAIRecommended &&
-              <Tooltip title='AI Recommended'>
+              <Tooltip title={t('map_project.ai_recommended')}>
             <AssistantIcon color='primary' fontSize='small' sx={{marginRight: '4px'}} />
             </Tooltip>
           }

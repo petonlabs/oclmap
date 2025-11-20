@@ -5,6 +5,7 @@ import Tooltip from '@mui/material/Tooltip'
 import DownloadIcon from '@mui/icons-material/Download';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useTranslation } from 'react-i18next';
 
 const IkonButton = ({title, icon, onClick, color, disabled}) => {
   return (
@@ -25,6 +26,7 @@ const IkonButton = ({title, icon, onClick, color, disabled}) => {
 }
 
 const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving}) => {
+  const { t } = useTranslation();
   const lastSavedText = project?.updated_at ? moment(project.updated_at).fromNow() : false
   return (
     <span style={{textAlign: 'right'}}>
@@ -32,14 +34,14 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving}
         <IkonButton
           color='primary'
           onClick={onSave}
-          title='Save this project'
+          title={t('map_project.save_this_project')}
           disabled={!owner || !file?.name || isSaving}
           icon={<SaveIcon />}
         />
         <IkonButton
           color='secondary'
           onClick={onDownload}
-          title='Download this project as CSV'
+          title={t('map_project.download_this_project_as_csv')}
           icon={<DownloadIcon />}
         />
         {
@@ -48,7 +50,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving}
               color='error'
               disabled={isSaving}
               onClick={onDelete}
-              title='Delete this project'
+              title={t('map_project.delete_this_project')}
               icon={<DeleteIcon />}
             />
         }
@@ -57,8 +59,8 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving}
         (lastSavedText || isSaving) &&
           <div style={{fontSize: '11px', color: 'rgba(0, 0, 0, 0.6)', textAlign: 'right', marginTop: '-4px'}}>
             {
-              isSaving ? 'Saving...' :
-                `last saved ${lastSavedText}`
+              isSaving ? t('map_project.saving') :
+                t('map_project.last_saved', {time: lastSavedText})
             }
           </div>
       }

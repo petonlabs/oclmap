@@ -135,7 +135,7 @@ const LeftMenu = ({ isOpen, onClose }) => {
             <ListItemText primary={t('user.my_mapping_projects')} />
             {
               isInWaitlist() &&
-                <Chip size='small' variant='contained' label='Waitlist' color='primary' />
+                <Chip size='small' variant='contained' label={t('map_project.waitlist')} color='primary' />
             }
           </ListItemButton>
         </ListItem>

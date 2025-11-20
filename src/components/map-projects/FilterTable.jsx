@@ -6,8 +6,10 @@ import TableCell from '@mui/material/TableCell'
 import TableBody from '@mui/material/TableBody'
 import map from 'lodash/map'
 import isBoolean from 'lodash/isBoolean'
+import { useTranslation } from 'react-i18next';
 
 const FilterTable = ({filters, order, sx}) => {
+  const { t } = useTranslation();
   const normalizeKey = key => {
     if (key === "concept_class" || key === "properties__concept_class")
       return "concept_class";
@@ -48,8 +50,8 @@ const FilterTable = ({filters, order, sx}) => {
     }}>
       <TableHead>
         <TableRow>
-          <TableCell>Field</TableCell>
-          <TableCell>Value</TableCell>
+          <TableCell>{t('map_project.field')}</TableCell>
+          <TableCell>{t('map_project.value')}</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>

@@ -9,8 +9,10 @@ import Avatar from '@mui/material/Avatar';
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import { WHITE } from '../../common/colors';
+import { useTranslation } from 'react-i18next';
 
 const MatchSummaryCard = ({id, icon, label, count, loading, color, selected, onClick, size, isLast, dividerBgColor }) => {
+  const { t } = useTranslation();
   const isSelected = id === selected
   const isLarge = size === 'large'
   const _iconSize = (isLarge ? 32 : 24)
@@ -43,7 +45,7 @@ const MatchSummaryCard = ({id, icon, label, count, loading, color, selected, onC
                 </Box>
               </ListItemAvatar>
               <ListItemText
-                primary={label}
+                primary={t('map_project.view_' + label.toLowerCase())}
                 secondary={count?.toLocaleString()}
                 sx={{
                   paddingLeft: '12px',

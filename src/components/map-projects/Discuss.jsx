@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import moment from 'moment'
 
 import Timeline  from '@mui/lab/Timeline';
@@ -26,6 +27,7 @@ import orderBy from 'lodash/orderBy'
 
 
 const Discuss = ({ logs, onAdd }) => {
+  const { t } = useTranslation();
   const [comment, setComment] = React.useState('')
   const getTitle = log => {
     if(['mapped', 'unmapped', 'auto-matched', 'rejected'].includes(log.action)) {
@@ -42,7 +44,7 @@ const Discuss = ({ logs, onAdd }) => {
       return description
     }
     if (log.action === 'exclude')
-      return 'Excluded'
+      return t('map_project.excluded')
     if(['AIRecommendation'].includes(log.action))
       return `${log.action}: ${log.description}`
     if(['commented'].includes(log.action)) {
@@ -144,7 +146,7 @@ const Discuss = ({ logs, onAdd }) => {
           minRows={2}
           maxRows={4}
           value={comment}
-          label='Comment'
+          label={t('map_project.comment')}
           onChange={event => setComment(event.target.value || '')}
           sx={{
             '.MuiInputBase-root': {

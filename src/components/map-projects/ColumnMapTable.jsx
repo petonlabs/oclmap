@@ -15,6 +15,7 @@ import map from 'lodash/map';
 import omit from 'lodash/omit';
 import get from 'lodash/get'
 import orderBy from 'lodash/orderBy'
+import { useTranslation } from 'react-i18next';
 
 
 const HeaderAutocomplete = ({headers, isValid, ...rest}) => {
@@ -100,6 +101,7 @@ const TargetSourceAutoComplete = ({sources, possibleValue, selected, onChange, .
 }
 
 const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumnVisibilityModel, columnVisibilityModel, mappedSources, targetSourcesFromRows}) => {
+  const { t } = useTranslation();
   const [random, setRandom] = React.useState(0)
   const onValChange = (position, value, key) => {
     onUpdate(position, value, key)
@@ -109,9 +111,9 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
     <Table size='small' sx={{'.MuiTableCell-root': {padding: '3px 8px'}, ...sx}}>
       <TableHead>
         <TableRow>
-          <TableCell><b>Input Column</b></TableCell>
-          <TableCell><b>Mapped Field</b></TableCell>
-          <TableCell><b>Show</b></TableCell>
+          <TableCell><b>{t('map_project.input_column')}</b></TableCell>
+          <TableCell><b>{t('map_project.mapped_field')}</b></TableCell>
+          <TableCell><b>{t('common.show')}</b></TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
