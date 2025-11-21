@@ -180,11 +180,11 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
         !targetConcept?.url && !isEmpty(proposed) &&
           <>
             <div style={{marginLeft: '8px'}}>
-              <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Relationship</Typography>
+              <Typography component='div' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>{t('mapping.relationship')}</Typography>
               <Typography component='div' sx={{}}>{proposed?.map_type || '-'}</Typography>
             </div>
             <div style={{marginLeft: '24px', maxWidth: '45%'}}>
-              <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>Target Code</Typography>
+              <Typography component='span' sx={{color: 'rgba(0, 0, 0, 0.6)', fontSize: '12px'}}>{t('map_project.target_code')}</Typography>
               <div className='col-xs-12 padding-0'>
                 <ListItemText
                   className='searchable'
