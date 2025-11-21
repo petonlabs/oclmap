@@ -159,7 +159,7 @@ const Discuss = ({ logs, onAdd }) => {
           }}
         />
         <Button onClick={onClick} sx={{textTransform: 'none', marginTop: '8px'}} variant='outlined' color='primary'>
-          Comment
+          {t('map_project.comment')}
         </Button>
       </div>
     </>

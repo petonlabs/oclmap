@@ -124,7 +124,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                 }
                 {
                   leftMappings &&
-                    <><br/>Mappings: <i>{leftMappings}</i></>
+                    <><br/>{t('mapping.mappings')}: <i>{leftMappings}</i></>
                 }
               </span>
             }
@@ -161,7 +161,7 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
                           <ConceptSummaryProperties concept={targetConcept} repoVersion={repoVersion}  />
                           {
                             rightMappings &&
-                              <><br/>Mappings: <i>{rightMappings}</i></>
+                              <><br/>{t('mapping.mappings')}: <i>{rightMappings}</i></>
                           }
                         </span>
                       </div>

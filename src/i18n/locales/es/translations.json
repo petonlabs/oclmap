@@ -46,6 +46,7 @@
     "404": "Lo siento, no se pudo encontrar tu página."
   },
   "dashboard": {
+    "my": "Mi tablero",
     "name": "Tablero",
     "welcome_line": "Bienvenido a OCL.",
     "take_a_tour": "Haz un recorrido",
@@ -103,7 +104,8 @@
     "company": "Empresa",
     "location": "Ubicación",
     "website": "Sitio web",
-    "last_login": "Último inicio de sesión"
+    "last_login": "Último inicio de sesión",
+    "my_mapping_projects": "Mis proyectos de mapeo"
   },
   "search": {
     "filters": "Filtros",
@@ -275,7 +277,9 @@
     "view_all": "Todos",
     "view_unmapped": "No Mapeados",
     "view_proposed": "Propuestos",
-    "view_approved": "Aprobados"
+    "view_readyforreview": "Propuestos",
+    "view_approved": "Aprobados",
+    "view_reviewed": "Aprobados"
   },
   "app": {
     "web_version": "Versión Web",

@@ -495,7 +495,9 @@
     "view_all": "All",
     "view_unmapped": "Unmapped",
     "view_proposed": "Proposed",
-    "view_approved": "Approved"
+    "view_readyforreview": "Proposed",
+    "view_approved": "Approved",
+    "view_reviewed": "Approved"
   },
   "app": {
     "web_version": "Web Version",
