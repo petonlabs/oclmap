@@ -589,8 +589,8 @@ const MapProject = () => {
       setRowStatuses(_states)
       setProposed(_proposed)
 
-      let repoURL = projectData.target_repo_url || _repo?.url
-      let repoVersion = projectData.target_repo_url ? URIToParentParams(projectData.target_repo_url, true)?.repoVersion || 'HEAD' : _repo?.version
+      let repoURL = projectData?.target_repo_url || _repo?.url
+      let repoVersion = projectData?.target_repo_url ? URIToParentParams(projectData?.target_repo_url, true)?.repoVersion || 'HEAD' : _repo?.version
       if(repoURL) {
         fetchRepo(repoURL, _repo)
         fetchVersions(repoURL, repoVersion)
