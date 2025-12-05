@@ -44,10 +44,13 @@ const MappingDecisionResult = ({targetConcept, row, rowIndex, mapTypes, allMapTy
     let title = ''
     const id = getValue('ID')
     const name = getValue('name')
+    const synonyms = getValue('synonyms')
     if(id)
       title = `${id}:`
     if(name)
       title += name
+    else if(synonyms)
+      title += synonyms
     return title
   }
 
