@@ -500,7 +500,8 @@
     "view_proposed": "Proposed",
     "view_readyforreview": "Proposed",
     "view_approved": "Approved",
-    "view_reviewed": "Approved"
+    "view_reviewed": "Approved",
+    "enable_reranker": "Enable Re-ranker"
   },
   "app": {
     "web_version": "Web Version",

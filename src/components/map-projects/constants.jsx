@@ -89,8 +89,9 @@ export const DECISION_TABS = ['candidates', 'search', 'propose', 'discuss']
 export const SCORES_COLOR = {
   recommended: RECOMMEND_COLOR,
   available: AVAILABLE_COLOR,
-  unranked: UNRANKED_COLOR
+  low_ranked: UNRANKED_COLOR
 }
 
 export const SEMANTIC_BATCH_SIZE = 10
 export const ES_BATCH_SIZE = 50
+export const CANDIDATES_LIMIT = 30

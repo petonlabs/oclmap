@@ -282,7 +282,8 @@
     "view_proposed": "Propuestos",
     "view_readyforreview": "Propuestos",
     "view_approved": "Aprobados",
-    "view_reviewed": "Aprobados"
+    "view_reviewed": "Aprobados",
+    "enable_reranker": "Habilitar reranker"
   },
   "app": {
     "web_version": "Versión Web",

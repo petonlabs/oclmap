@@ -168,7 +168,8 @@ const MapProject = () => {
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
-  const [candidatesScore, setCandidatesScore] = React.useState({recommended: 100, available: 70})
+  const [reranker, setReranker] = React.useState(false)
+  const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
   const [filters, setFilters] = React.useState({})
   const [AIModel, setAIModel] = React.useState('')
 
@@ -222,6 +223,7 @@ const MapProject = () => {
   /*eslint no-undef: 0*/
   let AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
+  const CANDIDATES_LIMIT = reranker ? 30 : 10
 
 
   // algos - computed based on current language
@@ -230,9 +232,9 @@ const MapProject = () => {
     {id: 'llm', label: t('map_project.algorithm_llm_label'), description: t('map_project.algorithm_llm_description'), disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
     {id: 'custom', label: t('map_project.algorithm_custom_label'), description: t('map_project.algorithm_custom_description')}
   ], [t, toggles?.SEMANTIC_SEARCH_TOGGLE])
-  
+
   const [algos, setAlgos] = React.useState(baseAlgos)
-  
+
   React.useEffect(() => {
     setAlgos(baseAlgos)
   }, [baseAlgos])
@@ -337,6 +339,7 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setMatchAPI(response.data?.match_api_url)
       setMatchAPIToken(response.data?.match_api_token)
+      setReranker(Boolean(response.data?.reranker))
       if(response.data?.match_api_url)
         setSemanticBatchSize(response.data?.batch_size || SEMANTIC_BATCH_SIZE)
       setCandidatesScore(response.data?.score_configuration)
@@ -650,6 +653,7 @@ const MapProject = () => {
       formData.append('match_api_token', '')
     }
     formData.append('filters', JSON.stringify(getFilters()))
+    formData.append('reranker', reranker)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(project?.id)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
@@ -791,11 +795,12 @@ const MapProject = () => {
 
       const payload = getPayloadForMatching(rowBatch, _repo)
       let extraParams = autoMatchLoadCandidates ? {
-        limit: 10,
+        limit: CANDIDATES_LIMIT,
         verbose: true,
         includeMappings: true,
         mappingBrief: true,
         mapTypes: 'SAME-AS,SAME AS,SAME_AS',
+        reranker: reranker
       } : {
         bestMatch: true
       }
@@ -1123,7 +1128,7 @@ const MapProject = () => {
       let maxScore = 100.1
       let noScore = false
       let rowIndexes = []
-      if(selectedCandidatesScoreBucket === 'unranked' ) {
+      if(selectedCandidatesScoreBucket === 'low_ranked' ) {
         minScore = -0.1
         maxScore = candidatesScore.available
         noScore = true
@@ -1165,7 +1170,7 @@ const MapProject = () => {
     return rows
   }
 
-  const unrankedCount = filter(mapSelected, target => !target?.search_meta?.search_normalized_score || target?.search_meta?.search_normalized_score < candidatesScore.available)?.length
+  const lowRankedCount = filter(mapSelected, target => !target?.search_meta?.search_normalized_score || target?.search_meta?.search_normalized_score < candidatesScore.available)?.length
   const availableCount = filter(mapSelected, target => target?.search_meta?.search_normalized_score >= candidatesScore.available && target?.search_meta?.search_normalized_score < candidatesScore.recommended)?.length
   const recommendedCount = filter(mapSelected, target => target?.search_meta?.search_normalized_score >= candidatesScore.recommended)?.length
 
@@ -1457,7 +1462,8 @@ const MapProject = () => {
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
-          limit: 10,
+          reranker: reranker,
+          limit: CANDIDATES_LIMIT,
           offset: offset || 0,
           semantic: ['llm', 'custom'].includes(algo)
         }).then(response => {
@@ -1656,7 +1662,7 @@ const MapProject = () => {
       return 'recommended'
     if(score >= candidatesScore.available)
       return 'available'
-    return 'unranked'
+    return 'low_ranked'
   }
 
 
@@ -1760,7 +1766,7 @@ const MapProject = () => {
             repo={repoVersion}
             bridgeRepoURL='/orgs/CIEL/sources/CIEL/'
             token={(algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null}
-            limit={10}
+            limit={CANDIDATES_LIMIT}
             user={user}
             ref={bridgeRef}
           />
@@ -1833,6 +1839,8 @@ const MapProject = () => {
                     setFilters={setFilters}
                     locales={locales}
                     isLoadingLocales={isLoadingLocales}
+                    reranker={reranker}
+                    setReranker={setReranker}
                   />
                 </div>
           }
@@ -1980,7 +1988,7 @@ const MapProject = () => {
                   onClick={bucket => setSelectedCandidatesScoreBucket(selectedCandidatesScoreBucket === bucket ? false : bucket)}
                   recommended={recommendedCount}
                   available={availableCount}
-                  unranked={unrankedCount}
+                  low_ranked={lowRankedCount}
                 />
                 <div style={{display: 'inline-block'}}>
                 {
@@ -2279,6 +2287,8 @@ const MapProject = () => {
                 setFilters={setFilters}
                 locales={locales}
                 isLoadingLocales={isLoadingLocales}
+                reranker={reranker}
+                setReranker={setReranker}
               />
             </div> :
           (
@@ -2438,6 +2448,7 @@ const MapProject = () => {
                 onClose={() => setShowHighlights(false)}
                 highlight={showHighlights?.search_meta?.search_highlight || []}
                 score={parseFloat(showHighlights?.search_meta?.search_normalized_score || 0).toFixed(2)}
+                raw_score={parseFloat(showHighlights?.search_meta?.search_score || 0).toFixed(2)}
               />
             </>
           )

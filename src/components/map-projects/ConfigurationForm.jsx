@@ -26,7 +26,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 
-import { toV3URL } from '../../common/utils'
+import { toV3URL, hasAuthGroup, getCurrentUser } from '../../common/utils'
+import { MAPPER_CROSS_ENCODER_GROUP } from '../../common/constants'
 import NamespaceDropdown from '../common/NamespaceDropdown'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
@@ -49,9 +50,10 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
+  const canApplyReranking = hasAuthGroup(getCurrentUser(), MAPPER_CROSS_ENCODER_GROUP)
 
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
   const onAlgoChange = id => {
@@ -286,6 +288,23 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
             />
           </>
       }
+      {
+        canApplyReranking && algo != 'es' &&
+          <FormControlLabel
+            sx={{marginLeft: '-4px'}}
+            size='small'
+            control={
+              <Checkbox
+                size='small'
+                checked={reranker}
+                sx={{padding: '8px 4px'}}
+                onChange={() => setReranker(!reranker)}
+              />
+            }
+            label={t('map_project.enable_reranker')}
+          />
+
+      }
       <>
         <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
           {t('map_project.score_configuration')}
@@ -295,7 +314,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         </FormHelperText>
         <ScoreConfiguration scores={candidatesScore} onChange={onScoreChange} />
         <div className='col-xs-12' style={{fontSize: '12px', margin: '-4px 0 16px 0'}}>
-          <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.unranked}}>
+          <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.low_ranked}}>
             {`${t('map_project.not_recommended')} (<${candidatesScore.available}%)`}
           </div>
           <div className='col-xs-4' style={{padding: '6px 16px', backgroundColor: SCORES_COLOR.available}}>

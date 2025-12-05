@@ -29,6 +29,7 @@ export const OCL_SERVERS_GROUP = 'ocl_servers';
 export const OCL_FHIR_SERVERS_GROUP = 'ocl_fhir_servers';
 export const HAPI_FHIR_SERVERS_GROUP = 'hapi_fhir_servers';
 export const OPERATIONS_PANEL_GROUP = 'operations_panel';
+export const MAPPER_CROSS_ENCODER_GROUP = 'mapper_cross_encoder'
 export const AUTH_GROUPS = [
   {id: OCL_SERVERS_GROUP, name: 'OCL Servers'},
   {id: OCL_FHIR_SERVERS_GROUP, name: 'OCL FHIR Servers'},

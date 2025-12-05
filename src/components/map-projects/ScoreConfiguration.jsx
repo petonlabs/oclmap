@@ -19,7 +19,7 @@ const ScoreConfiguration = ({scores, onChange}) => {
             backgroundColor: SCORES_COLOR.recommended,
           },
           '.MuiSlider-thumb[data-index="0"]': {
-            backgroundColor: SCORES_COLOR.unranked
+            backgroundColor: SCORES_COLOR.low_ranked
           },
           '.MuiSlider-thumb[data-index="1"]': {
             backgroundColor: SCORES_COLOR.recommended
@@ -28,7 +28,7 @@ const ScoreConfiguration = ({scores, onChange}) => {
         value={[scores.available, scores.recommended]}
         onChange={_onChange}
         valueLabelDisplay="auto"
-        step={5}
+        step={1}
         marks
         disableSwap
       />

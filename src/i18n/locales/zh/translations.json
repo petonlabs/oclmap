@@ -492,7 +492,8 @@
     "view_proposed": "已提议",
     "view_readyforreview": "已提议",
     "view_approved": "已批准",
-    "view_reviewed": "已批准"
+    "view_reviewed": "已批准",
+    "enable_reranker": "启用重排序器"
   },
   "app": {
     "web_version": "Web 版本",

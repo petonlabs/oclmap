@@ -16,7 +16,7 @@ import map from 'lodash/map'
 import Link from '../common/Link'
 
 
-const SearchHighlightsDialog = ({onClose, highlight, score, open}) => {
+const SearchHighlightsDialog = ({onClose, highlight, score, raw_score, open}) => {
   const { t } = useTranslation()
   return (
     <Dialog
@@ -82,6 +82,23 @@ const SearchHighlightsDialog = ({onClose, highlight, score, open}) => {
                   sx={{ color: 'text.primary', display: 'flex', fontWeight: 'bold' }}
                 >
                   {score}
+                </Typography>
+              }
+            />
+          </ListItem>
+          <ListItem>
+            <ListItemText
+              sx={{
+                '.MuiListItemText-primary': {color: 'surface.dark', fontSize: '12px'},
+                '.MuiListItemText-secondary': {color: 'default.light', fontSize: '14px'}
+              }}
+              primary={t('search.search_raw_score')}
+              secondary={
+                <Typography
+                  component="span"
+                  sx={{ color: 'text.primary', display: 'flex', fontWeight: 'bold' }}
+                >
+                  {raw_score}
                 </Typography>
               }
             />

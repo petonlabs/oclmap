@@ -67,8 +67,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
       ]
     return cols
   }
+  const count = candidates.length
 
-  return candidates.length > 0 ? (
+  return count > 0 ? (
     <ul>
       <SearchResults
         id={rowIndex}
@@ -92,13 +93,15 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           (showAnalysis && openAnalysis) ? (
             <div className='col-xs-12 padding-0' style={{display: 'inline-flex', flexDirection: 'column'}}>
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
-              <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px'}}>
+              <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px'}}>
                 <b>{header}</b>
+                <b>{count.toLocaleString()}</b>
               </ListSubheader>
             </div>
           ) :
-            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-block', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
-            <b>{header}</b>
+            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
+              <b>{header}</b>
+              <b>{count.toLocaleString()}</b>
           </ListSubheader>
         }
         title=' '
@@ -152,7 +155,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const canFetchMore = concepts?.length > 0
   let recommended = []
   let available = []
-  let unranked = []
+  let lowRanked = []
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
 
   concepts.forEach(concept => {
@@ -162,7 +165,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     else if (score >= availableScore)
       available.push(concept)
     else
-      unranked.push(concept)
+      lowRanked.push(concept)
   })
   let props = {
     rowIndex: rowIndex,
@@ -303,7 +306,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={unranked} header={t('map_project.unranked_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.unranked} bucketId={`${rowIndex}-unranked`} noToolbar />
+              <CandidateList {...props} candidates={lowRanked} header={t('map_project.low_ranked_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.low_ranked} bucketId={`${rowIndex}-low-ranked`} noToolbar />
             }
           </li>
           <li>

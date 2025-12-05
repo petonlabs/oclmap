@@ -26,7 +26,7 @@ const BucketButton = ({id, selected, onClick, count}) => {
   </Badge>
 }
 
-const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, available, unranked}) => {
+const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, available, low_ranked}) => {
   const getSortIcon = () => {
     if(sortBy === 'desc')
       return <DownIcon fontSize='inherit' />
@@ -34,13 +34,13 @@ const ScoreBucketButton = ({onClick, onSort, sortBy, selected, recommended, avai
       return <UpIcon fontSize='inherit' />
     return <SortIcon />
   }
-  const disabled = !recommended && !available && !unranked
-  const selectedCount = selected === 'recommended' ? recommended : (selected === 'available' ? available : unranked)
+  const disabled = !recommended && !available && !low_ranked
+  const selectedCount = selected === 'recommended' ? recommended : (selected === 'available' ? available : low_ranked)
   return (
     <ButtonGroup size='small' variant='text' sx={{marginRight: '8px', marginLeft: '12px'}}>
       <BucketButton id='recommended' selected={selected} count={recommended} onClick={onClick} />
       <BucketButton id='available' selected={selected} count={available} onClick={onClick} />
-      <BucketButton id='unranked' selected={selected} count={unranked} onClick={onClick} />
+      <BucketButton id='low_ranked' selected={selected} count={low_ranked} onClick={onClick} />
       {
         !disabled && selected && selectedCount > 1 &&
           <Button onClick={onSort}>{getSortIcon()}</Button>
