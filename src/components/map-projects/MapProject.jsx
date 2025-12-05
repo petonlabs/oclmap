@@ -794,6 +794,13 @@ const MapProject = () => {
       if (abortRef.current) return [];
 
       const payload = getPayloadForMatching(rowBatch, _repo)
+      payload.rows = filter(payload.rows, row => values(omit(row, '__index')).length > 0)
+      if(!payload.rows.length) {
+        setAlert({message: t('map_project.no_valid_columns_for_matching')})
+        setTimeout(() => setAlert(false), 6000)
+        return []
+      }
+
       let extraParams = autoMatchLoadCandidates ? {
         limit: CANDIDATES_LIMIT,
         verbose: true,
@@ -1443,13 +1450,22 @@ const MapProject = () => {
     setAlert(false)
     if(isAnyValidColumn()) {
       let __row = isEmpty(_row) ? row : _row
+      const payload = getPayloadForMatching([__row], repo, _filters)
+
+      if(!values(omit(payload.rows[0], '__index')).length){
+        setAlert({message: t('map_project.no_valid_columns_for_matching')})
+        setTimeout(() => setAlert(false), 6000)
+        return
+      }
+
       const existingCandidates = find(otherMatchedConcepts, c => c.row.__index === __row.__index)?.results
+
       if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
         setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
         return
       }
       setIsLoadingInDecisionView(true)
-      const payload = getPayloadForMatching([__row], repo, _filters)
+
       const service = getMatchAPIService()
       service.post(
         payload,
