@@ -33,9 +33,9 @@ const MapProjects = () => {
     fetchOrgProjects()
   }
 
-  const fetchUserProjects = () => APIService.users(user.username).appendToUrl('map-projects/?verbose=true').get().then(handleProjectsResponse)
+  const fetchUserProjects = () => APIService.users(user.username).appendToUrl('map-projects/').get().then(handleProjectsResponse)
 
-  const fetchOrgProjects = () => APIService.users(user.username).appendToUrl('orgs/map-projects/?verbose=true').get().then(handleProjectsResponse)
+  const fetchOrgProjects = () => APIService.users(user.username).appendToUrl('orgs/map-projects/').get().then(handleProjectsResponse)
 
   const handleProjectsResponse = response => {
     setProjects(prev => [...prev, ...(response?.data || [])])
