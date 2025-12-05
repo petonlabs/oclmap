@@ -124,7 +124,8 @@
     "search_this_repository": "Buscar en este repositorio",
     "search_all_concepts": "Buscar todos los conceptos",
     "search_results": "Resultados de Búsqueda",
-    "search_score": "Puntuación de Búsqueda"
+    "search_score": "Puntuación de Búsqueda",
+    "search_raw_score": "Puntuación Bruta de Búsqueda"
   },
   "locale": {
     "add_custom_language_codes": "Agregar código(s) de idioma personalizado(s)",
@@ -175,6 +176,7 @@
     "available": "Disponible",
     "recommended": "Recomendado",
     "unranked": "Sin Clasificar",
+    "low_ranked": "De baja clasificación",
     "field_configuration": "Configuración de Campo",
     "field_configuration_description": "Asocie campos en los datos de entrada con campos que los algoritmos de coincidencia puedan entender. Asigne campos de entrada que contengan códigos de concepto o mapeos a repositorios específicos. Aprenda más",
     "input_column": "Columna de Entrada",
@@ -262,6 +264,7 @@
     "recommended_candidates": "Candidatos Recomendados",
     "available_candidates": "Candidatos Disponibles",
     "unranked_candidates": "Candidatos Sin Clasificar",
+    "low_ranked_candidates": "Candidatos de baja clasificación",
     "ciel_bridge_terminology_candidates": "Candidatos de Terminología Puente CIEL",
     "fetching": "Obteniendo...",
     "fetch_more": "Obtener Más",

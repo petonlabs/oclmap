@@ -317,7 +317,8 @@
     "score": "评分",
     "search_highlight": "搜索亮点",
     "search_results": "搜索结果",
-    "search_score": "搜索评分"
+    "search_score": "搜索评分",
+    "search_raw_score": "原始搜索评分"
   },
   "url_registry": {
     "url_registry": "规范型 URL 注册库",
@@ -385,6 +386,7 @@
     "available": "可用",
     "recommended": "推荐",
     "unranked": "未排名",
+    "low_ranked": "低排名",
     "field_configuration": "字段配置",
     "field_configuration_description": "将输入数据中的字段与匹配算法能够理解的字段关联。将包含概念代码或映射的输入字段分配给特定存储库。了解更多",
     "input_column": "输入列",
@@ -472,6 +474,7 @@
     "recommended_candidates": "推荐候选对象",
     "available_candidates": "可用候选对象",
     "unranked_candidates": "未排名候选对象",
+    "low_ranked_candidates": "低排名候选人",
     "ciel_bridge_terminology_candidates": "CIEL 桥接术语候选对象",
     "fetching": "正在获取...",
     "fetch_more": "获取更多",

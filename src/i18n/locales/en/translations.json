@@ -326,7 +326,8 @@
     "score": "Score",
     "search_highlight": "Search Highlight",
     "search_results": "Search Results",
-    "search_score": "Search Score"
+    "search_score": "Search Score",
+    "search_raw_score": "Search Raw Score"
   },
   "url_registry": {
     "url_registry": "Canonical URL registry",
@@ -394,6 +395,7 @@
     "available": "Available",
     "recommended": "Recommended",
     "unranked": "Unranked",
+    "low_ranked": "Low Ranked",
     "field_configuration": "Field Configuration",
     "field_configuration_description": "Associate fields in the input data to fields that the matching algorithms are able to understand. Assign input fields that contain concept codes or mappings to specific repositories. Learn more",
     "input_column": "Input Column",
@@ -480,6 +482,7 @@
     "recommended_candidates": "Recommended Candidates",
     "available_candidates": "Available Candidates",
     "unranked_candidates": "Unranked Candidates",
+    "low_ranked_candidates": "Low Ranked Candidates",
     "ciel_bridge_terminology_candidates": "CIEL Bridge Terminology Candidates",
     "fetching": "Fetching...",
     "fetch_more": "Fetch More",
