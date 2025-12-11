@@ -82,7 +82,7 @@ import times from 'lodash/times'
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup, downloadObject } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -110,6 +110,7 @@ import Discuss from './Discuss'
 import ScoreBucketButton from './ScoreBucketButton'
 import Concept from './Concept'
 import AIAssistantButton from './AIAssistantButton'
+import ImportToCollection from './ImportToCollection'
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
@@ -217,6 +218,10 @@ const MapProject = () => {
   const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
   const [analysis, setAnalysis] = React.useState({})
   const [AIModels, setAIModels] = React.useState([])
+
+  // import
+  const [openImportToCollection, setOpenImportToCollection] = React.useState(false)
+  const [imports, setImports] = React.useState([])
 
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
@@ -611,6 +616,69 @@ const MapProject = () => {
     setColumns(cols)
   }
 
+
+  const getReferencesForImport = (collection) => {
+    return map(mapSelected, data => {
+      let url = data?.url
+
+      if(data?.repo?.version_url)
+        url = data.repo.version_url + 'concepts/' + data.id + '/'
+      else if(data?.repo?.url)
+        url = data.repo.url + 'concepts/' + data.id + '/'
+      return {
+        collection_url: collection.url,
+        type: 'Reference',
+        data: {expressions: [url]}
+      }
+    })
+  }
+
+  const onImport = collection => {
+    setOpenImportToCollection(false)
+    const references = getReferencesForImport(collection)
+    if(references.length > 0) {
+      APIService.new().overrideURL('/importers/bulk-import/').post({data: references}).then(response => {
+        if(response.status === 202) {
+          setAlert({message: t('map_project.import_accepted'), duration: 5, severity: 'success'})
+          const id = response.data.id
+          if(['STARTED', 'PENDING', 'RECEIVED'].includes(response.data.state)) {
+            response.data.interval = setInterval(() => updateImportStatus(id), 1000)
+          }
+          setImports([...imports, response.data])
+
+        } else {
+          setAlert({message: t('map_project.import_failed'), duration: 2, severity: 'error'})
+        }
+      })
+    }
+  }
+
+  const updateImportStatus = importId => {
+    if(!importId)
+      return
+    APIService.new().overrideURL(`/importers/bulk-import/?task=${importId}`).get().then(response => {
+      setImports(prev => {
+        let index = findIndex(prev, {id: importId})
+        let oldResponse = prev[index]
+        if(oldResponse.interval && !['STARTED', 'PENDING', 'RECEIVED'].includes(response.data.state))
+          clearInterval(oldResponse.interval)
+        const updated = [...prev];
+        updated[index] = {...response.data, interval: oldResponse.interval}
+        return updated
+      })
+    })
+  }
+
+  const downloadImportReport = importId => {
+    if(!importId)
+      return
+    APIService.new().overrideURL('/importers/bulk-import/').get(null, null, {task: importId, result: 'json'}).then(res => {
+      if(get(res, 'data')) {
+        downloadObject(JSON.stringify(res.data, undefined, 2), 'application/json', `${importId}.json`)
+      }
+    })
+  }
+
   const onSave = () => {
     setIsSaving(true)
     const f = getFileObjectFromRows()
@@ -776,7 +844,6 @@ const MapProject = () => {
     }
     return service
   }
-
 
   const getRowsResults = async (rows) => {
     abortRef.current = false;
@@ -1860,7 +1927,7 @@ const MapProject = () => {
                   />
                 </div>
           }
-          <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', justifyContent: 'space-between'}}>
+            <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
             {
               !(configure && !file?.name) &&
                 <span style={{display: 'flex', alignItems: 'center'}}>
@@ -1943,6 +2010,9 @@ const MapProject = () => {
                   owner={owner}
                   file={file}
                   isSaving={isSaving}
+                  onImport={isEmpty(mapSelected) ? false : () => setOpenImportToCollection(true)}
+                  importResponse={imports[0]}
+                  onDownloadImportReport={downloadImportReport}
                 />
             }
           </div>
@@ -2528,6 +2598,13 @@ const MapProject = () => {
             />
           </Dialog>
       }
+
+      <ImportToCollection
+        onImport={onImport}
+        rowStatuses={rowStatuses}
+        open={openImportToCollection}
+        onClose={() => setOpenImportToCollection(false)}
+      />
     </div>
   )
 }

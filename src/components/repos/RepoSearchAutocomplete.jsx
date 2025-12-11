@@ -2,7 +2,7 @@ import React from 'react';
 import { TextField, CircularProgress, Divider } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useTranslation } from 'react-i18next';
-import { get, debounce, map, find } from 'lodash'
+import { get, debounce, map, find, forEach } from 'lodash'
 import APIService from '../../services/APIService';
 import AutocompleteLoading from '../common/AutocompleteLoading';
 import RepoListItem from './RepoListItem';
@@ -10,20 +10,20 @@ import GroupHeader from '../common/GroupHeader'
 import GroupItems from '../common/GroupItems'
 
 
-const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersForSearch, size, suggested, sx, value}) => {
+const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersForSearch, size, suggested, sx, value, repoType, ownRepo, autoFocus}) => {
   const { t } = useTranslation();
   const minLength = minCharactersForSearch || 2;
   const [input, setInput] = React.useState('')
   const [open, setOpen] = React.useState(false)
-  const [sources, setSources] = React.useState(map(suggested || [], instance => ({...instance, resultType: t('repo.suggested_sources')})))
+  const [repos, setRepos] = React.useState(map(suggested || [], instance => ({...instance, resultType: t('repo.suggested_sources')})))
   const [selected, setSelected] = React.useState(undefined)
   const [loading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
     if(value?.url !== selected?.url && value?.url) {
       setSelected(value)
-      if(!find(sources, {url: value.url})?.url)
-        setSources([value, ...sources])
+      if(!find(repos, {url: value.url})?.url)
+        setRepos([value, ...repos])
     }
   }, [value])
 
@@ -31,7 +31,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
   const handleInputChange = debounce((event, value, reason) => {
     setInput(value || '')
     if(reason !== 'reset' && value && value.length >= minLength)
-      fetchSources(value)
+      fetchRepos(value)
     else
       setLoading(false)
   }, 300)
@@ -43,15 +43,28 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
     onChange(id, item)
   }
 
-  const fetchSources = searchStr => {
+  const fetchRepos = searchStr => {
     setLoading(true)
-    setSources([])
+    setRepos([])
     const query = {limit: 25, q: searchStr, includeSummary: true}
-    APIService.sources().get(null, null, query).then(response => {
-      const sources = response.data
-      setSources(map(sources, source => ({...source, resultType: t('search.search_results')})))
-      setLoading(false)
+    const services = getRepoServices()
+    let count = services.length
+    forEach(services, service => {
+      service.get(null, null, query).then(response => {
+        count -= 1
+        setRepos(prev => {
+          return [...prev, ...map(response.data, repo => ({...repo, resultType: t('search.search_results')}))]
+        })
+        if(count === 0)
+          setLoading(false)
+      })
     })
+  }
+
+  const getRepoServices = () => {
+    if(repoType && ownRepo)
+      return [APIService.user()[repoType](), APIService.user()['orgs/' + repoType]()]
+    return [APIService.sources()]
   }
 
   return (
@@ -65,9 +78,9 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
       onClose={() => setOpen(false)}
       isOptionEqualToValue={(option, value) => option.url === get(value, 'url')}
       value={selected || ''}
-      id={id || 'source'}
+      id={id || 'repo'}
       size={size || 'medium'}
-      options={sources}
+      options={repos}
       loading={loading}
       loadingText={
         loading ?
@@ -79,7 +92,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
       fullWidth
       required={required}
       onInputChange={handleInputChange}
-      onChange={(event, item) => handleChange(event, id || 'source', item)}
+      onChange={(event, item) => handleChange(event, id || 'repo', item)}
       groupBy={option => option.resultType}
       renderGroup={params => (
         <li style={{listStyle: 'none'}} key={params.key}>
@@ -91,6 +104,7 @@ const RepoSearchAutocomplete = ({onChange, label, id, required, minCharactersFor
         params => (
           <TextField
             {...params}
+            autoFocus={autoFocus}
             value={input || ''}
             required
             label={label || t('map_project.source')}

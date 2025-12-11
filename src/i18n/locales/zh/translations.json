@@ -89,7 +89,13 @@
     "from": "始于",
     "target": "目标",
     "properties": "特性",
-    "custom": "自定义"
+    "custom": "自定义",
+    "apply": "应用",
+    "reset": "重置",
+    "checking_auth": "正在检查授权...",
+    "default": "默认",
+    "report": "报告",
+    "import": "导入"
   },
   "errors": {
     "404": "很抱歉，未能找到您的页面。",
@@ -243,7 +249,8 @@
     "repo_version_summary": "存储库版本摘要",
     "repo_summary_is_calculating": "正在计算处理存储库摘要数据，请请稍后再回来查看。",
     "no_overview": "所有者尚未为该存储库创建概述页面",
-    "suggested_sources": "建议的来源"
+    "suggested_sources": "建议的来源",
+    "collection": "集合"
   },
   "org": {
     "my": "我的组织机构",
@@ -493,7 +500,15 @@
     "view_readyforreview": "已提议",
     "view_approved": "已批准",
     "view_reviewed": "已批准",
-    "enable_reranker": "启用重排序器"
+    "enable_reranker": "启用重排序器",
+    "import_accepted": "导入已接受",
+    "import_failed": "导入失败",
+    "import_this_project_in_collection": "将此项目导入到集合",
+    "import_to_collection": "导入到集合",
+    "concepts_will_be_added_to_this_collection": "{{count}} 概念将添加到集合 <0>{{collectionName}}</0>",
+    "click_to_download_import_report": "点击下载导入报告",
+    "approved_target_concepts_only": "仅批准的目标概念",
+    "all_approved_and_proposed_target_concepts": "所有批准和提议的目标概念"
   },
   "app": {
     "web_version": "Web 版本",

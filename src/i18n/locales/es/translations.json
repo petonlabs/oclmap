@@ -40,7 +40,9 @@
     "description": "Descripción",
     "attributes": "Atributos",
     "value": "Valor",
-    "default": "predeterminado"
+    "default": "predeterminado",
+    "report": "Reporte",
+    "import": "Importar"
   },
   "errors": {
     "404": "Lo siento, no se pudo encontrar tu página."
@@ -85,7 +87,8 @@
     "repo": "Repositorio",
     "repo_type": "Tipo de Repositorio",
     "manage": "Gestionar Repositorio",
-    "suggested_sources": "Fuentes Sugeridas"
+    "suggested_sources": "Fuentes Sugeridas",
+    "collection": "Colección"
   },
   "org": {
     "orgs": "Organizaciones",
@@ -283,7 +286,15 @@
     "view_readyforreview": "Propuestos",
     "view_approved": "Aprobados",
     "view_reviewed": "Aprobados",
-    "enable_reranker": "Habilitar reranker"
+    "enable_reranker": "Habilitar reranker",
+    "import_accepted": "Importación Aceptada",
+    "import_failed": "Importación Fallida",
+    "import_this_project_in_collection": "Importar este proyecto en la colección",
+    "import_to_collection": "Importar a Colección",
+    "concepts_will_be_added_to_this_collection": "{{count}} conceptos se agregarán a la colección <0>{{collectionName}}</0>",
+    "click_to_download_import_report": "Haga clic para descargar el informe de importación",
+    "approved_target_concepts_only": "Solo conceptos objetivo aprobados",
+    "all_approved_and_proposed_target_concepts": "Todos los conceptos objetivo aprobados y propuestos"
   },
   "app": {
     "web_version": "Versión Web",

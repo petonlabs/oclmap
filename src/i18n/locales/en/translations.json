@@ -94,7 +94,9 @@
     "apply": "Apply",
     "reset": "Reset",
     "checking_auth": "Checking auth...",
-    "default": "default"
+    "default": "default",
+    "report": "Report",
+    "import": "Import"
   },
   "errors": {
     "404": "Sorry your page could not be found.",
@@ -208,6 +210,7 @@
     "repo_type": "Repository Type",
     "source_type": "Source Type",
     "collection_type": "Collection Type",
+    "collection": "Collection",
     "manage": "Manage Repository",
     "repo_id": "Repository ID",
     "add_concept": "Add Concept",
@@ -501,7 +504,14 @@
     "view_readyforreview": "Proposed",
     "view_approved": "Approved",
     "view_reviewed": "Approved",
-    "enable_reranker": "Enable Re-ranker"
+    "import_accepted": "Import Accepted",
+    "import_failed": "Import Failed",
+    "import_this_project_in_collection": "Import target concepts to a collection",
+    "import_to_collection": "Import to Collection",
+    "concepts_will_be_added_to_this_collection": "{{count}} concepts will be added to the collection <0>{{collectionName}}</0>",
+    "click_to_download_import_report": "Click to download import report",
+    "approved_target_concepts_only": "Approved target concepts only",
+    "all_approved_and_proposed_target_concepts": "All approved and proposed target concepts"
   },
   "app": {
     "web_version": "Web Version",
