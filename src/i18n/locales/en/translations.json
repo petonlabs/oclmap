@@ -511,7 +511,8 @@
     "concepts_will_be_added_to_this_collection": "{{count}} concepts will be added to the collection <0>{{collectionName}}</0>",
     "click_to_download_import_report": "Click to download import report",
     "approved_target_concepts_only": "Approved target concepts only",
-    "all_approved_and_proposed_target_concepts": "All approved and proposed target concepts"
+    "all_approved_and_proposed_target_concepts": "All approved and proposed target concepts",
+    "enable_reranker": "Enable Reranker"
   },
   "app": {
     "web_version": "Web Version",
