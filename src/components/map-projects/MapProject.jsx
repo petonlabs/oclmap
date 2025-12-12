@@ -193,7 +193,6 @@ const MapProject = () => {
   const [showHighlights, setShowHighlights] = React.useState(false)
   const [showItem, setShowItem] = React.useState(false)
   const [autoMatchUnmappedOnly, setAutoMatchUnmappedOnly] = React.useState(true)
-  const [autoMatchLoadCandidates, setAutoMatchLoadCandidates] = React.useState(true)
   const [autoRunAIAnalysis, setAutoRunAIAnalysis] = React.useState(false)
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
@@ -883,15 +882,13 @@ const MapProject = () => {
         return []
       }
 
-      let extraParams = autoMatchLoadCandidates ? {
+      let extraParams = {
         limit: CANDIDATES_LIMIT,
         verbose: true,
         includeMappings: true,
         mappingBrief: true,
         mapTypes: 'SAME-AS,SAME AS,SAME_AS',
         reranker: reranker
-      } : {
-        bestMatch: true
       }
 
       try {
@@ -951,15 +948,14 @@ const MapProject = () => {
               })
               return prev
             })
-            if(autoMatchLoadCandidates)
-              forEach(data, concept => {
-                setOtherMatchedConcepts(prev => {
-                  return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
-                })
-                setCandidatesToSave(prev => {
-                  return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
-                })
+            forEach(data, concept => {
+              setOtherMatchedConcepts(prev => {
+                return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
               })
+              setCandidatesToSave(prev => {
+                return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
+              })
+            })
             setMatchedConcepts(prev => [...prev, ...data]);
             activeRequests.delete(promise); // Remove from active set after completion
           });
@@ -980,7 +976,7 @@ const MapProject = () => {
     await processWithConcurrency(repo);
 
     setTimeout(() => {
-      if(bridgeRef?.current?.canBridge() && autoMatchLoadCandidates)
+      if(bridgeRef?.current?.canBridge())
         fetchBulkBridgeCandidates(rows)
       else if(inAIAssistantGroup && autoRunAIAnalysis)
         setTimeout(() => runBulkAIAnalysis(rows), 1000)
@@ -2273,14 +2269,6 @@ const MapProject = () => {
             <FormHelperText sx={{marginTop: '-4px'}}>
               {
                 getHelperTextForAutoMatchUnmapped()
-              }
-            </FormHelperText>
-            <FormControlLabel sx={{marginTop: '0px', width: '100%'}} control={<Checkbox checked={autoMatchLoadCandidates} onChange={event => setAutoMatchLoadCandidates(event.target.checked)} />} label={t('map_project.load_candidates')} />
-            <FormHelperText sx={{marginTop: '-4px'}}>
-              {
-                autoMatchLoadCandidates ?
-                  t('map_project.load_candidates_note_enabled') :
-                  t('map_project.load_candidates_note_disabled')
               }
             </FormHelperText>
             {
