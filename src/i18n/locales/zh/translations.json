@@ -96,6 +96,7 @@
     "default": "默认",
     "report": "报告",
     "import": "导入",
+    "download_csv": "下載 CSV",
     "advance_settings": "高级设置"
   },
   "errors": {

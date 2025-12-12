@@ -43,6 +43,7 @@
     "default": "predeterminado",
     "report": "Reporte",
     "import": "Importar",
+    "download_csv": "Descargar CSV",
     "advance_settings": "Configuración avanzada"
   },
   "errors": {
