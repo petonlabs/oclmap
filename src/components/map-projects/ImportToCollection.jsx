@@ -40,7 +40,7 @@ const ImportToCollection = ({ onImport, onClose, open, rowStatuses }) => {
       }}
     >
       <DialogTitle sx={{padding: '12px 24px', color: 'surface.dark', fontSize: '22px', textAlign: 'left'}}>
-        {t('map_project.import_to_collection')}
+        {t('map_project.save_to_collection')}
       </DialogTitle>
       <DialogContent sx={{paddingTop: '8px !important'}}>
         <RepoSearchAutocomplete
@@ -95,9 +95,9 @@ const ImportToCollection = ({ onImport, onClose, open, rowStatuses }) => {
           size='small'
           sx={{textTransform: 'none', marginLeft: '12px'}}
           disabled={!collection?.url || !count}
-          onClick={() => onImport(collection)}
+          onClick={() => onImport(collection, scope)}
         >
-          {t('common.import')}
+          {t('common.save')}
         </Button>
         </DialogActions>
     </Dialog>

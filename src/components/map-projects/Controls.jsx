@@ -55,7 +55,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
               color='secondary'
               onClick={onImport}
               disabled={isRunningImport}
-              title={t('map_project.import_this_project_in_collection')}
+              title={t('map_project.save_this_project_to_collection')}
               icon={isRunningImport ? <CircularProgress size={20} /> : <RepoIcon noTooltip selected />}
             />
         }

@@ -616,9 +616,11 @@ const MapProject = () => {
     setColumns(cols)
   }
 
-
-  const getReferencesForImport = (collection) => {
-    return map(mapSelected, data => {
+  const getReferencesForImport = (collection, scope) => {
+    const approvedOnly = scope === 'approved'
+    return map(mapSelected, (data, index) => {
+      if(approvedOnly && !rowStatuses.reviewed.includes(parseInt(index)))
+        return null
       let url = data?.url
 
       if(data?.repo?.version_url)
@@ -633,9 +635,9 @@ const MapProject = () => {
     })
   }
 
-  const onImport = collection => {
+  const onImport = (collection, scope) => {
     setOpenImportToCollection(false)
-    const references = getReferencesForImport(collection)
+    const references = compact(getReferencesForImport(collection, scope))
     if(references.length > 0) {
       APIService.new().overrideURL('/importers/bulk-import/').post({data: references}).then(response => {
         if(response.status === 202) {
