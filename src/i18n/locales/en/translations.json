@@ -96,7 +96,8 @@
     "checking_auth": "Checking auth...",
     "default": "default",
     "report": "Report",
-    "import": "Import"
+    "import": "Import",
+    "download_csv": "Download CSV"
   },
   "errors": {
     "404": "Sorry your page could not be found.",
