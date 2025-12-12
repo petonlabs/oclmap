@@ -2271,6 +2271,7 @@ const MapProject = () => {
                 getHelperTextForAutoMatchUnmapped()
               }
             </FormHelperText>
+            <FormControlLabel sx={{width: '100%'}} control={<Checkbox checked={reranker} onChange={event => setReranker(event.target.checked)} />} label={t('map_project.enable_reranker')} />
             {
               inAIAssistantGroup &&
                 <>
