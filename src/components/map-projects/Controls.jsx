@@ -80,15 +80,15 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
       }
       {
         (importResponse?.state) &&
-          <div style={{fontSize: '11px', color: 'rgba(0, 0, 0, 0.6)', textAlign: 'right', marginTop: '2px'}}>
+          <div style={{fontSize: '11px', color: 'rgba(0, 0, 0, 0.6)', textAlign: 'right', marginTop: '-2px'}}>
             {`Import (${importResponse.state.toLowerCase()})`}:
             <Tooltip title={importResponse.id}>
-              <span onClick={() => copyToClipboard(importResponse.id)}>{`${importResponse.id.slice(0,8)}..${importResponse.id.slice(importResponse.id.length - 4, importResponse.id.length)}`}</span>
+              <span style={{marginLeft: '4px'}} onClick={() => copyToClipboard(importResponse.id)}>{`${importResponse.id.slice(0,8)}..${importResponse.id.slice(importResponse.id.length - 4, importResponse.id.length)}`}</span>
             </Tooltip>
             {
               importResponse?.state === 'SUCCESS' ?
                 <Tooltip title={t('map_project.click_to_download_import_report')}>
-                  <Button size='small' variant='text' sx={{textTransform: 'none', fontSize: '11px', minWidth: 'auto', '.MuiButton-endIcon': {marginLeft: '2px', marginRight: 0}}} onClick={() => onDownloadImportReport(importResponse.id)} endIcon={<DownloadIcon sx={{fontSize: '12px !important'}} />}>
+                  <Button size='small' variant='text' sx={{padding: '0 4px', textTransform: 'none', fontSize: '11px', minWidth: 'auto', '.MuiButton-endIcon': {marginLeft: '2px', marginRight: 0}}} onClick={() => onDownloadImportReport(importResponse.id)} endIcon={<DownloadIcon sx={{fontSize: '12px !important'}} />}>
                     {t('common.report')}
                   </Button>
                 </Tooltip> :
