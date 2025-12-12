@@ -95,7 +95,8 @@
     "checking_auth": "正在检查授权...",
     "default": "默认",
     "report": "报告",
-    "import": "导入"
+    "import": "导入",
+    "advance_settings": "高级设置"
   },
   "errors": {
     "404": "很抱歉，未能找到您的页面。",
@@ -508,7 +509,16 @@
     "concepts_will_be_added_to_this_collection": "{{count}} 概念将添加到集合 <0>{{collectionName}}</0>",
     "click_to_download_import_report": "点击下载导入报告",
     "approved_target_concepts_only": "仅批准的目标概念",
-    "all_approved_and_proposed_target_concepts": "所有批准和提议的目标概念"
+    "all_approved_and_proposed_target_concepts": "所有批准和提议的目标概念",
+    "would_you_like_to_cascade": "是否也要包含关联的概念（Concepts）和映射（Mappings）？",
+    "no_only_include_the_selected_resources": "否，仅包含所选资源",
+    "yes_include_associated_mappings_from_same_source": "是，包含来自同一来源的关联映射",
+    "yes_include_associated_mappings_and_target_concepts_from_same_source": "是，包含来自同一来源的关联映射和目标概念",
+    "yes_apply_openmrs_cascade": "是，应用与 OpenMRS 兼容的级联规则",
+    "openmrs_cascade_tooltip": "包含来自同一来源的关联映射和目标概念，并递归添加它们关联的答案概念、集合成员概念及其映射（例如：问答映射和概念集合映射）",
+    "transform_to_extensional_references": "转换为外延引用",
+    "transform_to_extensional_tooltip_1": "选中此复选框将指示 OCL 为每个单独的概念或映射创建独立的引用（即“外延”或“一对一”引用）。",
+    "transform_to_extensional_tooltip_2": "取消选中此复选框将指示 OCL 创建较少的引用，这些引用可以表示多个概念和映射（即“内涵”或“一对多”引用）。详情请参阅此 <0>YouTube 视频</0>。"
   },
   "app": {
     "web_version": "Web 版本",

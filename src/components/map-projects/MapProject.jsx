@@ -616,7 +616,7 @@ const MapProject = () => {
     setColumns(cols)
   }
 
-  const getReferencesForImport = (collection, scope) => {
+  const getReferencesForImport = (collection, scope, cascadeMethod, transformReferences) => {
     const approvedOnly = scope === 'approved'
     return map(mapSelected, (data, index) => {
       if(approvedOnly && !rowStatuses.reviewed.includes(parseInt(index)))
@@ -627,19 +627,32 @@ const MapProject = () => {
         url = data.repo.version_url + 'concepts/' + data.id + '/'
       else if(data?.repo?.url)
         url = data.repo.url + 'concepts/' + data.id + '/'
-      return {
+      const payload = {
         collection_url: collection.url,
         type: 'Reference',
         data: {expressions: [url]}
       }
+      if(transformReferences)
+        payload.__transform = 'extensional'
+      if(['sourcemappings', 'sourcetoconcepts'].includes(cascadeMethod))
+        payload.__cascade = cascadeMethod
+      else if(cascadeMethod === 'OpenMRSCascade')
+        payload.__cascade = {
+          "method": "sourcetoconcepts",
+          "cascade_levels": "*",
+          "map_types": "Q-AND-A,CONCEPT-SET",
+          "return_map_types": "*"
+        }
+      return payload
     })
   }
 
-  const onImport = (collection, scope) => {
+  const onImport = (collection, scope, cascadeMethod, transformReferences) => {
     setOpenImportToCollection(false)
-    const references = compact(getReferencesForImport(collection, scope))
+    const references = compact(getReferencesForImport(collection, scope, cascadeMethod, transformReferences))
     if(references.length > 0) {
-      APIService.new().overrideURL('/importers/bulk-import/').post({data: references}).then(response => {
+      const payload = {data: references}
+      APIService.new().overrideURL('/importers/bulk-import/').post(payload).then(response => {
         if(response.status === 202) {
           setAlert({message: t('map_project.import_accepted'), duration: 5, severity: 'success'})
           const id = response.data.id

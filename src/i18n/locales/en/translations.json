@@ -97,7 +97,8 @@
     "default": "default",
     "report": "Report",
     "import": "Import",
-    "download_csv": "Download CSV"
+    "download_csv": "Download CSV",
+    "advance_settings": "Advanced Settings"
   },
   "errors": {
     "404": "Sorry your page could not be found.",
@@ -513,7 +514,16 @@
     "click_to_download_import_report": "Click to download import report",
     "approved_target_concepts_only": "Approved target concepts only",
     "all_approved_and_proposed_target_concepts": "All approved and proposed target concepts",
-    "enable_reranker": "Enable Reranker"
+    "enable_reranker": "Enable Reranker",
+    "would_you_like_to_cascade": "Would you like to also include associated Concepts and Mappings?",
+    "no_only_include_the_selected_resources": "No, only include the selected resources",
+    "yes_include_associated_mappings_from_same_source": "Yes, include associated Mappings from the same source",
+    "yes_include_associated_mappings_and_target_concepts_from_same_source": "Yes, include associated Mappings and target Concepts from the same source",
+    "yes_apply_openmrs_cascade": "Yes, apply OpenMRS-compatible cascade",
+    "openmrs_cascade_tooltip": "Includes associated Mappings and target Concepts from the same source, and recursively adds any of their associated answer and set member concepts and mappings (e.g. Q-AND-A and CONCEPT-SET mappings)",
+    "transform_to_extensional_references": "Transform to extensional references",
+    "transform_to_extensional_tooltip_1": "Using this checkbox will instruct OCL to create separate references for each individual concept or mapping (i.e. 'extensional' or 'one-to-one' references).",
+    "transform_to_extensional_tooltip_2": "Uncheck this box to instruct OCL to create fewer references that can represent multiple concepts and mappings (i.e. 'intentional' or 'one-to-many' references). See this <0>YouTube video</0> for details."
   },
   "app": {
     "web_version": "Web Version",

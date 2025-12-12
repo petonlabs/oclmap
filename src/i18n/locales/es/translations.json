@@ -42,7 +42,8 @@
     "value": "Valor",
     "default": "predeterminado",
     "report": "Reporte",
-    "import": "Importar"
+    "import": "Importar",
+    "advance_settings": "Configuración avanzada"
   },
   "errors": {
     "404": "Lo siento, no se pudo encontrar tu página."
@@ -294,7 +295,16 @@
     "concepts_will_be_added_to_this_collection": "{{count}} conceptos se agregarán a la colección <0>{{collectionName}}</0>",
     "click_to_download_import_report": "Haga clic para descargar el informe de importación",
     "approved_target_concepts_only": "Solo conceptos objetivo aprobados",
-    "all_approved_and_proposed_target_concepts": "Todos los conceptos objetivo aprobados y propuestos"
+    "all_approved_and_proposed_target_concepts": "Todos los conceptos objetivo aprobados y propuestos",
+    "would_you_like_to_cascade": "¿También le gustaría incluir los Conceptos y Mappings asociados?",
+    "no_only_include_the_selected_resources": "No, incluir solo los recursos seleccionados",
+    "yes_include_associated_mappings_from_same_source": "Sí, incluir los Mappings asociados de la misma fuente",
+    "yes_include_associated_mappings_and_target_concepts_from_same_source": "Sí, incluir los Mappings asociados y los Conceptos de destino de la misma fuente",
+    "yes_apply_openmrs_cascade": "Sí, aplicar cascada compatible con OpenMRS",
+    "openmrs_cascade_tooltip": "Incluye los Mappings asociados y los Conceptos de destino de la misma fuente, y añade recursivamente cualquiera de sus conceptos y mappings asociados de respuestas y conjuntos (por ejemplo, mappings de PREGUNTA-Y-RESPUESTA y CONJUNTO-DE-CONCEPTOS)",
+    "transform_to_extensional_references": "Transformar a referencias extensionales",
+    "transform_to_extensional_tooltip_1": "Al marcar esta casilla, se indicará a OCL que cree referencias separadas para cada concepto o mapping individual (es decir, referencias «extensionales» o «uno a uno»).",
+    "transform_to_extensional_tooltip_2": "Desmarque esta casilla para indicar a OCL que cree menos referencias que puedan representar múltiples conceptos y mappings (es decir, referencias «intencionales» o «uno a muchos»). Consulte este <0>video de YouTube</0> para más detalles."
   },
   "app": {
     "web_version": "Versión Web",
