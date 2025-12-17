@@ -789,8 +789,8 @@ const MapProject = () => {
     if(!url)
       return
     setIsLoadingLocales(true)
-    APIService.new().overrideURL(url).appendToUrl('summary/').get(null, null, {verbose: true, distribution: 'name_locale'}).then(response => {
-      setLocales(map(response?.data?.distribution?.name_locale, 'locale'))
+    APIService.new().overrideURL(url).appendToUrl('summary/').get(null, null, {verbose: true, distribution: 'name_locale_list'}).then(response => {
+      setLocales(response?.data?.distribution?.name_locale_list || [])
       setIsLoadingLocales(false)
     })
   }
