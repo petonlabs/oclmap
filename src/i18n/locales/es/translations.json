@@ -302,7 +302,8 @@
     "openmrs_cascade_tooltip": "Incluye los Mappings asociados y los Conceptos de destino de la misma fuente, y añade recursivamente cualquiera de sus conceptos y mappings asociados de respuestas y conjuntos (por ejemplo, mappings de PREGUNTA-Y-RESPUESTA y CONJUNTO-DE-CONCEPTOS)",
     "transform_to_extensional_references": "Transformar a referencias extensionales",
     "transform_to_extensional_tooltip_1": "Al marcar esta casilla, se indicará a OCL que cree referencias separadas para cada concepto o mapping individual (es decir, referencias «extensionales» o «uno a uno»).",
-    "transform_to_extensional_tooltip_2": "Desmarque esta casilla para indicar a OCL que cree menos referencias que puedan representar múltiples conceptos y mappings (es decir, referencias «intencionales» o «uno a muchos»). Consulte este <0>video de YouTube</0> para más detalles."
+    "transform_to_extensional_tooltip_2": "Desmarque esta casilla para indicar a OCL que cree menos referencias que puedan representar múltiples conceptos y mappings (es decir, referencias «intencionales» o «uno a muchos»). Consulte este <0>video de YouTube</0> para más detalles.",
+    "sort_by_raw_score": "Ordenar por puntuación bruta"
   },
   "app": {
     "web_version": "Versión Web",

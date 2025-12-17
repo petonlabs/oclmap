@@ -2466,6 +2466,7 @@ const MapProject = () => {
                 {
                   decisionTab === 'candidates' && isSplitView &&
                     <Candidates
+                      reranker={reranker}
                       candidatesScore={candidatesScore}
                       rowIndex={rowIndex}
                       alert={alert}

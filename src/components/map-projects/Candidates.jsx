@@ -10,6 +10,8 @@ import List from '@mui/material/List';
 import Button from '@mui/material/Button'
 import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
+import ToggleButton from '@mui/material/ToggleButton';
+
 
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -138,8 +140,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   ): null
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker}) => {
   const { t } = useTranslation();
+  const [sortRaw, setSortRaw] = React.useState(false)
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
@@ -157,15 +160,20 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   let available = []
   let lowRanked = []
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
+  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
 
   concepts.forEach(concept => {
     let score = concept?.search_meta?.search_normalized_score || 0
-    if (score >= recommendedScore)
+    if(sortRaw)
       recommended.push(concept)
-    else if (score >= availableScore)
-      available.push(concept)
-    else
-      lowRanked.push(concept)
+    else {
+      if (score >= recommendedScore)
+        recommended.push(concept)
+      else if (score >= availableScore)
+        available.push(concept)
+      else
+        lowRanked.push(concept)
+    }
   })
   let props = {
     rowIndex: rowIndex,
@@ -184,6 +192,14 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     locales: locales
   }
 
+  const onSortByRawScore = () => {
+    let newOrder = !sortRaw
+    setSortRaw(newOrder)
+    if(newOrder)
+      onOrderChange('search_meta.search_score', 'desc')
+    else
+      onOrderChange('search_meta.search_normalized_score', 'desc')
+  }
 
   const onRecommend = () => {
     setOpenAIAnalysis(true)
@@ -193,13 +209,21 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const getRightControls = () => {
     if(inAIAssistantGroup)
       return (
+        <span style={{display: 'flex'}}>
+          {
+            reranker && !noCandidatesFound &&
+              <ToggleButton color='primary' value='check' selected={sortRaw} size='small' sx={{textTransform: 'none', padding: '5px'}} onChange={onSortByRawScore}>
+                {t('map_project.sort_by_raw_score')}
+              </ToggleButton>
+          }
         <AIAssistantButton
           models={models}
           selected={selectedModel}
           onClick={onRecommend}
           sx={{margin: '0 8px'}}
           onModelChange={onModelChange}
-        />
+          />
+        </span>
       )
 
     return ''
@@ -209,7 +233,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     setOpenAIAnalysis(isEmpty(analysis) ? false : (openAIAnalysis !== false))
   }, [rowIndex])
 
-  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
 
   return (
     <div className='col-xs-12 padding-0'>
@@ -274,9 +297,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               <CandidateList
                 {...props}
                 candidates={recommended}
-                header={t('map_project.recommended_candidates')}
+                header={sortRaw ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
                 onFetchMore={onFetchMore}
-                bgColor={SCORES_COLOR.recommended}
+                bgColor={sortRaw ? SCORES_COLOR.available : SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
                 noToolbar={false} onDisplayChange={setDisplay}
                 toolbarControl={
@@ -299,7 +322,14 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={available} header={t('map_project.available_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.available} bucketId={`${rowIndex}-available`} noToolbar />
+              <CandidateList
+                {...props}
+                candidates={available}
+                header={t('map_project.available_candidates')}
+                onFetchMore={onFetchMore}
+                bgColor={SCORES_COLOR.available}
+                bucketId={`${rowIndex}-available`}
+                noToolbar />
             }
           </li>
           <li>
