@@ -49,7 +49,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           color='secondary'
           onClick={onProjectLogsClick}
           title={t('map_project.project_logs_tooltip')}
-          disabled={!project.id}
+          disabled={!project?.id}
           icon={<TimelineIcon />}
         />
         <IkonButton
