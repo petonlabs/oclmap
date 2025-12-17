@@ -111,6 +111,7 @@ import ScoreBucketButton from './ScoreBucketButton'
 import Concept from './Concept'
 import AIAssistantButton from './AIAssistantButton'
 import ImportToCollection from './ImportToCollection'
+import ProjectLogs from './ProjectLogs';
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
@@ -198,8 +199,10 @@ const MapProject = () => {
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
   const [logs, setLogs] = React.useState({})
+  const [projectLogs, setProjectLogs] = React.useState([])
   const [filterModel, setFilterModel] = React.useState({ items: [] });
   const [retired, setRetired] = React.useState(false)
+  const [showProjectLogs, setShowProjectLogs] = React.useState(false)
 
   // repo state
   const [repo, setRepo] = React.useState(false)
@@ -294,7 +297,11 @@ const MapProject = () => {
       }
       setFilters(response.data?.filters || {})
       if(response.data.url) {
-        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => setLogs(response.data.logs || []))
+        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => {
+          setLogs(response.data.logs?.row_logs || [])
+          setProjectLogs(response.data.logs?.project_logs || [])
+          projectLog({action: 'Opened'})
+        })
       }
       if(response.data?.file_url) {
         fetch(response.data.file_url).then(res => res.text()).then(csvText => {
@@ -659,7 +666,10 @@ const MapProject = () => {
             response.data.interval = setInterval(() => updateImportStatus(id), 1000)
           }
           setImports([...imports, response.data])
-
+          projectLog({
+            action: 'saved_to_collection',
+            extras: {collection_url: collection.url, id: collection.id, task_id: id}
+          })
         } else {
           setAlert({message: t('map_project.import_failed'), duration: 2, severity: 'error'})
         }
@@ -674,7 +684,7 @@ const MapProject = () => {
       setImports(prev => {
         let index = findIndex(prev, {id: importId})
         let oldResponse = prev[index]
-        if(oldResponse.interval && !['STARTED', 'PENDING', 'RECEIVED'].includes(response.data.state))
+        if(oldResponse.interval && !['STARTED', 'PENDING', 'RECEIVED'].includes(response?.data?.state))
           clearInterval(oldResponse.interval)
         const updated = [...prev];
         updated[index] = {...response.data, interval: oldResponse.interval}
@@ -736,8 +746,9 @@ const MapProject = () => {
     }
     formData.append('filters', JSON.stringify(getFilters()))
     formData.append('reranker', reranker)
+    const isUpdate = Boolean(project?.id)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
-    if(project?.id)
+    if(isUpdate)
       service = service.appendToUrl(project.id + '/').put(formData, null, {"Content-Type": "multipart/form-data"})
     else
       service = service.post(formData, null, {"Content-Type": "multipart/form-data"})
@@ -745,13 +756,14 @@ const MapProject = () => {
     service.then(response => {
       setIsSaving(false)
       if(response?.data?.id) {
+        projectLog({action: isUpdate ? 'Updated' : 'Created'})
         setConfigure(false)
         setProject(response.data)
         if(response.data.url)
           history.push(response.data.url)
         baseSetAlert({severity: 'success', message: t('map_project.successfully_saved'), duration: 2000})
 
-        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: logs}).then(() => {})
+        APIService.new().overrideURL(response.data.url).appendToUrl('logs/').post({logs: {row_logs: logs, project_logs: projectLogs}}).then(() => {})
       }
     })
   }
@@ -759,6 +771,14 @@ const MapProject = () => {
   const log = (data, index) => {
     let idx = index === undefined ? rowIndex : index
     setLogs(prev => ({...prev, [idx]: [{...data, created_at: moment().toDate(), user: user.username || user.id}, ...(prev[idx] || [])]}))
+  }
+
+  const projectLog = data => {
+    const newLog = {...data, created_at: moment().toDate(), user: user.username || user.id}
+    const newLogs = [newLog, ...projectLogs]
+    setProjectLogs(prev => [newLog, ...prev])
+    if(project?.url)
+      APIService.new().overrideURL(project.url).appendToUrl('logs/').post({logs: {row_logs: logs, project_logs: newLogs}}).then(() => {})
   }
 
   const fetchRepo = (url, _repo) => APIService.new().overrideURL(url).get().then(response => setRepo(response.data?.id ? response.data : _repo))
@@ -1713,8 +1733,8 @@ const MapProject = () => {
     })
     return applied
   }
-
-  const isSplitView = Boolean(rowIndex !== undefined) || (configure && file?.name)
+  const equalSplitView = Boolean(rowIndex !== undefined) || (configure && file?.name)
+  const isSplitView = equalSplitView || (project?.id && showProjectLogs)
   const rows = getRows()
 
   const getConcept = concept => concept?.url ? conceptCache[concept.url] || concept : concept
@@ -1851,6 +1871,14 @@ const MapProject = () => {
     return t('map_project.auto_match_note_no_counts');
   };
 
+  const getSplitWidths = () => {
+    if(!isSplitView)
+      return [100, 0]
+    if(equalSplitView)
+      return [50, 50]
+    return [70, 30]
+  }
+
   return permissionDenied ? <Error403/> : (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       {
@@ -1870,7 +1898,7 @@ const MapProject = () => {
           <LoaderDialog open message={t('map_project.loading_project')}/>
       }
       <Split
-        sizes={isSplitView ? [50, 50] : [100, 0]} // initial % widths
+        sizes={getSplitWidths()}
         minSize={isSplitView ? 200 : 1000}
         expandToMin={false}
         gutterSize={isSplitView ? 6 : 0}
@@ -2024,6 +2052,7 @@ const MapProject = () => {
                   onImport={isEmpty(mapSelected) ? false : () => setOpenImportToCollection(true)}
                   importResponse={imports[0]}
                   onDownloadImportReport={downloadImportReport}
+                  onProjectLogsClick={() => setShowProjectLogs(!showProjectLogs)}
                 />
             }
           </div>
@@ -2382,6 +2411,7 @@ const MapProject = () => {
               />
             </div> :
           (
+            rowIndex !== undefined ?
             <>
               <div className='col-xs-12' style={{padding: '8px 16px', minWidth: '500px'}}>
                 <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -2541,7 +2571,7 @@ const MapProject = () => {
                 score={parseFloat(showHighlights?.search_meta?.search_normalized_score || 0).toFixed(2)}
                 raw_score={parseFloat(showHighlights?.search_meta?.search_score || 0).toFixed(2)}
               />
-            </>
+            </> : <ProjectLogs open={showProjectLogs} onClose={() => setShowProjectLogs(false) } logs={projectLogs} />
           )
         }
     </Paper>

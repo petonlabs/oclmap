@@ -521,7 +521,10 @@
     "transform_to_extensional_references": "Transform to extensional references",
     "transform_to_extensional_tooltip_1": "Using this checkbox will instruct OCL to create separate references for each individual concept or mapping (i.e. 'extensional' or 'one-to-one' references).",
     "transform_to_extensional_tooltip_2": "Uncheck this box to instruct OCL to create fewer references that can represent multiple concepts and mappings (i.e. 'intentional' or 'one-to-many' references). See this <0>YouTube video</0> for details.",
-    "sort_by_raw_score": "Sort by Raw Score"
+    "sort_by_raw_score": "Sort by Raw Score",
+    "project_logs": "Project Logs",
+    "project_logs_tooltip": "View project logs",
+    "saved_to_collection": "Saved to collection"
   },
   "app": {
     "web_version": "Web Version",

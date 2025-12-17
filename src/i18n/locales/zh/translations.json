@@ -517,7 +517,10 @@
     "transform_to_extensional_references": "转换为外延引用",
     "transform_to_extensional_tooltip_1": "选中此复选框将指示 OCL 为每个单独的概念或映射创建独立的引用（即“外延”或“一对一”引用）。",
     "transform_to_extensional_tooltip_2": "取消选中此复选框将指示 OCL 创建较少的引用，这些引用可以表示多个概念和映射（即“内涵”或“一对多”引用）。详情请参阅此 <0>YouTube 视频</0>。",
-    "sort_by_raw_score": "按原始分数排序"
+    "sort_by_raw_score": "按原始分数排序",
+    "project_logs": "项目日志",
+    "project_logs_tooltip": "查看项目日志",
+    "saved_to_collection": "已保存到集合"
   },
   "app": {
     "web_version": "Web 版本",
