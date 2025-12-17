@@ -12,8 +12,6 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 
 import OpenIcon from '@mui/icons-material/CropSquare';
-import CreateIcon from '@mui/icons-material/Add';
-import UpdateIcon from '@mui/icons-material/Edit';
 import RepoIcon from '../repos/RepoIcon'
 import HistoryIcon from '@mui/icons-material/ChangeHistory';
 
@@ -32,9 +30,9 @@ const ProjectLogs = ({onClose, logs}) => {
   const getIconAndColor = log => {
     const action = log?.action?.toLowerCase()
     if(action === 'created')
-      return [<CreateIcon key='create' color='primary' />, 'primary']
+      return [<i key="created" className="fa-brands fa-octopus-deploy" style={{color: PRIMARY_COLORS.main, fontSize: '1.25rem', width: '1em', height: '1em'}}></i>, 'primary']
     if(action === 'updated')
-      return [<UpdateIcon key='update' color='warning' />, 'warning']
+      return [<HistoryIcon key='update' color='warning' />, 'warning']
     if(action === 'saved_to_collection')
       return [<RepoIcon key='collection' selected noTooltip />, 'primary']
     if(action === 'opened')
@@ -64,10 +62,10 @@ const ProjectLogs = ({onClose, logs}) => {
         </Typography>
         <CloseIconButton color='secondary' onClick={onClose} />
       </div>
-      <div className='col-xs-12 padding-0' style={{maxHeight: 'calc(100vh - 360px)', overflow: 'auto'}}>
+      <div className='col-xs-12 padding-0' style={{maxHeight: 'calc(100vh - 190px)', overflow: 'auto'}}>
         <Timeline
           sx={{
-            padding: '4px 16px',
+            padding: '4px 20px',
             marginBottom: 0,
             [`& .${timelineItemClasses.root}:before`]: {
               flex: 0,
