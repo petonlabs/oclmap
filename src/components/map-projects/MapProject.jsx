@@ -987,6 +987,13 @@ const MapProject = () => {
       }
     };
 
+    let action = 'auto_matched'
+    let subActions = []
+    if(autoMatchUnmappedOnly)
+      subActions.push('unmatched_only')
+    if(reranker)
+      subActions.push('with_reranker')
+
     setRowStatuses(prev => {
       prev.unmapped = []
       if(!autoMatchUnmappedOnly)
@@ -996,15 +1003,20 @@ const MapProject = () => {
     await processWithConcurrency(repo);
 
     setTimeout(() => {
-      if(bridgeRef?.current?.canBridge())
+      if(bridgeRef?.current?.canBridge()) {
+        subActions.push('bridge_candidates')
         fetchBulkBridgeCandidates(rows)
-      else if(inAIAssistantGroup && autoRunAIAnalysis)
+      }
+      else if(inAIAssistantGroup && autoRunAIAnalysis) {
+        subActions.push('ai_analysis')
         setTimeout(() => runBulkAIAnalysis(rows), 1000)
+      }
       else {
         setLoadingMatches(false)
         setEndMatchingAt(moment())
       }
     }, 1000)
+    projectLog({action: action, extras: {sub_actions: subActions}})
   };
 
   const otherMatchedConceptsRef = React.useRef([]);
@@ -1290,6 +1302,7 @@ const MapProject = () => {
   const onDownloadClick = () => {
     const workbook = getWorkbook()
     XLSX.writeFile(workbook, `${name || t('map_project.matched')}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
+    projectLog({action: 'Downloaded'})
   }
 
   const getFileObjectFromRows = name => {

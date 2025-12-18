@@ -14,6 +14,8 @@ import Tooltip from '@mui/material/Tooltip';
 import OpenIcon from '@mui/icons-material/CropSquare';
 import RepoIcon from '../repos/RepoIcon'
 import HistoryIcon from '@mui/icons-material/ChangeHistory';
+import DownloadIcon from '@mui/icons-material/Download';
+import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 
 import map from 'lodash/map'
 import orderBy from 'lodash/orderBy'
@@ -37,17 +39,33 @@ const ProjectLogs = ({onClose, logs}) => {
       return [<RepoIcon key='collection' selected noTooltip />, 'primary']
     if(action === 'opened')
       return [<OpenIcon key='open' />, 'secondary']
+    if(action === 'downloaded')
+      return [<DownloadIcon key='download' />, 'secondary']
+    if(action === 'auto_matched')
+      return [<AutoMatchIcon key='auto_match' color='primary' />, 'primary']
     return [<HistoryIcon key='log' color='warning' />, 'warning']
   }
 
   const getTitle = log => {
-    if(log.action == 'saved_to_collection' && log.extras?.collection_url && log.extras?.id)
+    if(log.action === 'saved_to_collection' && log.extras?.collection_url && log.extras?.id)
       return <span>
                {t('map_project.saved_to_collection')}
                <a className='no-anchor-styles' style={{color: PRIMARY_COLORS.main, marginLeft: '4px'}} target='_blank' href={toV3URL(log.extras.collection_url)} rel="noreferrer">
                  {log.extras.id}
                </a>
              </span>
+    if(log.action === 'auto_matched') {
+      return <span>
+               {t('map_project.auto_match')}
+               {
+                 log.extras?.sub_actions?.length ?
+                <span style={{marginLeft: '4px'}}>
+                  {`(${map(log.extras.sub_actions, startCase).join(', ')})`}
+                </span> :
+                null
+               }
+             </span>
+    }
 
     if(log.description)
       return log.description
