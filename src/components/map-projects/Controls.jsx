@@ -61,7 +61,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
         />
         <IkonButton
           id='download-button'
-          color='secondary'
+          color={downloadOpen ? 'primary' : 'secondary'}
           onClick={event => setAnchorEl(event.currentTarget)}
           title={t('map_project.download_this_project_as_csv')}
           icon={<DownloadIcon />}
