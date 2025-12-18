@@ -35,7 +35,7 @@ const IkonButton = ({title, icon, onClick, color, disabled, id}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen}) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const downloadOpen = Boolean(anchorEl);
@@ -46,7 +46,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
     <span style={{textAlign: 'right'}}>
       <div>
         <IkonButton
-          color='secondary'
+          color={isProjectsLogOpen ? 'primary' : 'secondary'}
           onClick={onProjectLogsClick}
           title={t('map_project.project_logs_tooltip')}
           disabled={!project?.id}

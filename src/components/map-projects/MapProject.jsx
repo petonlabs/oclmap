@@ -2066,6 +2066,7 @@ const MapProject = () => {
                   importResponse={imports[0]}
                   onDownloadImportReport={downloadImportReport}
                   onProjectLogsClick={() => setShowProjectLogs(!showProjectLogs)}
+                  isProjectsLogOpen={showProjectLogs}
                 />
             }
           </div>
