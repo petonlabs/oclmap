@@ -70,8 +70,9 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
     return cols
   }
   const count = candidates.length
+  const showHeader = count > 0
 
-  return count > 0 ? (
+  return (
     <ul>
       <SearchResults
         id={rowIndex}
@@ -95,16 +96,22 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           (showAnalysis && openAnalysis) ? (
             <div className='col-xs-12 padding-0' style={{display: 'inline-flex', flexDirection: 'column'}}>
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
+              {
+              showHeader &&
               <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px'}}>
                 <b>{header}</b>
                 <b>{count.toLocaleString()}</b>
               </ListSubheader>
+              }
             </div>
           ) :
-            <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
-              <b>{header}</b>
-              <b>{count.toLocaleString()}</b>
-          </ListSubheader>
+            (
+              showHeader &&
+                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
+                  <b>{header}</b>
+                  <b>{count.toLocaleString()}</b>
+                </ListSubheader>
+            )
         }
         title=' '
         renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} bridge={bridge} />}
@@ -137,7 +144,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         repoDefaultFilters={repoVersion?.meta?.display?.default_filter}
       />
     </ul>
-  ): null
+  )
 }
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker}) => {
@@ -301,7 +308,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                 onFetchMore={onFetchMore}
                 bgColor={sortRaw ? SCORES_COLOR.available : SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
-                noToolbar={false} onDisplayChange={setDisplay}
+                noToolbar={false}
+                onDisplayChange={setDisplay}
                 toolbarControl={
                   <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
                     <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
