@@ -463,7 +463,7 @@ const MapProject = () => {
       renderCell: params => {
         const targetConcept = mapSelected[params.row.__index]
         if(targetConcept?.url) {
-          return <Concept sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix />
+          return <Concept key={`${params.row.__index}-${targetConcept.url}`} sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix />
         }
       }
     })
