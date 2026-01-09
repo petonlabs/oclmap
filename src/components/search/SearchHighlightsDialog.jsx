@@ -18,6 +18,7 @@ import Link from '../common/Link'
 
 const SearchHighlightsDialog = ({onClose, highlight, score, raw_score, open}) => {
   const { t } = useTranslation()
+  console.log(highlight)
   return (
     <Dialog
       open={Boolean(open)}
@@ -52,12 +53,12 @@ const SearchHighlightsDialog = ({onClose, highlight, score, raw_score, open}) =>
                       <React.Fragment>
                         {
                           map(values, value => {
-                            value = value.replaceAll('<em>', '<b>').replaceAll('</em>', '</b>').replaceAll(' ', '&nbsp;')
+                            value = value.replaceAll('<em>', '<b>').replaceAll('</em>', '</b>')
                             return (
                               <Typography
                                 key={value}
                                 component="span"
-                                sx={{ color: 'text.primary', display: 'flex' }}
+                                sx={{ color: 'text.primary', display: 'inline-block' }}
                                 dangerouslySetInnerHTML={{__html: value}}
                               />
                             )})
