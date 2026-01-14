@@ -18,7 +18,6 @@ import Link from '../common/Link'
 
 const SearchHighlightsDialog = ({onClose, highlight, score, raw_score, open}) => {
   const { t } = useTranslation()
-  console.log(highlight)
   return (
     <Dialog
       open={Boolean(open)}
