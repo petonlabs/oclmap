@@ -1805,9 +1805,27 @@ const MapProject = () => {
           return
         }
         setAIModels(response.data)
-        setAIModel(find(response.data, {default: true})?.id)
+        fetchAIPromptTemplate(response.data)
       })
     }
+  }
+
+  const fetchAIPromptTemplate = models => {
+    if(AIModel || !AI_ASSISTANT_API_URL) {
+      return
+    }
+    const service = APIService.new()
+    service.URL = AI_ASSISTANT_API_URL
+
+    let _models = models?.length ? models : AIModels
+    const defaultModel = find(_models, {default: true})
+    service.appendToUrl('/prompts/match-recommend/').get().then(response => {
+      if(response?.detail) {
+        setAIModel(defaultModel?.id)
+        return
+      }
+      setAIModel(find(_models, {id: response.data.default_model})?.id || defaultModel?.id)
+    })
   }
 
   const fetchRecommendation = _row => {

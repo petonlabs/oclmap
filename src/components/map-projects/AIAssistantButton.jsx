@@ -11,7 +11,6 @@ import MenuList from '@mui/material/MenuList';
 import ListSubheader from '@mui/material/ListSubheader';
 import ListItemText from '@mui/material/ListItemText';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 
 import AssistantIcon from '@mui/icons-material/Assistant';
@@ -22,7 +21,6 @@ import filter from 'lodash/filter'
 import orderBy from 'lodash/orderBy'
 
 const Model = ({ model, selected, onClick }) => {
-  const { t } = useTranslation();
   return (
     <MenuItem
       key={model.id}
@@ -30,10 +28,6 @@ const Model = ({ model, selected, onClick }) => {
       onClick={event => onClick(event, model)}
     >
       <ListItemText primary={model.name} secondary={model.id} />
-      {
-        model.default &&
-          <Chip sx={{margin: '0 2px'}} size='small' label={t('common.default')} variant='contained' color='success' />
-      }
       {
         model.hugging_face_id &&
           <IconButton size='small' sx={{margin: '0 2px', color: 'yellow'}} onClick={event => {
@@ -51,6 +45,7 @@ const Model = ({ model, selected, onClick }) => {
 
 
 const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperProps, ...rest }) => {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [model, setModel] = React.useState(selected || find(models, {default: true})?.id || '')
@@ -109,7 +104,7 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperPro
           onClick={event => onClick(event, model)}
           startIcon={<AssistantIcon fontSize='inherit' sx={{marginTop: '-1px'}} />}
         >
-          {`AI Assistant - ${model}`}
+          {t('map_project.ai_assistant')}
         </Button>
         <Button
           size="small"
@@ -147,7 +142,7 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperPro
                     orderBy(recommendedOptions, 'name').length > 0 &&
                       <>
                         <ListSubheader sx={{fontSize: '12px', lineHeight: '32px', backgroundColor: 'rgb(237, 237, 237)'}}>
-                          Recommended
+                          {t('map_project.recommended')}
                         </ListSubheader>
                         {
                           recommendedOptions.map(option => (
@@ -160,7 +155,7 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperPro
                     otherOptions.length > 0 &&
                       <>
                         <ListSubheader sx={{fontSize: '12px', lineHeight: '32px', backgroundColor: 'rgb(237, 237, 237)'}}>
-                          All Options
+                          {t('map_project.all_options')}
                         </ListSubheader>
                         {
                           orderBy(otherOptions, 'name').map(option => (
