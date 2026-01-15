@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
@@ -50,7 +50,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker, canBridge, bridgeEnabled, setBridgeEnabled }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const canApplyReranking = hasAuthGroup(getCurrentUser(), MAPPER_CROSS_ENCODER_GROUP)
@@ -302,6 +302,31 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               />
             }
             label={t('map_project.enable_reranker')}
+          />
+
+      }
+      {
+        algo != 'es' &&
+          <FormControlLabel
+            sx={{marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
+            size='small'
+            control={
+              <Checkbox
+                size='small'
+                disabled={!canBridge}
+                checked={bridgeEnabled}
+                sx={{padding: '8px 4px'}}
+                onChange={() => setBridgeEnabled(!bridgeEnabled)}
+              />
+            }
+            label={
+              <Trans
+                i18nKey='map_project.bridge_terminology_search'
+                components={[
+                  <sup key="1"/>
+                ]}
+              />
+            }
           />
 
       }

@@ -171,6 +171,7 @@ const MapProject = () => {
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
   const [reranker, setReranker] = React.useState(false)
+  const [bridgeEnabled, setBridgeEnabled] = React.useState(false)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
   const [filters, setFilters] = React.useState({})
   const [AIModel, setAIModel] = React.useState('')
@@ -231,6 +232,7 @@ const MapProject = () => {
   let AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const CANDIDATES_LIMIT = reranker ? 30 : 10
+  const canBridge = bridgeRef?.current?.canBridge()
 
 
   // algos - computed based on current language
@@ -351,6 +353,7 @@ const MapProject = () => {
       setMatchAPI(response.data?.match_api_url)
       setMatchAPIToken(response.data?.match_api_token)
       setReranker(Boolean(response.data?.reranker))
+      setBridgeEnabled(Boolean(response.data?.bridge_enabled))
       if(response.data?.match_api_url)
         setSemanticBatchSize(response.data?.batch_size || SEMANTIC_BATCH_SIZE)
       setCandidatesScore(response.data?.score_configuration)
@@ -746,6 +749,7 @@ const MapProject = () => {
     }
     formData.append('filters', JSON.stringify(getFilters()))
     formData.append('reranker', reranker)
+    formData.append('bridge_enabled', bridgeEnabled)
     const isUpdate = Boolean(project?.id)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(isUpdate)
@@ -993,6 +997,8 @@ const MapProject = () => {
       subActions.push('unmatched_only')
     if(reranker)
       subActions.push('with_reranker')
+    if(bridgeEnabled)
+      subActions.push('with_bridge_candidates')
 
     setRowStatuses(prev => {
       prev.unmapped = []
@@ -1003,7 +1009,7 @@ const MapProject = () => {
     await processWithConcurrency(repo);
 
     setTimeout(() => {
-      if(bridgeRef?.current?.canBridge()) {
+      if(bridgeEnabled) {
         subActions.push('bridge_candidates')
         fetchBulkBridgeCandidates(rows)
       }
@@ -1025,6 +1031,11 @@ const MapProject = () => {
   React.useEffect(() => {
     otherMatchedConceptsRef.current = otherMatchedConcepts;
   }, [otherMatchedConcepts]);
+
+  React.useEffect(() => {
+    if(bridgeEnabled && canBridge === false)
+      setBridgeEnabled(false)
+  }, [canBridge, bridgeEnabled])
 
   React.useEffect(() => {
     bridgeCandidatesRef.current = bridgeCandidates;
@@ -1336,7 +1347,7 @@ const MapProject = () => {
     forEach(getTop10RowCandidates(index), (candidate, i) => {
       if(i < 10)
         _candidatesTop10[`__Candidate_Top_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
-      else if(bridgeRef?.current?.canBridge()) {
+      else if(bridgeEnabled) {
         _bridgeCandidatesTop10[`__BridgeCandidate_Top_${i - 9}__`] = candidate ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
       }
     })
@@ -1634,7 +1645,7 @@ const MapProject = () => {
       setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
       return
     }
-    if(!bridgeRef?.current?.canBridge())
+    if(!bridgeEnabled)
       return
     setIsLoadingInDecisionView(true)
     const payload = getPayloadForMatching([__row], repo)
@@ -1994,6 +2005,9 @@ const MapProject = () => {
                     isLoadingLocales={isLoadingLocales}
                     reranker={reranker}
                     setReranker={setReranker}
+                    bridgeEnabled={bridgeEnabled}
+                    setBridgeEnabled={setBridgeEnabled}
+                    canBridge={canBridge}
                   />
                 </div>
           }
@@ -2440,6 +2454,9 @@ const MapProject = () => {
                 isLoadingLocales={isLoadingLocales}
                 reranker={reranker}
                 setReranker={setReranker}
+                bridgeEnabled={bridgeEnabled}
+                setBridgeEnabled={setBridgeEnabled}
+                canBridge={canBridge}
               />
             </div> :
           (

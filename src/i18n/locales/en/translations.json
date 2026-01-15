@@ -525,7 +525,8 @@
     "sort_by_raw_score": "Sort by Raw Score",
     "project_logs": "Project Logs",
     "project_logs_tooltip": "View project logs",
-    "saved_to_collection": "Saved to collection"
+    "saved_to_collection": "Saved to collection",
+    "bridge_terminology_search": "Bridge terminology search<0>Premium</0>: Search mappings in the Columbia University International eHealth Laboratory interface terminology to identify additional high quality candidates (only available for compatible target repositories and matching algorithms)"
   },
   "app": {
     "web_version": "Web Version",
