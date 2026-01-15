@@ -10,17 +10,18 @@ import List from '@mui/material/List';
 import Button from '@mui/material/Button'
 import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
-import ToggleButton from '@mui/material/ToggleButton';
-
 
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import SortIcon from '@mui/icons-material/SwapVert';
 
 import find from 'lodash/find'
 import get from 'lodash/get'
 import isEmpty from 'lodash/isEmpty'
 import flatten from 'lodash/flatten'
 import values from 'lodash/values'
+import startCase from 'lodash/startCase'
 
 import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
@@ -147,7 +148,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker, onRefreshClick}) => {
   const { t } = useTranslation();
   const [sortRaw, setSortRaw] = React.useState(false)
   /*eslint no-undef: 0*/
@@ -214,26 +215,33 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   }
 
   const getRightControls = () => {
-    if(inAIAssistantGroup)
       return (
         <span style={{display: 'flex'}}>
           {
-            reranker && !noCandidatesFound &&
-              <ToggleButton color='primary' value='check' selected={sortRaw} size='small' sx={{textTransform: 'none', padding: '5px'}} onChange={onSortByRawScore}>
-                {t('map_project.sort_by_raw_score')}
-              </ToggleButton>
+            !noCandidatesFound &&
+              <Button onClick={onRefreshClick} color='info.dark' variant='outlined' size='small' sx={{margin: '0 8px', padding: '5px', textTransform: 'none', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} startIcon={<RefreshIcon fontSize='inherit' />}>
+                {startCase(t('common.refresh'))}
+              </Button>
           }
-        <AIAssistantButton
-          models={models}
-          selected={selectedModel}
-          onClick={onRecommend}
-          sx={{margin: '0 8px'}}
-          onModelChange={onModelChange}
-          />
+          {
+            reranker && !noCandidatesFound &&
+              <Button variant='outlined' color='info.dark' value='check' selected={sortRaw} size='small' sx={{textTransform: 'none', padding: '5px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} onClick={onSortByRawScore} startIcon={<SortIcon fontSize='inherit' />}>
+                {t('map_project.sort_by_raw_score')}
+              </Button>
+          }
+          {
+            inAIAssistantGroup &&
+              <AIAssistantButton
+                models={models}
+                selected={selectedModel}
+                onClick={onRecommend}
+                sx={{margin: '0 8px'}}
+                onModelChange={onModelChange}
+              />
+          }
         </span>
       )
 
-    return ''
   }
 
   React.useEffect(() => {

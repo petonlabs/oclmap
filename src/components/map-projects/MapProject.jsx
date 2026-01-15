@@ -1437,6 +1437,16 @@ const MapProject = () => {
     }
   }
 
+  const onRefreshClick = () => {
+    setOtherMatchedConcepts(prev => {
+      let newConcepts = {...prev}
+      let result = find(newConcepts, c => c.row.__index === rowIndex)
+      result.results = null
+      return newConcepts
+    })
+    fetchOtherCandidates(row, 0, undefined, undefined, undefined, true)
+  }
+
   const onCloseDecisions = () => {
     setRow(false)
     setShowHighlights(false)
@@ -1660,8 +1670,12 @@ const MapProject = () => {
         else {
           setBridgeCandidates(prev => {
             const newMatches = [...prev]
-            const index = findIndex(newMatches, match => match.row.__index === __row.__index)
-            newMatches[index].results = [...newMatches[index].results, ...(candidates[0]?.results || [])]
+            let index = findIndex(newMatches, match => match.row.__index === __row.__index)
+            if(index < 0) {
+              newMatches[candidates[0].row.__index] = candidates[0]
+            } else {
+              newMatches[index].results = [...newMatches[index].results, ...(candidates[0]?.results || [])]
+            }
             return newMatches
           })
           let items = get(candidates, '0.results') || []
@@ -1892,7 +1906,6 @@ const MapProject = () => {
   }
 
   const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
-
 
   const getHelperTextForAutoMatchUnmapped = () => {
     if (autoMatchUnmappedOnly) {
@@ -2578,6 +2591,7 @@ const MapProject = () => {
                       models={AIModels}
                       selectedModel={AIModel}
                       onModelChange={setAIModel}
+                      onRefreshClick={onRefreshClick}
                     />
                 }
                 {
