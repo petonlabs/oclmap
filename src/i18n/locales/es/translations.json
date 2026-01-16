@@ -307,7 +307,9 @@
     "sort_by_raw_score": "Ordenar por puntuación bruta",
     "project_logs": "Registros del proyecto",
     "project_logs_tooltip": "Ver registros del proyecto",
-    "saved_to_collection": "Guardado en la colección"
+    "saved_to_collection": "Guardado en la colección",
+    "bridge_terminology_search": "Búsqueda de terminología Bridge<0>Premium</0>",
+    "bridge_terminology_search_description": "Incluir mapeos en la <0>Terminología de Interfaz CIEL</0> para identificar candidatos adicionales de alta calidad. Disponible solo para repositorios de destino y algoritmos de coincidencia compatibles."
   },
   "app": {
     "web_version": "Versión Web",

@@ -307,8 +307,9 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       }
       {
         algo != 'es' &&
+          <>
           <FormControlLabel
-            sx={{marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
+            sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
             size='small'
             control={
               <Checkbox
@@ -328,6 +329,16 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               />
             }
           />
+            <FormHelperText sx={{marginTop: 0}}>
+              <Trans
+                i18nKey='map_project.bridge_terminology_search_description'
+                components={[
+                  <a href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
+                ]}
+              />
+        </FormHelperText>
+        </>
+
 
       }
       <>
