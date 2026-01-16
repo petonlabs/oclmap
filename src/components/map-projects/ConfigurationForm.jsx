@@ -333,7 +333,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               <Trans
                 i18nKey='map_project.bridge_terminology_search_description'
                 components={[
-                  <a href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
+                  <a key="0" href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
                 ]}
               />
         </FormHelperText>
