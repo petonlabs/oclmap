@@ -1055,3 +1055,11 @@ export const toCamelCase = str => {
 }
 
 export const isInWaitlist = () => getCurrentUser()?.extras?.__oidc_groups?.includes('mapper-waitlist')
+
+
+export const isNumeric = value => {
+  if (value === null || value === undefined || value === '') return false;
+  if (typeof value !== "string") return false;
+  if (value.trim() === "") return false;
+  return Number.isFinite(Number(value));
+};

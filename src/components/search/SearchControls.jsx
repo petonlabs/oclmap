@@ -59,12 +59,12 @@ const SearchControls = ({ disabled, onDisplayChange, display, order, orderBy, on
         alignLeft ?
           <>
             <div className='col-xs-12 padding-0' style={{float: 'left', textAlign: 'right', display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between'}}>
-              <span>
+              <span style={{display: 'flex'}}>
                 {getControls()}
               </span>
               {
               rightControl &&
-                  <span>
+                  <span style={{display: 'flex'}}>
                     {rightControl}
                   </span>
               }

@@ -7,6 +7,9 @@ import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/Button';
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
+import Menu from '@mui/material/Menu';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button'
 import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
@@ -34,6 +37,44 @@ import Concept from './Concept'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 import AIAssistantButton from './AIAssistantButton'
+
+const Sort = ({ selected, onSort, reranker }) => {
+  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = React.useState(false)
+  const onSortClick = event => setAnchorEl(event.currentTarget)
+  const onClick = option => {
+    setAnchorEl(false)
+    onSort(option)
+  }
+
+  return (
+    <>
+      <Button onClick={onSortClick} variant='outlined' color='info.dark' value='check' size='small' sx={{textTransform: 'none', padding: '5px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} startIcon={<SortIcon fontSize='inherit' />}>
+        {t('common.sort')}
+      </Button>
+
+      <Menu
+      anchorEl={anchorEl}
+      open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(false)}
+      sx={{'.MuiPaper-root': {backgroundColor: 'surface.n94'}}}
+      >
+        {
+          reranker &&
+            <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'score'}>
+              <ListItemText primary={t('map_project.sort_by_raw_score')} />
+            </ListItemButton>
+        }
+        <ListItemButton id='sort_by_id' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('id')} selected={selected === 'id'}>
+          <ListItemText primary={t('map_project.concept_id')} />
+        </ListItemButton>
+        <ListItemButton id='sort_by_name' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('display_name')} selected={selected === 'display_name'}>
+          <ListItemText primary={t('concept.display_name')} />
+        </ListItemButton>
+    </Menu>
+    </>
+  )
+}
 
 const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
@@ -150,7 +191,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
 
 const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker, onRefreshClick}) => {
   const { t } = useTranslation();
-  const [sortRaw, setSortRaw] = React.useState(false)
+  const [sortBy, setSortBy] = React.useState(false)
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
@@ -172,7 +213,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
 
   concepts.forEach(concept => {
     let score = concept?.search_meta?.search_normalized_score || 0
-    if(sortRaw)
+    if(sortBy)
       recommended.push(concept)
     else {
       if (score >= recommendedScore)
@@ -200,13 +241,19 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     locales: locales
   }
 
-  const onSortByRawScore = () => {
-    let newOrder = !sortRaw
-    setSortRaw(newOrder)
-    if(newOrder)
-      onOrderChange('search_meta.search_score', 'desc')
-    else
-      onOrderChange('search_meta.search_normalized_score', 'desc')
+  const onSort = option => {
+    let newOption = option
+    if(option === sortBy) {
+      setSortBy(false)
+      newOption = 'search_meta.search_normalized_score'
+    } else if(option === 'score') {
+      newOption = 'search_meta.search_score'
+      setSortBy(option)
+    } else {
+      setSortBy(option)
+    }
+
+    onOrderChange(newOption, option === 'score' ? 'desc' : 'asc')
   }
 
   const onRecommend = () => {
@@ -224,10 +271,12 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               </Button>
           }
           {
-            reranker && !noCandidatesFound &&
-              <Button variant='outlined' color='info.dark' value='check' selected={sortRaw} size='small' sx={{textTransform: 'none', padding: '5px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} onClick={onSortByRawScore} startIcon={<SortIcon fontSize='inherit' />}>
-                {t('map_project.sort_by_raw_score')}
-              </Button>
+            !noCandidatesFound &&
+              <Sort
+                onSort={onSort}
+                selected={sortBy}
+                reranker={reranker}
+              />
           }
           {
             inAIAssistantGroup &&
@@ -312,9 +361,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               <CandidateList
                 {...props}
                 candidates={recommended}
-                header={sortRaw ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
+                header={sortBy ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
                 onFetchMore={onFetchMore}
-                bgColor={sortRaw ? SCORES_COLOR.available : SCORES_COLOR.recommended}
+                bgColor={sortBy ? SCORES_COLOR.available : SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
                 noToolbar={false}
                 onDisplayChange={setDisplay}

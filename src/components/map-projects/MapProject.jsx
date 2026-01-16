@@ -82,7 +82,7 @@ import times from 'lodash/times'
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup, downloadObject } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup, downloadObject, isNumeric } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -1786,7 +1786,12 @@ const MapProject = () => {
     if(candidates.length) {
       const newCandidates = [...otherMatchedConcepts]
       const index = findIndex(otherMatchedConcepts, c => c.row.__index === rowIndex)
-      newCandidates[index].results = orderBy(candidates, property, order)
+      if(property === 'id' && every(candidates, c => isNumeric(c.id))) {
+        newCandidates[index].results = orderBy(candidates, candidate => parseFloat(candidate.id), order)
+      } else if (property === 'display_name') {
+        newCandidates[index].results = orderBy(candidates, candidate => candidate.display_name.toLowerCase(), order)
+      } else
+        newCandidates[index].results = orderBy(candidates, property, order)
       setOtherMatchedConcepts(newCandidates)
     }
   }

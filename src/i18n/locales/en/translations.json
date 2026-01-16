@@ -98,7 +98,8 @@
     "report": "Report",
     "import": "Import",
     "download_csv": "Download CSV",
-    "advance_settings": "Advanced Settings"
+    "advance_settings": "Advanced Settings",
+    "sort": "Sort"
   },
   "errors": {
     "404": "Sorry your page could not be found.",

@@ -44,7 +44,8 @@
     "report": "Reporte",
     "import": "Importar",
     "download_csv": "Descargar CSV",
-    "advance_settings": "Configuración avanzada"
+    "advance_settings": "Configuración avanzada",
+    "sort": "Ordenar"
   },
   "errors": {
     "404": "Lo siento, no se pudo encontrar tu página."

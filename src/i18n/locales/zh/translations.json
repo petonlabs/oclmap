@@ -97,7 +97,8 @@
     "report": "报告",
     "import": "导入",
     "download_csv": "下載 CSV",
-    "advance_settings": "高级设置"
+    "advance_settings": "高级设置",
+    "sort": "排序"
   },
   "errors": {
     "404": "很抱歉，未能找到您的页面。",
