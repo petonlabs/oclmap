@@ -1850,7 +1850,7 @@ const MapProject = () => {
     let _models = models?.length ? models : AIModels
     const defaultModel = find(_models, {default: true})
     service.appendToUrl('/prompts/match-recommend/').get().then(response => {
-      if(response?.detail) {
+      if(response?.detail || !response?.data?.default_model) {
         setAIModel(defaultModel?.id)
         return
       }
