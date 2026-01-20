@@ -44,6 +44,9 @@ fi
 if [[ ! -z "${AI_ASSISTANT_API_URL}" ]]; then
     echo "var AI_ASSISTANT_API_URL = \"${AI_ASSISTANT_API_URL}\";" >> ${ENV_FILE}
 fi
+if [[ ! -z "${SCISPACY_LOINC_API_URL}" ]]; then
+    echo "var SCISPACY_LOINC_API_URL = \"${SCISPACY_LOINC_API_URL}\";" >> ${ENV_FILE}
+fi
 
 echo "Adjusting nginx configuration"
 envsubst '$WEB_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf

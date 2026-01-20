@@ -21,3 +21,4 @@ services:
       - OCL_ONLINE=${OCL_ONLINE-false}
       - BRIDGE_MATCH_URL
       - AI_ASSISTANT_API_URL
+      - SCISPACY_LOINC_API_URL

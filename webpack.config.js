@@ -114,12 +114,13 @@ module.exports = (env) => {
         'process.env.HOTJAR_ID': JSON.stringify(env.HOTJAR_ID),
         'process.env.ERRBIT_URL': JSON.stringify(env.ERRBIT_URL),
         'process.env.ERRBIT_KEY': JSON.stringify(env.ERRBIT_KEY),
-        'process.env.LOGIN_REDIRECT_URL': JSON.stringify(env.LOGIN_REDIRECT_URL),
-        'process.env.OIDC_RP_CLIENT_ID': JSON.stringify(env.OIDC_RP_CLIENT_ID),
-        'process.env.OIDC_RP_CLIENT_SECRET': JSON.stringify(env.OIDC_RP_CLIENT_SECRET),
+        'process.env.LOGIN_REDIRECT_URL': JSON.stringify('http://localhost:4004'),
+        'process.env.OIDC_RP_CLIENT_ID': JSON.stringify('oclmaplocal'),
+        'process.env.OIDC_RP_CLIENT_SECRET': JSON.stringify('1LN3yVI9qhmOW7LJ87njG16oHe67Mg4X'),
         'process.env.OCL_ONLINE': JSON.stringify(env.OCL_ONLINE) || 'false',
         'process.env.BRIDGE_MATCH_URL': JSON.stringify(env.BRIDGE_MATCH_URL || '') || '',
-        'process.env.AI_ASSISTANT_API_URL': JSON.stringify(env.AI_ASSISTANT_API_URL || '') || ''
+        'process.env.AI_ASSISTANT_API_URL': JSON.stringify(env.AI_ASSISTANT_API_URL || '') || '',
+        'process.env.SCISPACY_LOINC_API_URL': JSON.stringify(env.SCISPACY_LOINC_API_URL || '') || ''
       }),
       new IgnorePlugin({ resourceRegExp: /moment\/locale\// })
     ],
