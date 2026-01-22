@@ -26,7 +26,7 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping}) => {
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping, scispacy}) => {
   const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_url)
   let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   const conceptToMap = isValidBridge ?
@@ -86,7 +86,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
         isSelectedForMap &&
             <MapButton
               simple
-              disabled={bridge && !mapping.cascade_target_concept_url}
+              disabled={scispacy || (bridge && !mapping.cascade_target_concept_url)}
               selected={mapTypeToApply}
               onClick={(event, applied, mapType) => onMap(event, conceptToMap, !applied, mapping?.map_type || mapType)}
               isMapped={isSelectedForMap(conceptToMap)}
@@ -99,7 +99,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, bridge}) => {
+const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, bridge, scispacy}) => {
   const id = concept?.version_url || concept?.url || concept?.id
   const isSelectedToShow = isShown ? isShown(id) : false
 
@@ -140,11 +140,11 @@ const Concept = ({firstChild, concept, setShowHighlights, isShown, onCardClick, 
 
   return notClickable ? (
     <ListItem {...props}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} />
     </ListItem>
   ) : (
     <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} />
       </ListItemButton>
     )
 }

@@ -50,7 +50,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker, canBridge, bridgeEnabled, setBridgeEnabled }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const canApplyReranking = hasAuthGroup(getCurrentUser(), MAPPER_CROSS_ENCODER_GROUP)
@@ -308,27 +308,27 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       {
         algo != 'es' &&
           <>
-          <FormControlLabel
-            sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
-            size='small'
-            control={
-              <Checkbox
-                size='small'
-                disabled={!canBridge}
-                checked={bridgeEnabled}
-                sx={{padding: '8px 4px'}}
-                onChange={() => setBridgeEnabled(!bridgeEnabled)}
-              />
-            }
-            label={
-              <Trans
-                i18nKey='map_project.bridge_terminology_search'
-                components={[
-                  <sup key="1"/>
-                ]}
-              />
-            }
-          />
+            <FormControlLabel
+              sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
+              size='small'
+              control={
+                <Checkbox
+                  size='small'
+                  disabled={!canBridge}
+                  checked={bridgeEnabled}
+                  sx={{padding: '8px 4px'}}
+                  onChange={() => setBridgeEnabled(!bridgeEnabled)}
+                />
+              }
+              label={
+                <Trans
+                  i18nKey='map_project.bridge_terminology_search'
+                  components={[
+                    <sup key="1"/>
+                  ]}
+                />
+              }
+            />
             <FormHelperText sx={{marginTop: 0}}>
               <Trans
                 i18nKey='map_project.bridge_terminology_search_description'
@@ -336,10 +336,29 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
                   <a key="0" href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
                 ]}
               />
-        </FormHelperText>
-        </>
-
-
+            </FormHelperText>
+            <FormControlLabel
+              sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
+              size='small'
+              control={
+                <Checkbox
+                  size='small'
+                  disabled={!canScispacy}
+                  checked={scispacyEnabled}
+                  sx={{padding: '8px 4px'}}
+                  onChange={() => setScispacyEnabled(!scispacyEnabled)}
+                />
+              }
+              label={
+                <Trans
+                  i18nKey='map_project.scispacy_loinc_search'
+                  components={[
+                    <sup key="1"/>
+                  ]}
+                />
+              }
+            />
+          </>
       }
       <>
         <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>

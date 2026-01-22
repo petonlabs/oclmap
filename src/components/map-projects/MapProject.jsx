@@ -148,6 +148,7 @@ const MapProject = () => {
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [bridgeCandidates, setBridgeCandidates] = React.useState([]);
+  const [scispacyCandidates, setScispacyCandidates] = React.useState([]);
   const [candidatesToSave, setCandidatesToSave] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [facets, setFacets] = React.useState({});
@@ -164,6 +165,8 @@ const MapProject = () => {
   const [bulkAIAnalysisEndedAt, setBulkAIAnalysisEndedAt] = React.useState(false)
   const [bridgeCandidatesStartedAt, setBridgeCandidatesStartedAt] = React.useState(false)
   const [bridgeCandidatesEndedAt, setBridgeCandidatesEndedAt] = React.useState(false)
+  const [scispacyCandidatesStartedAt, setScispacyCandidatesStartedAt] = React.useState(false)
+  const [scispacyCandidatesEndedAt, setScispacyCandidatesEndedAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
   const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
   const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
@@ -172,6 +175,7 @@ const MapProject = () => {
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
   const [reranker, setReranker] = React.useState(false)
   const [bridgeEnabled, setBridgeEnabled] = React.useState(false)
+  const [scispacyEnabled, setScispacyEnabled] = React.useState(false)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
   const [filters, setFilters] = React.useState({})
   const [AIModel, setAIModel] = React.useState('')
@@ -229,10 +233,12 @@ const MapProject = () => {
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
   /*eslint no-undef: 0*/
-  let AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
+  const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
+  const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const CANDIDATES_LIMIT = reranker ? 30 : 10
   const canBridge = bridgeRef?.current?.canBridge()
+  const canScispacy = Boolean(canBridge && SCISPACY_API_URL && window.SCISPACY_LOINC_TOGGLE === true)
 
 
   // algos - computed based on current language
@@ -354,6 +360,7 @@ const MapProject = () => {
       setMatchAPIToken(response.data?.match_api_token)
       setReranker(Boolean(response.data?.reranker))
       setBridgeEnabled(Boolean(response.data?.bridge_enabled))
+      setScispacyEnabled(Boolean(response.data?.scispacy_enabled))
       if(response.data?.match_api_url)
         setSemanticBatchSize(response.data?.batch_size || SEMANTIC_BATCH_SIZE)
       setCandidatesScore(response.data?.score_configuration)
@@ -532,6 +539,8 @@ const MapProject = () => {
     setBulkAIAnalysisEndedAt(false)
     setBridgeCandidatesStartedAt(false)
     setBridgeCandidatesEndedAt(false)
+    setScispacyCandidatesStartedAt(false)
+    setScispacyCandidatesEndedAt(false)
     setSearchStr('')
     setRow(false)
     setLoadingMatches(false)
@@ -750,6 +759,7 @@ const MapProject = () => {
     formData.append('filters', JSON.stringify(getFilters()))
     formData.append('reranker', reranker)
     formData.append('bridge_enabled', bridgeEnabled)
+    formData.append('scispacy_enabled', scispacyEnabled)
     const isUpdate = Boolean(project?.id)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(isUpdate)
@@ -999,6 +1009,8 @@ const MapProject = () => {
       subActions.push('with_reranker')
     if(bridgeEnabled)
       subActions.push('with_bridge_candidates')
+    if(scispacyEnabled)
+      subActions.push('with_scispacy_candidates')
 
     setRowStatuses(prev => {
       prev.unmapped = []
@@ -1012,6 +1024,10 @@ const MapProject = () => {
       if(bridgeEnabled) {
         subActions.push('bridge_candidates')
         fetchBulkBridgeCandidates(rows)
+      }
+      else if(scispacyEnabled) {
+        subActions.push('scispacy_candidates')
+        fetchBulkScispacyCandidates(rows)
       }
       else if(inAIAssistantGroup && autoRunAIAnalysis) {
         subActions.push('ai_analysis')
@@ -1027,6 +1043,7 @@ const MapProject = () => {
 
   const otherMatchedConceptsRef = React.useRef([]);
   const bridgeCandidatesRef = React.useRef([]);
+  const scispacyCandidatesRef = React.useRef([]);
 
   React.useEffect(() => {
     otherMatchedConceptsRef.current = otherMatchedConcepts;
@@ -1035,11 +1052,17 @@ const MapProject = () => {
   React.useEffect(() => {
     if(bridgeEnabled && canBridge === false)
       setBridgeEnabled(false)
-  }, [canBridge, bridgeEnabled])
+    if(scispacyEnabled && canBridge === false && !canScispacy)
+      setScispacyEnabled(false)
+  }, [canBridge, bridgeEnabled, canScispacy, scispacyEnabled])
 
   React.useEffect(() => {
     bridgeCandidatesRef.current = bridgeCandidates;
   }, [bridgeCandidates]);
+
+  React.useEffect(() => {
+    scispacyCandidatesRef.current = scispacyCandidates;
+  }, [scispacyCandidates]);
 
   const runBulkAIAnalysis = async (_rows) => {
     setLoadingMatches(true)
@@ -1068,6 +1091,28 @@ const MapProject = () => {
     }
     const now = moment()
     setBridgeCandidatesEndedAt(now)
+    if(scispacyEnabled) {
+      fetchBulkScispacyCandidates(_rows)
+    }
+    else if(inAIAssistantGroup && autoRunAIAnalysis)
+      setTimeout(() => runBulkAIAnalysis(_rows), 1000)
+    else {
+      setEndMatchingAt(now)
+      setLoadingMatches(false)
+    }
+  }
+
+  const fetchBulkScispacyCandidates = async (_rows) => {
+    setLoadingMatches(true)
+    setScispacyCandidatesStartedAt(moment())
+    for (let index = 0; index < _rows.length; index++) {
+      if (abortRef.current) break;
+
+      await fetchScispacyCandidates(_rows[index]); // wait for completion
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+    }
+    const now = moment()
+    setScispacyCandidatesEndedAt(now)
     if(inAIAssistantGroup && autoRunAIAnalysis)
       setTimeout(() => runBulkAIAnalysis(_rows), 1000)
     else {
@@ -1078,6 +1123,7 @@ const MapProject = () => {
 
   const isRunningBulkAnalysis = bulkAIAnalysisEndedAt ? moment().isBetween(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt) : Boolean(bulkAIAnalysisStartedAt)
   const isRunningBulkBridgeCandidates = bridgeCandidatesEndedAt ? moment().isBetween(bridgeCandidatesStartedAt, bridgeCandidatesEndedAt) : Boolean(bridgeCandidatesStartedAt)
+  const isRunningBulkScispacyCandidates = scispacyCandidatesStartedAt ? moment().isBetween(scispacyCandidatesStartedAt, scispacyCandidatesEndedAt) : Boolean(scispacyCandidatesStartedAt)
 
   const fetchVersions = (url, _selectedVersion) => {
     APIService.new().overrideURL(dropVersion(url)).appendToUrl('versions/?verbose=true').get().then(response => {
@@ -1186,6 +1232,8 @@ const MapProject = () => {
       setBulkAIAnalysisEndedAt(null)
       setBridgeCandidatesStartedAt(null)
       setBridgeCandidatesEndedAt(null)
+      setScispacyCandidatesStartedAt(null)
+      setScispacyCandidatesEndedAt(null)
       setLoadingMatches(true)
       getRowsResults(data)
     } else {
@@ -1216,6 +1264,13 @@ const MapProject = () => {
     if(loadingMatches || bridgeCandidates?.length)
       return `${t('map_project.bridge_candidates')} (${matchingDuration})`
     return t('map_project.bridge_candidates')
+  }
+
+  const getBulkScispacyCandidatesButtonLabel = () => {
+    const matchingDuration = getMatchingDuration(scispacyCandidatesStartedAt, scispacyCandidatesEndedAt)
+    if(loadingMatches || scispacyCandidates?.length)
+      return `${t('map_project.scispacy_candidates')} (${matchingDuration})`
+    return t('map_project.scispacy_candidates')
   }
 
   const getBulkAIAnalysisButtonLabel = () => {
@@ -1337,21 +1392,25 @@ const MapProject = () => {
   const getTop10RowCandidates = (index, removeNull=false) => {
     let _candidates = find(otherMatchedConcepts, c => c.row?.__index === index)?.results || []
     let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === index)?.results || []
-    let __all = [...times(10, i => _candidates[i]), ...times(10, i => _bridgeCandidates[i])]
+    let _scispacyCandidates = find(scispacyCandidates, c => c.row?.__index === index)?.results || []
+    let __all = [...times(10, i => _candidates[i]), ...times(10, i => _bridgeCandidates[i]), ...times(10, i => _scispacyCandidates[i])]
     return removeNull ? compact(__all) : __all
   }
 
   const getTop10RowCandidatesForDownload = index => {
     let _candidatesTop10 = {};
     let _bridgeCandidatesTop10 = {};
+    let _scispacyCandidatesTop10 = {};
     forEach(getTop10RowCandidates(index), (candidate, i) => {
       if(i < 10)
         _candidatesTop10[`__Candidate_Top_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
       else if(bridgeEnabled) {
         _bridgeCandidatesTop10[`__BridgeCandidate_Top_${i - 9}__`] = candidate ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
+      } else if(scispacyEnabled) {
+        _scispacyCandidatesTop10[`__ScispacyCandidate_Top_${i - 9}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
       }
     })
-    return {..._candidatesTop10, ..._bridgeCandidatesTop10}
+    return {..._candidatesTop10, ..._bridgeCandidatesTop10, ..._scispacyCandidatesTop10}
   }
 
   const getRowsForDownload = () => {
@@ -1498,7 +1557,7 @@ const MapProject = () => {
 
   const getConceptLabel = concept => `${concept?.repo?.short_code || repo?.short_code || repo?.id}:${concept.repo?.version || concept.repo?.id || repo?.version || repo?.id}:${concept.id} ${concept.display_name || ''}`
 
-  const isSelectedForMap = (concept, index) => mapSelected[index || rowIndex]?.url == concept.url
+  const isSelectedForMap = (concept, index) => (mapSelected[index || rowIndex]?.url == concept.url) && concept.url
 
   const onStateTabChange = newValue => {
     setSelectedRowStatus(newValue)
@@ -1634,6 +1693,7 @@ const MapProject = () => {
             setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
           }
           fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload)
+          fetchScispacyCandidates(__row, scrollToBottom, forceReload)
           if(scrollToBottom) {
             setTimeout(() => {
               const el = document.getElementById('candidates-list')
@@ -1647,6 +1707,56 @@ const MapProject = () => {
       setTimeout(() => setAlert(false), 6000)
     }
   }
+
+  const fetchScispacyCandidates = (_row, scrollToBottom, forceReload=false) => {
+    let __row = isEmpty(_row) ? row : _row
+    const existingCandidates = find(scispacyCandidates, c => c.row.__index === __row.__index)?.results
+    if(!forceReload && existingCandidates?.length> 0) {
+      setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+      return
+    }
+    if(!scispacyEnabled)
+      return
+    let inputRow = prepareRow(__row)
+    if(!inputRow.name) {
+      return
+    }
+    setIsLoadingInDecisionView(true)
+    const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
+    const service = APIService.new()
+    service.URL = SCISPACY_API_URL
+    service.appendToUrl('/match/recommend/').post(payload).then(response => {
+      if(!isEmpty(response?.data)) {
+        let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
+        setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
+        setTimeout(() => highlightTexts([], null, false, compact([get(payload, 'rows.0.label')])), 100)
+      }
+      setIsLoadingInDecisionView(false)
+    })
+  }
+
+  const fromScispacyResultsToConcepts = results => {
+    let formatted = []
+    forEach(results, (result) => {
+      if(result?.LOINC_NUM)
+        formatted.push({id: result.LOINC_NUM, display_name: result.LONG_COMMON_NAME, search_meta: {search_normalized_score: result.composite_score * 100}, extras: result, source: 'LOINC'})
+    })
+    return formatted
+  }
+
+  // const getAllCandidatesForReranking = () => {
+  //   if(rowIndex) {
+  //     let candidates = find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results || []
+  //     let _bridgeCandidates = find(bridgeCandidates, c => c.row.__index === rowIndex)?.results || []
+  //     let _scispacyCandidates = find(scispacyCandidates, c => c.row.__index === rowIndex)?.results || []
+  //     return [
+  //       ...(candidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$match'}}))),
+  //       ...(_bridgeCandidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$bridge-match'}}))),
+  //       ...(_scispacyCandidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$scispacy-loinc'}}))),
+  //     ]
+  //   }
+  //   return []
+  // }
 
   const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
     let __row = isEmpty(_row) ? row : _row
@@ -1783,16 +1893,37 @@ const MapProject = () => {
     setCandidatesOrderBy(property)
     setCandidatesOrder(order)
     let candidates = find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results || []
+    let _bridgeCandidates = find(bridgeCandidates, c => c.row.__index === rowIndex)?.results || []
+    let _scispacyCandidates = find(scispacyCandidates, c => c.row.__index === rowIndex)?.results || []
     if(candidates.length) {
       const newCandidates = [...otherMatchedConcepts]
+      const newBridgeCandidates = [...bridgeCandidates]
+      const newScispacyCandidates = [...scispacyCandidates]
       const index = findIndex(otherMatchedConcepts, c => c.row.__index === rowIndex)
+      const bridgeIndex = findIndex(bridgeCandidates, c => c.row.__index === rowIndex)
+      const scispacyIndex = findIndex(scispacyCandidates, c => c.row.__index === rowIndex)
       if(property === 'id' && every(candidates, c => isNumeric(c.id))) {
         newCandidates[index].results = orderBy(candidates, candidate => parseFloat(candidate.id), order)
+        if(bridgeIndex > -1)
+          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, candidate => parseFloat(candidate.id), order)
+        if(scispacyIndex > -1)
+          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, candidate => parseFloat(candidate.id), order)
       } else if (property === 'display_name') {
         newCandidates[index].results = orderBy(candidates, candidate => candidate.display_name.toLowerCase(), order)
-      } else
+        if(bridgeIndex > -1)
+          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, candidate => candidate.display_name.toLowerCase(), order)
+        if(scispacyIndex > -1)
+          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, candidate => candidate.display_name.toLowerCase(), order)
+      } else {
         newCandidates[index].results = orderBy(candidates, property, order)
+        if(bridgeIndex > -1)
+          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, property, order)
+        if(scispacyIndex > -1)
+          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, property, order)
+      }
       setOtherMatchedConcepts(newCandidates)
+      setBridgeCandidates(newBridgeCandidates)
+      setScispacyCandidates(newScispacyCandidates)
     }
   }
 
@@ -1871,6 +2002,7 @@ const MapProject = () => {
     }
     let _candidates = find(otherMatchedConceptsRef.current, c => c.row?.__index === __index)?.results || []
     let _bridgeCandidates = find(bridgeCandidatesRef.current, c => c.row?.__index === __index)?.results || []
+    let _scispacyCandidates = find(scispacyCandidatesRef.current, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       let rowData = prepareRow(__row, true)
       let cols = filter(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
@@ -1894,6 +2026,7 @@ const MapProject = () => {
         metadata: rowData.metadata,
         candidates: _candidates,
         bridgeCandidates: _bridgeCandidates,
+        scispacyCandidates: _scispacyCandidates,
         model: AIModel,
       }
       const service = APIService.new()
@@ -2026,6 +2159,9 @@ const MapProject = () => {
                     bridgeEnabled={bridgeEnabled}
                     setBridgeEnabled={setBridgeEnabled}
                     canBridge={canBridge}
+                    canScispacy={canScispacy}
+                    scispacyEnabled={scispacyEnabled}
+                    setScispacyEnabled={setScispacyEnabled}
                   />
                 </div>
           }
@@ -2058,6 +2194,19 @@ const MapProject = () => {
                     {getCandidatesButtonLabel()}
                   </Button>
                   {
+                    scispacyCandidatesStartedAt &&
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        sx={{textTransform: 'none', margin: '5px', pointerEvents: 'none', display: 'none'}}
+                        endIcon={isRunningBulkScispacyCandidates ? <PendingIcon color='warning' /> : <DoneIcon color='primary' />}
+                        loading={isRunningBulkScispacyCandidates || isRunningBulkAnalysis}
+                        loadingPosition="start"
+                      >
+                        {getBulkScispacyCandidatesButtonLabel()}
+                      </Button>
+                  }
+                  {
                     bridgeCandidatesStartedAt &&
                       <Button
                         variant='outlined'
@@ -2085,7 +2234,7 @@ const MapProject = () => {
                       </Button>
                   }
                   {
-                    (loadingMatches || isRunningBulkAnalysis || isRunningBulkBridgeCandidates) &&
+                    (loadingMatches || isRunningBulkAnalysis || isRunningBulkBridgeCandidates || isRunningBulkScispacyCandidates) &&
                       <Button
                         variant='text'
                         size='small'
@@ -2475,6 +2624,9 @@ const MapProject = () => {
                 bridgeEnabled={bridgeEnabled}
                 setBridgeEnabled={setBridgeEnabled}
                 canBridge={canBridge}
+                canScispacy={canScispacy}
+                scispacyEnabled={scispacyEnabled}
+                setScispacyEnabled={setScispacyEnabled}
               />
             </div> :
           (
@@ -2570,6 +2722,7 @@ const MapProject = () => {
                       setAlert={setAlert}
                       candidates={otherMatchedConcepts}
                       bridgeCandidates={bridgeCandidates}
+                      scispacyCandidates={scispacyCandidates}
                       orderBy={candidatesOrderBy}
                       order={candidatesOrder}
                       onOrderChange={onCandidatesOrderChange}

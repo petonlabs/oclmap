@@ -76,7 +76,7 @@ const Sort = ({ selected, onSort, reranker }) => {
   )
 }
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
 
   const getExtraColumns = () => {
@@ -149,14 +149,14 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           ) :
             (
               showHeader &&
-                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: bridge ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
+                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
                   <b>{header}</b>
                   <b>{count.toLocaleString()}</b>
                 </ListSubheader>
             )
         }
         title=' '
-        renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} bridge={bridge} />}
+        renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} bridge={bridge} scispacy={scispacy} notClickable={Boolean(scispacy)} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested
@@ -189,7 +189,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, models, selectedModel, onModelChange, reranker, onRefreshClick}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, reranker, onRefreshClick}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState(false)
   /*eslint no-undef: 0*/
@@ -202,6 +202,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const availableScore = candidatesScore?.available
   const results = find(candidates, c => c.row?.__index === rowIndex )?.results
   const bridgeResults = find(bridgeCandidates, c => c.row?.__index === rowIndex )?.results || []
+  const scispacyResults = find(scispacyCandidates, c => c.row?.__index === rowIndex )?.results || []
   const isNoneLoaded = results === null || results === undefined
   const concepts = results || []
   const canFetchMore = concepts?.length > 0
@@ -409,6 +410,13 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList {...props} candidates={bridgeResults} header={t('map_project.ciel_bridge_terminology_candidates')} onFetchMore={onFetchMore} bucketId={`${rowIndex}-bridge`} noToolbar bridge />
+            }
+          </li>
+          <li>
+            {
+              (isLoading && isNoneLoaded) ?
+                <Skeleton height={60} /> :
+              <CandidateList {...props} candidates={scispacyResults} header={t('map_project.scispacy_candidates')} onFetchMore={onFetchMore} bucketId={`${rowIndex}-scispacy`} noToolbar scispacy />
             }
           </li>
         </List>
