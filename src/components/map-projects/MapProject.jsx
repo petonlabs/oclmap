@@ -238,7 +238,7 @@ const MapProject = () => {
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const CANDIDATES_LIMIT = reranker ? 30 : 10
   const canBridge = bridgeRef?.current?.canBridge()
-  const canScispacy = Boolean(canBridge && SCISPACY_API_URL && window.SCISPACY_LOINC_TOGGLE === true)
+  const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
 
 
   // algos - computed based on current language
