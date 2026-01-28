@@ -13,7 +13,6 @@ import TableRow from '@mui/material/TableRow';
 import Skeleton from '@mui/material/Skeleton';
 import ListItemText from '@mui/material/ListItemText'
 import AddIcon from '@mui/icons-material/Add'
-import FileIcon from '@mui/icons-material/AttachFile';
 import times from 'lodash/times'
 import APIService from '../../services/APIService'
 import { getCurrentUser } from '../../common/utils'
@@ -116,17 +115,7 @@ const MapProjects = () => {
                         </span>
                     </TableCell>
                     <TableCell>
-                      <ListItemText
-                        primary={project.name}
-                        secondary={
-                          <a href={project.file_url} rel="noreferrer noopener" target="_blank">
-                            <span style={{display: 'flex', alignItems: 'center', marginLeft: '-2px'}}>
-                            <FileIcon sx={{fontSize: '14px'}} />
-                            {project.input_file_name}
-                          </span>
-                            </a>
-                        }
-                      />
+                      <ListItemText primary={project.name} />
                     </TableCell>
                     <TableCell>
                       <ListItemText
