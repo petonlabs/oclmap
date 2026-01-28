@@ -375,7 +375,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                     </Badge>
                   </IconButton>
                 }
-                alignToolbarLeft={inAIAssistantGroup}
+                alignToolbarLeft
                 rightControl={getRightControls()}
                 analysis={analysis}
                 showAnalysis
