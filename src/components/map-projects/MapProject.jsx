@@ -1011,6 +1011,8 @@ const MapProject = () => {
       subActions.push('with_bridge_candidates')
     if(scispacyEnabled)
       subActions.push('with_scispacy_candidates')
+    if(inAIAssistantGroup && autoRunAIAnalysis)
+      subActions.push('with_ai_analysis')
 
     setRowStatuses(prev => {
       prev.unmapped = []
@@ -1021,18 +1023,12 @@ const MapProject = () => {
     await processWithConcurrency(repo);
 
     setTimeout(() => {
-      if(bridgeEnabled) {
-        subActions.push('bridge_candidates')
+      if(bridgeEnabled)
         fetchBulkBridgeCandidates(rows)
-      }
-      else if(scispacyEnabled) {
-        subActions.push('scispacy_candidates')
+      else if(scispacyEnabled)
         fetchBulkScispacyCandidates(rows)
-      }
-      else if(inAIAssistantGroup && autoRunAIAnalysis) {
-        subActions.push('ai_analysis')
+      else if(inAIAssistantGroup && autoRunAIAnalysis)
         setTimeout(() => runBulkAIAnalysis(rows), 1000)
-      }
       else {
         setLoadingMatches(false)
         setEndMatchingAt(moment())

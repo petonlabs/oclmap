@@ -46,6 +46,20 @@ const ProjectLogs = ({onClose, logs}) => {
     return [<HistoryIcon key='log' color='warning' />, 'warning']
   }
 
+
+  const formatSubAction = subAction => {
+    let result = '';
+    if(subAction.startsWith('with_')) {
+      result = 'with '
+      subAction = subAction.replace('with_', '')
+    }
+    if(subAction.includes('ai_analysis'))
+      result += 'AI Analysis'
+    else
+      result += startCase(subAction)
+    return result
+  }
+
   const getTitle = log => {
     if(log.action === 'saved_to_collection' && log.extras?.collection_url && log.extras?.id)
       return <span>
@@ -60,7 +74,7 @@ const ProjectLogs = ({onClose, logs}) => {
                {
                  log.extras?.sub_actions?.length ?
                 <span style={{marginLeft: '4px'}}>
-                  {`(${map(log.extras.sub_actions, startCase).join(', ')})`}
+                  {`(${map(log.extras.sub_actions, formatSubAction).join(', ')})`}
                 </span> :
                 null
                }
