@@ -31,6 +31,14 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
     return model + (user ? ` (${analysis?.user} - ${timestamp})` : '')
   }
 
+  const getRecommendationTitle = () => {
+    let recommendation = analysis?.recommendation
+    if(recommendation && analysis?.primary_candidate?.match_strength){
+      recommendation += ` (${analysis.primary_candidate.match_strength})`
+    }
+    return recommendation
+  }
+
   return (
     <>
     <Card variant='outlined' sx={sx}>
@@ -50,7 +58,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
       <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
       {
         get(analysis, 'recommendation') &&
-          <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'recommendation')}:</span>
+          <span style={{fontWeight: 'bold', marginRight: '8px'}}>{getRecommendationTitle()}:</span>
       }
       {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
       </Typography>
