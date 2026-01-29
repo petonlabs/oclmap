@@ -1,4 +1,5 @@
 import React from 'react'
+import moment from 'moment'
 import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -22,6 +23,13 @@ import { isAdminUser } from '../../common/utils'
 const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
   const { t } = useTranslation();
   const [openDetails, setOpenDetails] = React.useState(false)
+
+  const getModelName = () => {
+    let model = analysis?.model || 'AI Model'
+    let user = analysis?.user || ''
+    let timestamp = analysis?.timestamp ? moment(analysis.timestamp).fromNow() : ''
+    return model + (user ? ` (${analysis?.user} - ${timestamp})` : '')
+  }
 
   return (
     <>
@@ -47,7 +55,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
       {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
       </Typography>
         <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0, textAlign: 'right' }}>
-          {analysis?.model ? analysis.model : ''}
+          {getModelName()}
           {
             isAdminUser() &&
               <Tooltip title={t('map_project.view_raw_json')} placement='right'>

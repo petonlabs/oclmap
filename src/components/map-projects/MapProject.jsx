@@ -784,7 +784,7 @@ const MapProject = () => {
 
   const log = (data, index) => {
     let idx = index === undefined ? rowIndex : index
-    setLogs(prev => ({...prev, [idx]: [{...data, created_at: moment().toDate(), user: user.username || user.id}, ...(prev[idx] || [])]}))
+    setLogs(prev => ({...prev, [idx]: [{created_at: moment().toDate(), user: user.username || user.id, ...data}, ...(prev[idx] || [])]}))
   }
 
   const projectLog = data => {
@@ -2032,9 +2032,10 @@ const MapProject = () => {
           setAlert({message: response.detail, severity: 'error'})
           return
         }
+        let timestamp = moment().toDate()
         if(get(response.data, 'rationale'))
-          log({action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
-        setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel}}))
+          log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
+        setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel, timestamp: timestamp, user: user.username || user.id}}))
       })
     }
   }
