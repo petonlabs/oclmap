@@ -16,6 +16,8 @@ import DataObjectIcon from '@mui/icons-material/DataObject';
 
 import get from 'lodash/get'
 
+import { isAdminUser } from '../../common/utils'
+
 
 const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
   const { t } = useTranslation();
@@ -26,30 +28,39 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
     <Card variant='outlined' sx={sx}>
       <CardContent sx={{padding: '8px !important'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-6px'}}>
-          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
-            AI Candidates Analysis {analysis?.model ? ` - ${analysis.model}` : ''}
-            <Tooltip title={t('map_project.view_raw_json')} placement='right'>
-            <span>
-              <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '16px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
-                <DataObjectIcon fontSize='inherit' />
-              </IconButton>
-            </span>
-            </Tooltip>
-          </Typography>
-          <IconButton onClick={onClose} size='small' color='secondary'>
-            <CloseIcon fontSize='small' />
-          </IconButton>
-        </div>
-        {
-          analysis === undefined ?
-            <Skeleton height={75} sx={{'-webkit-transform': 'none', 'transform': 'none'}} /> :
-          <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
-            {
-              get(analysis, 'recommendation') &&
-                <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'recommendation')}:</span>
-            }
-            {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
-          </Typography>
+    <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
+    {t('map_project.ocl_ai_candidates_analysis')}
+    </Typography>
+    <IconButton onClick={onClose} size='small' color='secondary'>
+    <CloseIcon fontSize='small' />
+    </IconButton>
+    </div>
+    {
+      analysis === undefined ?
+        <Skeleton height={75} sx={{'-webkit-transform': 'none', 'transform': 'none'}} /> :
+      <>
+      <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
+      {
+        get(analysis, 'recommendation') &&
+          <span style={{fontWeight: 'bold', marginRight: '8px'}}>{get(analysis, 'recommendation')}:</span>
+      }
+      {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
+      </Typography>
+        <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0, textAlign: 'right' }}>
+          {analysis?.model ? analysis.model : ''}
+          {
+            isAdminUser() &&
+              <Tooltip title={t('map_project.view_raw_json')} placement='right'>
+                <span>
+                  <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '4px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
+                    <DataObjectIcon fontSize='inherit' />
+                  </IconButton>
+                </span>
+              </Tooltip>
+          }
+      </Typography>
+
+          </>
         }
       </CardContent>
     </Card>
@@ -69,7 +80,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
     >
 
       <DialogTitle sx={{p: 3, color: 'surface.dark', fontSize: '22px', textAlign: 'left'}}>
-          AI Candidate Analysis
+        {t('map_project.ocl_ai_candidates_analysis')}
         </DialogTitle>
         <DialogContent>
           <pre style={{fontSize: '12px', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
