@@ -1721,7 +1721,7 @@ const MapProject = () => {
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
     service.URL = SCISPACY_API_URL
-    service.appendToUrl('/match/recommend/').post(payload).then(response => {
+    service.appendToUrl('$match-scispacy-loinc/').post(payload).then(response => {
       if(!isEmpty(response?.data)) {
         let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
         setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
@@ -2027,7 +2027,7 @@ const MapProject = () => {
       }
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
-      service.appendToUrl('/match/recommend/').post(payload).then(response => {
+      service.appendToUrl('/match/$recommend/').post(payload).then(response => {
         if(response?.detail) {
           setAlert({message: response.detail, severity: 'error'})
           return
