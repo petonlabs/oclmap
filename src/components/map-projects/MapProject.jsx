@@ -1748,7 +1748,7 @@ const MapProject = () => {
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
     service.URL = SCISPACY_API_URL
-    service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
+    service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
       if(!isEmpty(response?.data)) {
         let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
         setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
