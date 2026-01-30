@@ -1415,7 +1415,7 @@ const MapProject = () => {
       if(candidate?.id) {
         let algo = candidate.search_meta.algorithm || 'ocl-semantic'
         algo = algo.replaceAll('-', '')
-        _candidates[`__candidate__${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
+        _candidates[`__candidate__${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
       }
     })
     forEach(__bridgeCandidates, (candidate, i) => {
@@ -1429,7 +1429,7 @@ const MapProject = () => {
       if(candidate?.id) {
         let algo = candidate.search_meta.algorithm || 'ocl-scispacy-loinc'
         algo = algo.replaceAll('-', '')
-        _scispacyCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
+        _scispacyCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
       }
     })
     return {..._candidates, ..._bridgeCandidates, ..._scispacyCandidates}
