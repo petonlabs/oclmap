@@ -149,7 +149,6 @@ const MapProject = () => {
   const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
   const [bridgeCandidates, setBridgeCandidates] = React.useState([]);
   const [scispacyCandidates, setScispacyCandidates] = React.useState([]);
-  const [candidatesToSave, setCandidatesToSave] = React.useState([]);
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [facets, setFacets] = React.useState({});
   const [appliedFacets, setAppliedFacets] = React.useState({});
@@ -350,8 +349,21 @@ const MapProject = () => {
       } else {
         setLoadingProject(false)
       }
-      setOtherMatchedConcepts(response?.data?.candidates || [])
-      setCandidatesToSave(response?.data?.candidates || [])
+      let _candidates = []
+      let _bridgeCandidates = []
+      let _scispacyCandidates = []
+      forEach((response?.data?.candidates || []), candidate => {
+        let algo = get(candidate.results, '0.search_meta.algorithm')
+        if(algo === 'ocl-ciel-bridge')
+          _bridgeCandidates.push(candidate)
+        else if(algo === 'ocl-scispacy-loinc')
+          _scispacyCandidates.push(candidate)
+        else
+          _candidates.push(candidate)
+      })
+      setOtherMatchedConcepts(_candidates)
+      setBridgeCandidates(_bridgeCandidates)
+      setScispacyCandidates(_scispacyCandidates)
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
@@ -730,12 +742,17 @@ const MapProject = () => {
         rowIndex: i
       }
     })
-    const candidates = []
-    forEach(candidatesToSave, _candidates => {
-      if(_candidates?.results?.length) {
-        candidates.push({..._candidates, results: _candidates.results.slice(0, 10)})
-      }
-    })
+    let _getCandidates = (_candidates, returnAll) => {
+      let __candidates = []
+      forEach(_candidates, ___candidates => {
+        if(___candidates?.results?.length)
+          __candidates.push({...___candidates, results: returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)})
+      })
+      return __candidates
+    }
+    const candidates = [
+      ..._getCandidates(otherMatchedConcepts), ..._getCandidates(bridgeCandidates), ..._getCandidates(scispacyCandidates, true)
+    ]
     const formData = new FormData();
     formData.append('file', f);
     formData.append('candidates', JSON.stringify(candidates))
@@ -984,9 +1001,6 @@ const MapProject = () => {
             })
             forEach(data, concept => {
               setOtherMatchedConcepts(prev => {
-                return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
-              })
-              setCandidatesToSave(prev => {
                 return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
               })
             })
@@ -1385,28 +1399,40 @@ const MapProject = () => {
     return workbook
   }
 
-  const getTop10RowCandidates = (index, removeNull=false) => {
-    let _candidates = find(otherMatchedConcepts, c => c.row?.__index === index)?.results || []
-    let _bridgeCandidates = find(bridgeCandidates, c => c.row?.__index === index)?.results || []
-    let _scispacyCandidates = find(scispacyCandidates, c => c.row?.__index === index)?.results || []
-    let __all = [...times(10, i => _candidates[i]), ...times(10, i => _bridgeCandidates[i]), ...times(10, i => _scispacyCandidates[i])]
-    return removeNull ? compact(__all) : __all
+  const getTopRowCandidates = (index) => {
+    let _candidates = orderBy(find(otherMatchedConcepts, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
+    let _bridgeCandidates = orderBy(find(bridgeCandidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
+    let _scispacyCandidates = orderBy(find(scispacyCandidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
+    return [times(CANDIDATES_LIMIT, i => _candidates[i]), times(CANDIDATES_LIMIT, i => _bridgeCandidates[i]), times(CANDIDATES_LIMIT, i => _scispacyCandidates[i])]
   }
 
-  const getTop10RowCandidatesForDownload = index => {
-    let _candidatesTop10 = {};
-    let _bridgeCandidatesTop10 = {};
-    let _scispacyCandidatesTop10 = {};
-    forEach(getTop10RowCandidates(index), (candidate, i) => {
-      if(i < 10)
-        _candidatesTop10[`__Candidate_Top_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
-      else if(bridgeEnabled) {
-        _bridgeCandidatesTop10[`__BridgeCandidate_Top_${i - 9}__`] = candidate ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
-      } else if(scispacyEnabled) {
-        _scispacyCandidatesTop10[`__ScispacyCandidate_Top_${i - 9}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
+  const getRowCandidatesForDownload = index => {
+    let _candidates = {};
+    let _bridgeCandidates = {};
+    let _scispacyCandidates = {};
+    const [__candidates, __bridgeCandidates, __scispacyCandidates] = getTopRowCandidates(index)
+    forEach(__candidates, (candidate, i) => {
+      if(candidate?.id) {
+        let algo = candidate.search_meta.algorithm || 'ocl-semantic'
+        algo = algo.replaceAll('-', '')
+        _candidates[`__candidate__${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
       }
     })
-    return {..._candidatesTop10, ..._bridgeCandidatesTop10, ..._scispacyCandidatesTop10}
+    forEach(__bridgeCandidates, (candidate, i) => {
+      if(candidate?.id) {
+        let algo = candidate.search_meta.algorithm || 'ocl-ciel-bridge'
+        algo = algo.replaceAll('-', '')
+        _bridgeCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
+      }
+    })
+    forEach(__scispacyCandidates, (candidate, i) => {
+      if(candidate?.id) {
+        let algo = candidate.search_meta.algorithm || 'ocl-scispacy-loinc'
+        algo = algo.replaceAll('-', '')
+        _scispacyCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`]).join('\n') : null
+      }
+    })
+    return {..._candidates, ..._bridgeCandidates, ..._scispacyCandidates}
   }
 
   const getRowsForDownload = () => {
@@ -1420,7 +1446,7 @@ const MapProject = () => {
       const aiCandidate = get(aiRecommendation, 'primary_candidate')
       const aiCandidateID = aiCandidate?.concept_id
       const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
-      let  candidates = getTop10RowCandidatesForDownload(index)
+      let  candidates = getRowCandidatesForDownload(index)
       const getOutOfScopeSuggestions = () => {
         let suggestions = get(aiRecommendation, 'out_of_scope_suggestions') || []
         return map(suggestions, sugg => {
@@ -1451,6 +1477,7 @@ const MapProject = () => {
         '__Repo URL__': _repo?.version_url || _repo?.url,
         ...candidates,
       }
+      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && key.includes('_Top_'))
       delete newRow.__index
       return newRow
     })
@@ -1721,7 +1748,7 @@ const MapProject = () => {
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
     service.URL = SCISPACY_API_URL
-    service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
+    service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
       if(!isEmpty(response?.data)) {
         let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
         setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
@@ -1735,7 +1762,7 @@ const MapProject = () => {
     let formatted = []
     forEach(results, (result) => {
       if(result?.LOINC_NUM)
-        formatted.push({id: result.LOINC_NUM, display_name: result.LONG_COMMON_NAME, search_meta: {search_normalized_score: result.composite_score * 100}, extras: result, source: 'LOINC'})
+        formatted.push({id: result.LOINC_NUM, display_name: result.LONG_COMMON_NAME, search_meta: {search_normalized_score: result.composite_score * 100, search_score: result.composite_score, algorithm: 'ocl-scispacy-loinc'}, extras: result, source: 'LOINC'})
     })
     return formatted
   }
