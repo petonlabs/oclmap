@@ -172,7 +172,6 @@ const MapProject = () => {
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
-  const [reranker, setReranker] = React.useState(true)
   const [bridgeEnabled, setBridgeEnabled] = React.useState(false)
   const [scispacyEnabled, setScispacyEnabled] = React.useState(false)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
@@ -235,7 +234,7 @@ const MapProject = () => {
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
-  const CANDIDATES_LIMIT = reranker ? 30 : 10
+  const CANDIDATES_LIMIT = 30
   const canBridge = bridgeRef?.current?.canBridge()
   const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
 
@@ -370,7 +369,6 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setMatchAPI(response.data?.match_api_url)
       setMatchAPIToken(response.data?.match_api_token)
-      setReranker(Boolean(response.data?.reranker))
       setBridgeEnabled(Boolean(response.data?.bridge_enabled))
       setScispacyEnabled(Boolean(response.data?.scispacy_enabled))
       if(response.data?.match_api_url)
@@ -811,7 +809,6 @@ const MapProject = () => {
       formData.append('match_api_token', '')
     }
     formData.append('filters', JSON.stringify(getFilters()))
-    formData.append('reranker', reranker)
     formData.append('bridge_enabled', bridgeEnabled)
     formData.append('scispacy_enabled', scispacyEnabled)
     const isUpdate = Boolean(project?.id)
@@ -976,7 +973,6 @@ const MapProject = () => {
         includeMappings: true,
         mappingBrief: true,
         mapTypes: 'SAME-AS,SAME AS,SAME_AS',
-        reranker: reranker
       }
 
       try {
@@ -1053,11 +1049,9 @@ const MapProject = () => {
     };
 
     let action = 'auto_matched'
-    let subActions = []
+    let subActions = ['with_reranker']
     if(autoMatchUnmappedOnly)
       subActions.push('unmatched_only')
-    if(reranker)
-      subActions.push('with_reranker')
     if(bridgeEnabled)
       subActions.push('with_bridge_candidates')
     if(scispacyEnabled)
@@ -1729,7 +1723,6 @@ const MapProject = () => {
           mappingBrief: true,
           mapTypes: 'SAME-AS,SAME AS,SAME_AS',
           verbose: true,
-          reranker: reranker,
           limit: CANDIDATES_LIMIT,
           offset: offset || 0,
           semantic: ['llm', 'custom'].includes(algo)
@@ -2215,8 +2208,6 @@ const MapProject = () => {
                     setFilters={setFilters}
                     locales={locales}
                     isLoadingLocales={isLoadingLocales}
-                    reranker={reranker}
-                    setReranker={setReranker}
                     bridgeEnabled={bridgeEnabled}
                     setBridgeEnabled={setBridgeEnabled}
                     canBridge={canBridge}
@@ -2574,7 +2565,6 @@ const MapProject = () => {
                 getHelperTextForAutoMatchUnmapped()
               }
             </FormHelperText>
-            <FormControlLabel sx={{width: '100%'}} control={<Checkbox checked={reranker} onChange={event => setReranker(event.target.checked)} />} label={t('map_project.enable_reranker')} />
             {
               inAIAssistantGroup &&
                 <>
@@ -2680,8 +2670,6 @@ const MapProject = () => {
                 setFilters={setFilters}
                 locales={locales}
                 isLoadingLocales={isLoadingLocales}
-                reranker={reranker}
-                setReranker={setReranker}
                 bridgeEnabled={bridgeEnabled}
                 setBridgeEnabled={setBridgeEnabled}
                 canBridge={canBridge}
@@ -2776,7 +2764,6 @@ const MapProject = () => {
                 {
                   decisionTab === 'candidates' && isSplitView &&
                     <Candidates
-                      reranker={reranker}
                       candidatesScore={candidatesScore}
                       rowIndex={rowIndex}
                       alert={alert}

@@ -49,7 +49,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -284,23 +284,6 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               helperText={t('map_project.rows_per_match_api')}
             />
           </>
-      }
-      {
-        algo != 'es' &&
-          <FormControlLabel
-            sx={{marginLeft: '-4px'}}
-            size='small'
-            control={
-              <Checkbox
-                size='small'
-                checked={reranker}
-                sx={{padding: '8px 4px'}}
-                onChange={() => setReranker(!reranker)}
-              />
-            }
-            label={t('map_project.enable_reranker')}
-          />
-
       }
       {
         algo != 'es' &&

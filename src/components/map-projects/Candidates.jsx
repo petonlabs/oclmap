@@ -38,7 +38,7 @@ import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 import AIAssistantButton from './AIAssistantButton'
 
-const Sort = ({ selected, onSort, reranker }) => {
+const Sort = ({ selected, onSort }) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(false)
   const onSortClick = event => setAnchorEl(event.currentTarget)
@@ -59,12 +59,9 @@ const Sort = ({ selected, onSort, reranker }) => {
         onClose={() => setAnchorEl(false)}
       sx={{'.MuiPaper-root': {backgroundColor: 'surface.n94'}}}
       >
-        {
-          reranker &&
-            <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'score'}>
-              <ListItemText primary={t('map_project.sort_by_raw_score')} />
-            </ListItemButton>
-        }
+        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'score'}>
+          <ListItemText primary={t('map_project.sort_by_raw_score')} />
+        </ListItemButton>
         <ListItemButton id='sort_by_id' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('id')} selected={selected === 'id'}>
           <ListItemText primary={t('map_project.concept_id')} />
         </ListItemButton>
@@ -189,7 +186,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, reranker, onRefreshClick}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState(false)
   /*eslint no-undef: 0*/
@@ -276,7 +273,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
               <Sort
                 onSort={onSort}
                 selected={sortBy}
-                reranker={reranker}
               />
           }
           {
