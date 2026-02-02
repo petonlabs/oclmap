@@ -741,6 +741,8 @@ export const URIToOwnerParams = uri => {
 }
 
 export const URIToParentParams = (uri, includeVersion=false) => {
+  if(!uri)
+    return {}
   const parentURI = includeVersion ? toParentVersionURI(uri) : toParentURI(uri)
   let parent = {ownerType: undefined, owner: undefined, url: parentURI, repo: undefined, repoType: undefined}
   const parts = parentURI.split('/')

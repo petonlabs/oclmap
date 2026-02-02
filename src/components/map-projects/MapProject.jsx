@@ -587,8 +587,29 @@ const MapProject = () => {
   const setProjectFromData = (jsonData, projectData) => {
     let _data = []
 
-    const reservedKeys = ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__']
-    const optionalReservedKeys = ['__Concept Name__']
+    const reservedKeys = [
+      '__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__',
+      '__map_concept_id__',
+      '__map_concept_name__',
+      '__map_concept_url__',
+      '__map_type__',
+      '__map_score__',
+      '__Match Type__',
+      '__oclai_match_quality__',
+      '__oclai_confidence_score__',
+      '__oclai_rec_concept_id__',
+      '__oclai_rec_concept_name__',
+      '__oclai_alt_concepts__',
+      '__oclai_oos_suggestions__',
+      '__oclai_rationale__',
+      '__row_decision__',
+      '__row_status__',
+      '__proposed__',
+      '__map_repo_id__',
+      '__map_repo_url__',
+      '__match_type__'
+    ]
+    const optionalReservedKeys = ['__Concept Name__', '__map_concept_name__']
     let columns = keys(jsonData[0])
     let isResuming = params?.projectId || every(reservedKeys, key => columns.includes(key))
     let _decisions = {}
@@ -598,23 +619,39 @@ const MapProject = () => {
     let _proposed = {}
     let _repo = null
     let _states = {...rowStatuses}
+    const repoVersionURL = data['__Repo URL__'] || data['__map_repo_url__']
+    const repoURL = dropVersion(repoVersionURL)
+    const repoParams = URIToParentParams(repoVersionURL, true)
+    const repoVersion = data['__Repo Version__'] || repoParams.repoVersion
     forEach(jsonData, (data, index) => {
       data.__index = index
       if(isResuming) {
-        let repo = {id: data['__Repo ID__'], version: data['__Repo Version__'], url: dropVersion(data['__Repo URL__']), version_url: data['__Repo URL__']}
-        let concept = {id: data['__Concept ID__'], display_name: data['__Concept Name__'], url: data['__Concept URL__'], search_meta: {search_normalized_score: data['__Match Score__'], match_type: snakeCase(data['__Match Type__'])}, repo: repo}
+        let repo = {
+          id: data['__Repo ID__'] || data['__map_repo_id__'],
+          version: repoVersion,
+          url: repoURL,
+          version_url: repoVersionURL
+        }
+        let concept = {
+          id: data['__Concept ID__'] || data['__map_concept_id__'],
+          display_name: data['__Concept Name__'] || data['__map_concept_name__'],
+          url: data['__Concept URL__'] || data['__map_concept_url__'],
+          search_meta: {search_normalized_score: data['__Match Score__'] || data['__map_score__'],
+                        match_type: snakeCase(data['__Match Type__'] || data['__match_type__'])},
+          repo: repo
+        }
         if(concept?.id) {
           _mapSelected[index] = concept
           _repo = repo
         }
-        let rowStateLabel = data['__State__']
+        let rowStateLabel = data['__State__'] || data['__row_status__']
         let state = keys(pickBy(VIEWS, info => info.label === rowStateLabel))[0]
         _states[state] = _states[state] || []
         _states[state].push(index)
-        _decisions[index] = data['__Decision__'] === t('map_project.none') ? undefined : data['__Decision__']
+        _decisions[index] = (data['__Decision__'] || data['__row_decision__']) === t('map_project.none') ? undefined : (data['__Decision__'] || data['__row_decision__'])
         _notes[index] = data['__Note__']
-        _mapTypes[index] = data['__Map Type__']
-        _proposed[index] = data['__Proposed__'] ? JSON.parse(data['__Proposed__']) : undefined
+        _mapTypes[index] = data['__Map Type__'] || data['__map_type__']
+        _proposed[index] = (data['__Proposed__'] || data['__proposed__']) ? JSON.parse(data['__Proposed__'] || data['__proposed__']) : undefined
         data = omit(data, [...reservedKeys, ...optionalReservedKeys])
       }
       _data.push(data)
@@ -1406,6 +1443,8 @@ const MapProject = () => {
     return [times(CANDIDATES_LIMIT, i => _candidates[i]), times(CANDIDATES_LIMIT, i => _bridgeCandidates[i]), times(CANDIDATES_LIMIT, i => _scispacyCandidates[i])]
   }
 
+  const twoDigit = n => String(n).padStart(2, '0')
+
   const getRowCandidatesForDownload = index => {
     let _candidates = {};
     let _bridgeCandidates = {};
@@ -1415,21 +1454,21 @@ const MapProject = () => {
       if(candidate?.id) {
         let algo = candidate.search_meta.algorithm || 'ocl-semantic'
         algo = algo.replaceAll('-', '')
-        _candidates[`__candidate__${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
+        _candidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
       }
     })
     forEach(__bridgeCandidates, (candidate, i) => {
       if(candidate?.id) {
         let algo = candidate.search_meta.algorithm || 'ocl-ciel-bridge'
         algo = algo.replaceAll('-', '')
-        _bridgeCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
+        _bridgeCandidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
       }
     })
     forEach(__scispacyCandidates, (candidate, i) => {
       if(candidate?.id) {
         let algo = candidate.search_meta.algorithm || 'ocl-scispacy-loinc'
         algo = algo.replaceAll('-', '')
-        _scispacyCandidates[`__candidate_${algo}_${i + 1}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
+        _scispacyCandidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
       }
     })
     return {..._candidates, ..._bridgeCandidates, ..._scispacyCandidates}
@@ -1455,29 +1494,27 @@ const MapProject = () => {
       }
       let newRow = {
         ...row,
-        '__Concept ID__': concept?.id,
-        '__Concept Name__': concept?.display_name,
-        '__Concept URL__': concept?.url,
-        '__Map Type__': mapTypes[index],
-        '__Match Score__': concept?.search_meta?.search_normalized_score,
-        '__Match Type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
-        '__AI Recommendation__': get(aiRecommendation, 'recommendation') || null,
-        '__AI Recommendation Candidate__': aiCandidateID || null,
-        '__AI Recommendation Candidate Name__': get(aiCandidate, 'name') || null,
-        '__AI Recommendation Score__': aiScore || null,
-        '__AI Recommendation Rationale__': get(aiRecommendation, 'rationale') || null,
-        '__AI Recommendation Alternative Candidates__': map(get(aiRecommendation, 'alternative_candidates', []), 'concept_id').join('\n') || null,
-        '__AI Recommendation Out Of Scope Suggestions__': getOutOfScopeSuggestions() || null,
-        '__Decision__': decisions[index] || 'None',
-        '__Note__': notes[index] || null,
-        '__State__': rowStateLabel,
-        '__Proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
-        '__Repo Version__': _repo?.version || _repo?.id,
-        '__Repo ID__': _repo?.short_code || _repo?.id,
-        '__Repo URL__': _repo?.version_url || _repo?.url,
+        '__map_concept_id__': concept?.id,
+        '__map_concept_name__': concept?.display_name,
+        '__map_concept_url__': concept?.url,
+        '__map_type__': mapTypes[index],
+        '__map_score__': concept?.search_meta?.search_normalized_score,
+        '__match_type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
+        '__oclai_match_quality__': get(aiRecommendation, 'recommendation') || null,
+        '__oclai_confidence_score__': aiScore || null,
+        '__oclai_rec_concept_id__': aiCandidateID || null,
+        '__oclai_rec_concept_name__': get(aiCandidate, 'name') || null,
+        '__oclai_alt_concepts__': map(get(aiRecommendation, 'alternative_candidates', []), 'concept_id').join('\n') || null,
+        '__oclai_oos_suggestions__': getOutOfScopeSuggestions() || null,
+        '__oclai_rationale__': get(aiRecommendation, 'rationale') || null,
+        '__row_decision__': decisions[index] || 'None',
+        '__row_status__': rowStateLabel,
+        '__proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
+        '__map_repo_id__': _repo?.short_code || _repo?.id,
+        '__map_repo_url__': _repo?.version_url || _repo?.url,
         ...candidates,
       }
-      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && key.includes('_Top_'))
+      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__'].includes(key)))
       delete newRow.__index
       return newRow
     })
@@ -1748,7 +1785,7 @@ const MapProject = () => {
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
     service.URL = SCISPACY_API_URL
-    service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
+    service.appendToUrl('/$match-scispacy-loinc/').post(payload, "h77mKwHRdcvBS2IHNcNuPNMR5").then(response => {
       if(!isEmpty(response?.data)) {
         let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
         setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
