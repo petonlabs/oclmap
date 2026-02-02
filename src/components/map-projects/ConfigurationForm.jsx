@@ -26,8 +26,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import isEmpty from 'lodash/isEmpty'
 import omit from 'lodash/omit'
 
-import { toV3URL, hasAuthGroup, getCurrentUser } from '../../common/utils'
-import { MAPPER_CROSS_ENCODER_GROUP } from '../../common/constants'
+import { toV3URL } from '../../common/utils'
 import NamespaceDropdown from '../common/NamespaceDropdown'
 import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
 import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
@@ -53,8 +52,6 @@ const VisuallyHiddenInput = styled('input')({
 const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, reranker, setReranker, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
-  const canApplyReranking = hasAuthGroup(getCurrentUser(), MAPPER_CROSS_ENCODER_GROUP)
-
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
   const onAlgoChange = id => {
     setAlgoMenuAnchorEl(null)
@@ -289,7 +286,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
           </>
       }
       {
-        canApplyReranking && algo != 'es' &&
+        algo != 'es' &&
           <FormControlLabel
             sx={{marginLeft: '-4px'}}
             size='small'

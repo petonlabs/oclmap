@@ -172,7 +172,7 @@ const MapProject = () => {
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
-  const [reranker, setReranker] = React.useState(false)
+  const [reranker, setReranker] = React.useState(true)
   const [bridgeEnabled, setBridgeEnabled] = React.useState(false)
   const [scispacyEnabled, setScispacyEnabled] = React.useState(false)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
@@ -1785,7 +1785,7 @@ const MapProject = () => {
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
     service.URL = SCISPACY_API_URL
-    service.appendToUrl('/$match-scispacy-loinc/').post(payload, "h77mKwHRdcvBS2IHNcNuPNMR5").then(response => {
+    service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
       if(!isEmpty(response?.data)) {
         let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
         setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
