@@ -89,7 +89,7 @@ const Discuss = ({ logs, onAdd }) => {
     if(['proposed'].includes(log.action))
       return 'warning'
     if(['mapped', 'auto-matched', 'AIRecommendation', 'approved', 'reviewed', 'algo_finished', 'rerank_finished'].includes(log.action))
-      return 'primary'
+      return log.extras?.error ? 'error' : 'primary'
     return undefined
   }
 

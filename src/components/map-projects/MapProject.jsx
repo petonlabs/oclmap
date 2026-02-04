@@ -2315,13 +2315,14 @@ const MapProject = () => {
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
       service.appendToUrl('/match/$recommend/').post(payload).then(response => {
+        let timestamp = moment().toDate()
         if(response?.detail) {
+          log({created_at: timestamp, action: 'AIRecommendation', description: response.detail, extras: {error: response.detail, model: find(AIModels, {id: AIModel})}})
           setAlert({message: response.detail, severity: 'error'})
           return
         }
-        let timestamp = moment().toDate()
-        if(get(response.data, 'rationale'))
-          log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
+
+        log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
         setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel, timestamp: timestamp, user: user.username || user.id}}))
       })
     }
