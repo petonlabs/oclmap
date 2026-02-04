@@ -49,7 +49,7 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled, setAIAssistantColumns, AIAssistantColumns, inAIAssistantGroup }) => {
   const { t } = useTranslation();
   const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
@@ -379,6 +379,9 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
               setColumnVisibilityModel={setColumnVisibilityModel}
               mappedSources={mappedSources}
               targetSourcesFromRows={targetSourcesFromRows}
+              setAIAssistantColumns={setAIAssistantColumns}
+              AIAssistantColumns={AIAssistantColumns}
+              inAIAssistantGroup={inAIAssistantGroup}
             />
           </>
       }

@@ -81,39 +81,49 @@ const TargetSourceAutoComplete = ({sources, possibleValue, selected, onChange, .
     }
   }, [])
   return <Autocomplete
-            autoHighlight
-            autoComplete
-            disablePortal
-            blurOnSelect
-            fullWidth
-            getOptionLabel={option => option.id || ''}
-            isOptionEqualToValue={(option, value) => option?.url === value}
-            sx={{
-              minWidth: '100px',
-              '.MuiButtonBase-root': {color: '#000'}
-            }}
-            renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
+           autoHighlight
+           autoComplete
+           disablePortal
+           blurOnSelect
+           fullWidth
+           getOptionLabel={option => option.id || ''}
+           isOptionEqualToValue={(option, value) => option?.url === value}
+           sx={{
+             minWidth: '100px',
+             '.MuiButtonBase-root': {color: '#000'}
+           }}
+           renderInput={(params) => <TextField margin='dense' size='small' {...params} />}
            options={orderBy(sources, 'id')}
            value={selected ? find(sources, {url: selected}) || '' : ''}
            onChange={(event, val) => onChange(val?.url)}
-            {...rest}
-          />
+           {...rest}
+         />
 }
 
-const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumnVisibilityModel, columnVisibilityModel, mappedSources, targetSourcesFromRows}) => {
+const ColumnMapTable = ({
+  validColumns, columns, isValid, onUpdate, sx, mappedSources, targetSourcesFromRows,
+  setColumnVisibilityModel, columnVisibilityModel,
+  setAIAssistantColumns, AIAssistantColumns,
+  inAIAssistantGroup
+}) => {
   const { t } = useTranslation();
   const [random, setRandom] = React.useState(0)
   const onValChange = (position, value, key) => {
     onUpdate(position, value, key)
     setRandom(random + 1)
   }
+
   return (
     <Table size='small' sx={{'.MuiTableCell-root': {padding: '3px 8px'}, ...sx}}>
       <TableHead>
         <TableRow>
-          <TableCell><b>{t('map_project.input_column')}</b></TableCell>
-          <TableCell><b>{t('map_project.mapped_field')}</b></TableCell>
-          <TableCell><b>{t('common.show')}</b></TableCell>
+          <TableCell sx={{width: '40%'}}><b>{t('map_project.input_column')}</b></TableCell>
+          <TableCell sx={{width: '40%'}}><b>{t('map_project.mapped_field')}</b></TableCell>
+          <TableCell align='center'><b>{t('common.show')}</b></TableCell>
+          {
+            inAIAssistantGroup &&
+              <TableCell align='center'><b>{t('map_project.column_send_to_ai_assistant')}</b></TableCell>
+          }
         </TableRow>
       </TableHead>
       <TableBody>
@@ -121,9 +131,10 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
           map(columns, (column, position) => {
             const isValidColumn = isValid(column.label)
             const isHidden = columnVisibilityModel[column.dataKey] === false
+            const sendToAIAssistant = AIAssistantColumns[column.dataKey] === false
             return (
               <TableRow key={column.original}>
-              <TableCell sx={{width: '50%'}}>
+                <TableCell sx={{width: '40%'}}>
                   <span style={{display: 'flex', alignItems: 'center'}}>
                     {
                       isValidColumn ?
@@ -133,15 +144,15 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                     {column.original}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{width: '40%'}}>
                   <>
-                  <HeaderAutocomplete
-                    headers={validColumns}
-                    value={column.label}
-                    id={position.toString()}
-                    isValid={isValidColumn}
-                    onChange={(event, value) => onValChange(position, value?.label || value)}
-                  />
+                    <HeaderAutocomplete
+                      headers={validColumns}
+                      value={column.label}
+                      id={position.toString()}
+                      isValid={isValidColumn}
+                      onChange={(event, value) => onValChange(position, value?.label || value)}
+                    />
                     {
                       'Mapping: List' === column.label &&
                         <div>
@@ -178,11 +189,17 @@ const ColumnMapTable = ({validColumns, columns, isValid, onUpdate, sx, setColumn
                           />
                         </div>
                     }
-              </>
+                  </>
                 </TableCell>
-                <TableCell>
+                <TableCell align='center'>
                   <Switch size="small" checked={!isHidden} onChange={() => setColumnVisibilityModel(isHidden ? omit(columnVisibilityModel, [column.dataKey]) : {...columnVisibilityModel, [column.dataKey]: false})}/>
                 </TableCell>
+                {
+                  inAIAssistantGroup &&
+                    <TableCell align='center'>
+                      <Switch size="small" checked={!sendToAIAssistant} onChange={() => setAIAssistantColumns(sendToAIAssistant ? omit(AIAssistantColumns, [column.dataKey]) : {...AIAssistantColumns, [column.dataKey]: false})}/>
+                    </TableCell>
+                }
               </TableRow>
             )
           })

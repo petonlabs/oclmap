@@ -36,7 +36,7 @@ import uniq from 'lodash/uniq'
 import without from 'lodash/without'
 import orderBy from 'lodash/orderBy'
 
-import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
+import { highlightTexts } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
 import { SCORES_COLOR } from './constants'
 import SearchResults from '../search/SearchResults';
@@ -286,15 +286,11 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick, rowStage}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState('search_meta.search_normalized_score')
   const [groupBy, setGroupBy] = React.useState('quality')
   const [collapsed, setCollapsed] = React.useState([])
-
-  /*eslint no-undef: 0*/
-  const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
-  const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const [openFilters, setOpenFilters] = React.useState(false)
   const [display, setDisplay] = React.useState('card')
   const [openAIAnalysis, setOpenAIAnalysis] = React.useState(undefined)

@@ -319,7 +319,8 @@
     "ocl_ai_candidates_analysis": "OCL AI Assistant: Análisis de Candidatos",
     "group_by_match_quality": "Calidad de Coincidencia",
     "ocl_semantic_algorithm": "Algoritmo Semántico OCL",
-    "algorithm": "Algoritmo"
+    "algorithm": "Algoritmo",
+    "column_send_to_ai_assistant": "Enviar a Asistente de IA"
   },
   "app": {
     "web_version": "Versión Web",

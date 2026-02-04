@@ -199,6 +199,7 @@ const MapProject = () => {
   const [autoRunAIAnalysis, setAutoRunAIAnalysis] = React.useState(false)
   const [alert, setAlert] = React.useState(false)
   const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({})
+  const [AIAssistantColumns, setAIAssistantColumns] = React.useState({})
   const [columnWidth, setColumnWidth] = React.useState({})
   const [logs, setLogs] = React.useState({})
   const [projectLogs, setProjectLogs] = React.useState([])
@@ -328,11 +329,14 @@ const MapProject = () => {
             const _columns = response.data.columns.map(col => ({...omit(col, ['hidden'])}))
             setColumns(_columns)
             setTargetSourcesFromRows(getTargetSourcesFromRows(_columns, data))
+            let AIAssistantColVisibility = {}
             let colVisibility = {}
             let colWidth = {}
             response.data.columns.forEach(col => {
               if(col.hidden)
                 colVisibility[col.dataKey] = false
+              if(col.ai_assistant_hidden)
+                AIAssistantColVisibility[col.dataKey] = false
               if(col.width) {
                 if(isString(col.width)) {
                   let _width = parseInt(col.width.replace('px'))
@@ -343,6 +347,7 @@ const MapProject = () => {
               }
             })
             setColumnVisibilityModel(colVisibility)
+            setAIAssistantColumns(AIAssistantColVisibility)
             setColumnWidth(colWidth)
           }
           setTimeout(() => {
@@ -810,7 +815,7 @@ const MapProject = () => {
     formData.append('matches', JSON.stringify(selected))
     formData.append('name', name || f.name)
     formData.append('description', description)
-    formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined}))))
+    formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined, ai_assistant_hidden: AIAssistantColumns[col.dataKey] === false}))))
     if(repoVersion?.version_url)
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('matching_algorithm', algo)
@@ -1273,7 +1278,7 @@ const MapProject = () => {
     }
   }
 
-  const prepareRow = (csvRow, additional=false) => {
+  const prepareRow = (csvRow, additional=false, forRecommendation=false) => {
     let row = {}
     let metadata = {}
     forEach(csvRow,  (value, key) => {
@@ -1281,33 +1286,35 @@ const MapProject = () => {
         const column = find(columns, {original: key.replace('__updated', '')}) || find(columns, {dataKey: key.replace('__updated', '')})
         key = column?.label || key
         const dataKey = column?.dataKey || key
-        if(columnVisibilityModel[dataKey] !== false && (dataKey === '__index' || isValidColumnValue(column?.label))) {
-          let newValue = value
-          let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
-          let isList = key === '__index' ? false : newValue.includes('\n')
-          if(['Mapping: Code', 'Mapping: List'].includes(column?.label))
-            newKey = column.dataKey
+        if(!forRecommendation || AIAssistantColumns[dataKey] !== false) {
+          if(columnVisibilityModel[dataKey] !== false && (dataKey === '__index' || isValidColumnValue(column?.label))) {
+            let newValue = value
+            let newKey = key === '__index' ? key : snakeCase(key.toLowerCase())
+            let isList = key === '__index' ? false : newValue.includes('\n')
+            if(['Mapping: Code', 'Mapping: List'].includes(column?.label))
+              newKey = column.dataKey
 
-          if(isList)
-            newValue = newValue.split('\n')
-          if(key.includes('__updated'))
-            newKey = key.replace('__updated', '')
-          if(newKey.includes('class'))
-            newKey = 'concept_class'
-          if(newKey.includes('datatype'))
-            newKey = 'datatype'
-          if(newKey === 'set_members')
-            newKey = 'other_map_codes'
-          if(newKey === 'same_as')
-            newKey = 'same_as_map_codes'
-          if(newKey.startsWith('property_'))
-            newKey = newKey.replace('property_', 'properties__')
-          if(isList)
-            row[newKey] = [...(row[newKey] || []), ...newValue]
-          else
-            row[newKey] = newValue
-        } else if(additional && !key?.startsWith('__')) {
-          metadata[key] = value
+            if(isList)
+              newValue = newValue.split('\n')
+            if(key.includes('__updated'))
+              newKey = key.replace('__updated', '')
+            if(newKey.includes('class'))
+              newKey = 'concept_class'
+            if(newKey.includes('datatype'))
+              newKey = 'datatype'
+            if(newKey === 'set_members')
+              newKey = 'other_map_codes'
+            if(newKey === 'same_as')
+              newKey = 'same_as_map_codes'
+            if(newKey.startsWith('property_'))
+              newKey = newKey.replace('property_', 'properties__')
+            if(isList)
+              row[newKey] = [...(row[newKey] || []), ...newValue]
+            else
+              row[newKey] = newValue
+          } else if(additional && !key?.startsWith('__')) {
+            metadata[key] = value
+          }
         }
       }
     })
@@ -1925,7 +1932,7 @@ const MapProject = () => {
     const service = APIService.new()
     try {
       service.URL = SCISPACY_API_URL
-      service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
+      service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
         log({action: 'algo_finished', extras: {algo: 'ocl-scispacy-loinc'}}, __row.__index)
         setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-scispacy-loinc': 1}}))
         if(!isEmpty(response?.data)) {
@@ -2243,8 +2250,8 @@ const MapProject = () => {
     let _bridgeCandidates = find(bridgeCandidatesRef.current, c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(scispacyCandidatesRef.current, c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
-      let rowData = prepareRow(__row, true)
-      let cols = filter(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
+      let rowData = prepareRow(__row, true, true)
+      let cols = filter(map(columns, col => ({...col, hidden: AIAssistantColumns[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
         return !has(col, 'hidden') || col['hidden'] === false && col?.label
       })
       cols = compact(map(cols, col => {
@@ -2312,6 +2319,63 @@ const MapProject = () => {
     return [70, 30]
   }
 
+  const getConfigurationForm = () => (
+    <ConfigurationForm
+      project={project}
+      handleFileUpload={handleFileUpload}
+      file={file}
+      owner={owner}
+      setOwner={setOwner}
+      name={name}
+      setName={setName}
+      description={description}
+      setDescription={setDescription}
+      repo={repo}
+      onRepoChange={onRepoChange}
+      repoVersion={repoVersion}
+      setRepoVersion={onRepoVersionChange}
+      mappedSources={mappedSources}
+      targetSourcesFromRows={targetSourcesFromRows}
+      versions={versions}
+      algo={algo}
+      onAlgoSelect={onAlgoSelect}
+      algos={algos}
+      validColumns={headers}
+      columns={columns}
+      isValidColumnValue={isValidColumnValue}
+      updateColumn={updateColumn}
+      configure={configure}
+      setConfigure={setConfigure}
+      columnVisibilityModel={columnVisibilityModel}
+      setColumnVisibilityModel={setColumnVisibilityModel}
+      onSave={onSave}
+      isSaving={isSaving}
+      matchAPI={matchAPI}
+      setMatchAPI={setMatchAPI}
+      matchAPIToken={matchAPIToken}
+      setMatchAPIToken={setMatchAPIToken}
+      semanticBatchSize={semanticBatchSize}
+      setSemanticBatchSize={setSemanticBatchSize}
+      candidatesScore={candidatesScore}
+      onScoreChange={setCandidatesScore}
+      includeDefaultFilter={includeDefaultFilter}
+      setIncludeDefaultFilter={setIncludeDefaultFilter}
+      filters={filters}
+      setFilters={setFilters}
+      locales={locales}
+      isLoadingLocales={isLoadingLocales}
+      bridgeEnabled={bridgeEnabled}
+      setBridgeEnabled={setBridgeEnabled}
+      canBridge={canBridge}
+      canScispacy={canScispacy}
+      scispacyEnabled={scispacyEnabled}
+      setScispacyEnabled={setScispacyEnabled}
+      setAIAssistantColumns={setAIAssistantColumns}
+      AIAssistantColumns={AIAssistantColumns}
+      inAIAssistantGroup={inAIAssistantGroup}
+    />
+  )
+
   return permissionDenied ? <Error403/> : (
     <div className='col-xs-12 padding-0' style={{borderRadius: '10px', width: 'calc(100vw - 32px)'}}>
       {
@@ -2350,57 +2414,7 @@ const MapProject = () => {
             {
               configure && !file?.name &&
                 <div className='col-xs-8 padding-0'>
-                  <ConfigurationForm
-                    project={project}
-                    handleFileUpload={handleFileUpload}
-                    file={file}
-                    owner={owner}
-                    setOwner={setOwner}
-                    name={name}
-                    setName={setName}
-                    description={description}
-                    setDescription={setDescription}
-                    repo={repo}
-                    onRepoChange={onRepoChange}
-                    repoVersion={repoVersion}
-                    setRepoVersion={onRepoVersionChange}
-                    mappedSources={mappedSources}
-                    targetSourcesFromRows={targetSourcesFromRows}
-                    versions={versions}
-                    algo={algo}
-                    onAlgoSelect={onAlgoSelect}
-                    algos={algos}
-                    validColumns={headers}
-                    columns={columns}
-                    isValidColumnValue={isValidColumnValue}
-                    updateColumn={updateColumn}
-                    configure={configure}
-                    setConfigure={setConfigure}
-                    columnVisibilityModel={columnVisibilityModel}
-                    setColumnVisibilityModel={setColumnVisibilityModel}
-                    onSave={onSave}
-                    isSaving={isSaving}
-                    matchAPI={matchAPI}
-                    setMatchAPI={setMatchAPI}
-                    matchAPIToken={matchAPIToken}
-                    setMatchAPIToken={setMatchAPIToken}
-                    semanticBatchSize={semanticBatchSize}
-                    setSemanticBatchSize={setSemanticBatchSize}
-                    candidatesScore={candidatesScore}
-                    onScoreChange={setCandidatesScore}
-                    includeDefaultFilter={includeDefaultFilter}
-                    setIncludeDefaultFilter={setIncludeDefaultFilter}
-                    filters={filters}
-                    setFilters={setFilters}
-                    locales={locales}
-                    isLoadingLocales={isLoadingLocales}
-                    bridgeEnabled={bridgeEnabled}
-                    setBridgeEnabled={setBridgeEnabled}
-                    canBridge={canBridge}
-                    canScispacy={canScispacy}
-                    scispacyEnabled={scispacyEnabled}
-                    setScispacyEnabled={setScispacyEnabled}
-                  />
+                  {getConfigurationForm()}
                 </div>
           }
             <div className='col-xs-12 padding-0' style={{backgroundColor: SURFACE_COLORS.main, marginLeft: '-5px', paddingBottom: '0px', paddingLeft: '0px', paddingTop: '0px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
@@ -2812,57 +2826,7 @@ const MapProject = () => {
         {
           configure && file?.name ?
             <div className='col-xs-12'>
-              <ConfigurationForm
-                project={project}
-                handleFileUpload={handleFileUpload}
-                file={file}
-                owner={owner}
-                setOwner={setOwner}
-                name={name}
-                setName={setName}
-                description={description}
-                setDescription={setDescription}
-                repo={repo}
-                onRepoChange={onRepoChange}
-                repoVersion={repoVersion}
-                setRepoVersion={onRepoVersionChange}
-                mappedSources={mappedSources}
-                targetSourcesFromRows={targetSourcesFromRows}
-                versions={versions}
-                algo={algo}
-                onAlgoSelect={onAlgoSelect}
-                algos={algos}
-                validColumns={headers}
-                columns={columns}
-                isValidColumnValue={isValidColumnValue}
-                updateColumn={updateColumn}
-                configure={configure}
-                setConfigure={setConfigure}
-                columnVisibilityModel={columnVisibilityModel}
-                setColumnVisibilityModel={setColumnVisibilityModel}
-                onSave={onSave}
-                isSaving={isSaving}
-                matchAPI={matchAPI}
-                setMatchAPI={setMatchAPI}
-                matchAPIToken={matchAPIToken}
-                setMatchAPIToken={setMatchAPIToken}
-                semanticBatchSize={semanticBatchSize}
-                setSemanticBatchSize={setSemanticBatchSize}
-                candidatesScore={candidatesScore}
-                onScoreChange={setCandidatesScore}
-                includeDefaultFilter={includeDefaultFilter}
-                setIncludeDefaultFilter={setIncludeDefaultFilter}
-                filters={filters}
-                setFilters={setFilters}
-                locales={locales}
-                isLoadingLocales={isLoadingLocales}
-                bridgeEnabled={bridgeEnabled}
-                setBridgeEnabled={setBridgeEnabled}
-                canBridge={canBridge}
-                canScispacy={canScispacy}
-                scispacyEnabled={scispacyEnabled}
-                setScispacyEnabled={setScispacyEnabled}
-              />
+              {getConfigurationForm()}
             </div> :
           (
             rowIndex !== undefined ?
@@ -2983,6 +2947,7 @@ const MapProject = () => {
                       selectedModel={AIModel}
                       onModelChange={setAIModel}
                       onRefreshClick={onRefreshClick}
+                      inAIAssistantGroup={inAIAssistantGroup}
                     />
                 }
                 {
