@@ -45,7 +45,8 @@
     "import": "Importar",
     "download_csv": "Descargar CSV",
     "advance_settings": "Configuración avanzada",
-    "sort": "Ordenar"
+    "sort": "Ordenar",
+    "group": "Grupo"
   },
   "errors": {
     "404": "Lo siento, no se pudo encontrar tu página."
@@ -209,6 +210,7 @@
     "clear_filter": "Limpiar Filtro",
     "configure_mapping_project_tooltip": "Configurar Proyecto de Mapeo",
     "auto_match": "Coincidencia Automática",
+    "auto_matched": "Coincidencia Automática",
     "unmapped_only": "Solo No Mapeados",
     "map_target": "Objetivo de Mapeo",
     "propose": "Proponer",
@@ -312,7 +314,11 @@
     "saved_to_collection": "Guardado en la colección",
     "bridge_terminology_search": "Búsqueda de terminología Bridge<0>Premium</0>",
     "bridge_terminology_search_description": "Incluir mapeos en la <0>Terminología de Interfaz CIEL</0> para identificar candidatos adicionales de alta calidad. Disponible solo para repositorios de destino y algoritmos de coincidencia compatibles.",
-    "scispacy_loinc_search": "Búsqueda Scispacy LOINC<0>Premium</0>"
+    "scispacy_loinc_search": "Búsqueda Scispacy LOINC<0>Premium</0>",
+    "ocl_ai_candidates_analysis": "OCL AI Assistant: Análisis de Candidatos",
+    "group_by_match_quality": "Calidad de Coincidencia",
+    "ocl_semantic_algorithm": "Algoritmo Semántico OCL",
+    "algorithm": "Algoritmo"
   },
   "app": {
     "web_version": "Versión Web",

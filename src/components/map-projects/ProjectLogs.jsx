@@ -70,7 +70,7 @@ const ProjectLogs = ({onClose, logs}) => {
              </span>
     if(log.action === 'auto_matched') {
       return <span>
-               {t('map_project.auto_match')}
+               {t('map_project.auto_matched')}
                {
                  log.extras?.sub_actions?.length ?
                 <span style={{marginLeft: '4px'}}>

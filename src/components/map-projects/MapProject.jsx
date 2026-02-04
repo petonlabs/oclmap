@@ -78,11 +78,12 @@ import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
 import isNumber from 'lodash/isNumber'
 import times from 'lodash/times'
+import isPlainObject from 'lodash/isPlainObject'
 
 import { OperationsContext } from '../app/LayoutContext';
 
 import APIService from '../../services/APIService';
-import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup, downloadObject, isNumeric } from '../../common/utils';
+import { highlightTexts, dropVersion, getCurrentUser, URIToParentParams, hasAuthGroup, downloadObject } from '../../common/utils';
 import { WHITE, SURFACE_COLORS } from '../../common/colors';
 
 import { useDoubleClick } from '../common/useDoubleClick'
@@ -167,8 +168,6 @@ const MapProject = () => {
   const [scispacyCandidatesStartedAt, setScispacyCandidatesStartedAt] = React.useState(false)
   const [scispacyCandidatesEndedAt, setScispacyCandidatesEndedAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
-  const [candidatesOrder, setCandidatesOrder] = React.useState('desc')
-  const [candidatesOrderBy, setCandidatesOrderBy] = React.useState('search_meta.search_normalized_score')
   const [matchAPI, setMatchAPI] = React.useState('')
   const [matchAPIToken, setMatchAPIToken] = React.useState('')
   const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
@@ -230,6 +229,13 @@ const MapProject = () => {
 
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
+  const [rowStage, setRowStage] = React.useState({})  // {'0': {'algo1': -2, -1, 0, 1, 'rerank': -2, -1, 0, 1}} --> -2: failed, -1: not run yet, 0: running, 1: done
+
+  const otherMatchedConceptsRef = React.useRef([]);
+  const bridgeCandidatesRef = React.useRef([]);
+  const scispacyCandidatesRef = React.useRef([]);
+  const rowStageRef = React.useRef([]);
+
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
@@ -237,6 +243,7 @@ const MapProject = () => {
   const CANDIDATES_LIMIT = 30
   const canBridge = bridgeRef?.current?.canBridge()
   const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
+  const isMultiAlgo = bridgeEnabled || scispacyEnabled
 
 
   // algos - computed based on current language
@@ -351,15 +358,22 @@ const MapProject = () => {
       let _candidates = []
       let _bridgeCandidates = []
       let _scispacyCandidates = []
+      let _rowStage = {}
       forEach((response?.data?.candidates || []), candidate => {
+        _rowStage[candidate.row.__index] = {'ocl-semantic': 1}
         let algo = get(candidate.results, '0.search_meta.algorithm')
-        if(algo === 'ocl-ciel-bridge')
+        if(algo === 'ocl-ciel-bridge') {
           _bridgeCandidates.push(candidate)
-        else if(algo === 'ocl-scispacy-loinc')
+          _rowStage[candidate.row.__index]['ocl-ciel-bridge'] = 1
+        }
+        else if(algo === 'ocl-scispacy-loinc') {
           _scispacyCandidates.push(candidate)
+          _rowStage[candidate.row.__index]['ocl-scispacy-loinc'] = 1
+        }
         else
           _candidates.push(candidate)
       })
+      setRowStage(_rowStage)
       setOtherMatchedConcepts(_candidates)
       setBridgeCandidates(_bridgeCandidates)
       setScispacyCandidates(_scispacyCandidates)
@@ -564,6 +578,7 @@ const MapProject = () => {
     setAlert(false)
     setSelectedCandidatesScoreBucket(false)
     setScoreBucketSortBy('desc')
+    setRowStage({})
   }
 
   const handleFileUpload = event => {
@@ -605,7 +620,8 @@ const MapProject = () => {
       '__proposed__',
       '__map_repo_id__',
       '__map_repo_url__',
-      '__match_type__'
+      '__match_type__',
+      '__map_algorithm__'
     ]
     const optionalReservedKeys = ['__Concept Name__', '__map_concept_name__']
     let columns = keys(jsonData[0])
@@ -635,7 +651,7 @@ const MapProject = () => {
           display_name: data['__Concept Name__'] || data['__map_concept_name__'],
           url: data['__Concept URL__'] || data['__map_concept_url__'],
           search_meta: {search_normalized_score: data['__Match Score__'] || data['__map_score__'],
-                        match_type: snakeCase(data['__Match Type__'] || data['__match_type__'])},
+                        match_type: snakeCase(data['__Match Type__'] || data['__match_type__']), algorithm: data['__map_algorithm__']},
           repo: repo
         }
         if(concept?.id) {
@@ -944,6 +960,79 @@ const MapProject = () => {
     return service
   }
 
+  const setStateViews = (data, _repo) => {
+    let matchTypes = map(data, 'results.0.search_meta.match_type')
+    let counts = countBy(matchTypes)
+    setMatchTypes(prev => ({
+      very_high: prev.very_high + (counts?.very_high || 0),
+      high: prev.high + (counts?.high || 0),
+      medium: prev.medium + (counts?.medium || 0),
+      low: prev.low + (counts?.low || 0),
+      no_match: prev.no_match + (sum(values(omit(counts, ['very_high', 'high', 'medium', 'low']))) || 0)
+    }));
+    setRowStatuses(prev => {
+      forEach(data, concept => {
+        if(get(concept, 'results.0.search_meta.match_type') === 'very_high') {
+          let _concept = {...concept.results[0], repo: {..._repo, version: repoVersion?.id || _repo.version, version_url: repoVersion?.version_url || _repo.version_url}}
+          setMapSelected(_prev => {
+            _prev[concept.row.__index] = _concept
+            return _prev
+          })
+          const mapType = get(concept, 'results.0.search_meta.map_type') || 'SAME-AS'
+          prev.readyForReview = uniq([...prev.readyForReview, concept.row.__index])
+          setDecisions(prev => ({...prev, [concept.row.__index]: 'map'}))
+          setMapTypes(prev => ({...prev, [concept.row.__index]: mapType}))
+          log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: mapType}}, concept.row.__index)
+        } else
+          prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
+      })
+      return prev
+    })
+  }
+
+  const setAutoMatched = (indexes) => {
+    forEach(indexes, index => {
+      const topCandidate = orderBy(flatten(map(filter([...(otherMatchedConceptsRef.current || {}), ...(bridgeCandidatesRef.current || {}), ...(scispacyCandidatesRef.current || {})], candidate => candidate.row.__index === index), _candidate => _candidate?.results || [])), 'search_meta.search_normalized_score', 'desc')[0]
+      if(topCandidate?.search_meta?.search_normalized_score >= candidatesScore.recommended) {
+        const isBridge = topCandidate.search_meta.algorithm.includes('bridge')
+        let conceptToMap = topCandidate
+        if(isBridge) {
+          let mapping = find(topCandidate.mappings, mapping => mapping.map_type.toLowerCase().replace(' ', '').replace('_', '').replace('-', '') === 'sameas') || get(topCandidate.mappings, '0')
+          if(mapping)
+            conceptToMap = {
+              id: mapping.cascade_target_concept_code,
+              name: mapping.cascade_target_concept_name,
+              display_name: mapping.cascade_target_concept_name,
+              url: mapping.cascade_target_concept_url,
+              source: mapping.cascade_target_source_name,
+              type: 'Concept',
+              search_meta: {...topCandidate.search_meta, map_type: mapping.map_type || topCandidate.search_meta.map_type },
+            }
+        }
+        setMatchTypes(prev => prev.very_high + 1)
+        setRowStatuses(prev => {
+          let _concept = {...conceptToMap, repo: {...repo, version: repoVersion?.id || repo.version, version_url: repoVersion?.version_url || repo.version_url}}
+          setMapSelected(_prev => {
+            _prev[index] = _concept
+            return _prev
+          })
+          const mapType = get(conceptToMap, 'search_meta.map_type') || 'SAME-AS'
+          prev.readyForReview = uniq([...prev.readyForReview, index])
+          setDecisions(prev => ({...prev, [index]: 'map'}))
+          setMapTypes(prev => ({...prev, [index]: mapType}))
+          log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || repo.version_url, name: getConceptLabel(_concept), map_type: mapType, algorithm: _concept.search_meta?.algorithm}}, index)
+          return prev
+        })
+      } else {
+        setMapSelected(prev => omit(prev, index))
+        setDecisions(prev => omit(prev, index))
+        setMapTypes(prev => omit(prev, index))
+        setRowStatuses(prev => ({...prev, unmapped: uniq([...prev.unmapped, index])}))
+      }
+    })
+  }
+
+
   const getRowsResults = async (rows) => {
     abortRef.current = false;
 
@@ -973,7 +1062,12 @@ const MapProject = () => {
         includeMappings: true,
         mappingBrief: true,
         mapTypes: 'SAME-AS,SAME AS,SAME_AS',
+        reranker: !isMultiAlgo
       }
+
+      const rowIds = map(rowBatch, '__index')
+
+      initiateRowStage(rowIds)
 
       try {
         const service = getMatchAPIService()
@@ -987,7 +1081,7 @@ const MapProject = () => {
             ...extraParams
          }
         );
-
+        updateRowStage(rowIds, 'ocl-semantic', 1)
         return response.data || [];
       } catch {
         return [];
@@ -1005,33 +1099,8 @@ const MapProject = () => {
           if (abortRef.current) return;
           const rowBatch = queue.shift();
           const promise = processBatch(_repo, rowBatch).then((data) => {
-            let matchTypes = map(data, 'results.0.search_meta.match_type')
-            let counts = countBy(matchTypes)
-            setMatchTypes(prev => ({
-              very_high: prev.very_high + (counts?.very_high || 0),
-              high: prev.high + (counts?.high || 0),
-              medium: prev.medium + (counts?.medium || 0),
-              low: prev.low + (counts?.low || 0),
-              no_match: prev.no_match + (sum(values(omit(counts, ['very_high', 'high', 'medium', 'low']))) || 0)
-            }));
-            setRowStatuses(prev => {
-              forEach(data, concept => {
-                if(get(concept, 'results.0.search_meta.match_type') === 'very_high') {
-                  let _concept = {...concept.results[0], repo: {..._repo, version: repoVersion?.id || _repo.version, version_url: repoVersion?.version_url || _repo.version_url}}
-                  setMapSelected(_prev => {
-                    _prev[concept.row.__index] = _concept
-                    return _prev
-                  })
-                  const mapType = get(concept, 'results.0.search_meta.map_type') || 'SAME-AS'
-                  prev.readyForReview = uniq([...prev.readyForReview, concept.row.__index])
-                  setDecisions(prev => ({...prev, [concept.row.__index]: 'map'}))
-                  setMapTypes(prev => ({...prev, [concept.row.__index]: mapType}))
-                  log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || _repo.version_url, name: getConceptLabel(_concept), map_type: mapType}}, concept.row.__index)
-                } else
-                  prev.unmapped = uniq([...prev.unmapped, concept.row.__index])
-              })
-              return prev
-            })
+            if(!isMultiAlgo)
+              setStateViews(data, _repo)
             forEach(data, concept => {
               setOtherMatchedConcepts(prev => {
                 return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
@@ -1049,7 +1118,9 @@ const MapProject = () => {
     };
 
     let action = 'auto_matched'
-    let subActions = ['with_reranker']
+    let subActions = []
+    if(!isMultiAlgo)
+      subActions.push('with_reranker')
     if(autoMatchUnmappedOnly)
       subActions.push('unmatched_only')
     if(bridgeEnabled)
@@ -1082,12 +1153,10 @@ const MapProject = () => {
     projectLog({action: action, extras: {sub_actions: subActions}})
   };
 
-  const otherMatchedConceptsRef = React.useRef([]);
-  const bridgeCandidatesRef = React.useRef([]);
-  const scispacyCandidatesRef = React.useRef([]);
-
   React.useEffect(() => {
     otherMatchedConceptsRef.current = otherMatchedConcepts;
+    if(isPlainObject(otherMatchedConceptsRef.current))
+      otherMatchedConceptsRef.current = values(otherMatchedConceptsRef.current)
   }, [otherMatchedConcepts]);
 
   React.useEffect(() => {
@@ -1099,11 +1168,19 @@ const MapProject = () => {
 
   React.useEffect(() => {
     bridgeCandidatesRef.current = bridgeCandidates;
+    if(isPlainObject(bridgeCandidatesRef.current))
+      bridgeCandidatesRef.current = values(bridgeCandidatesRef.current);
   }, [bridgeCandidates]);
 
   React.useEffect(() => {
     scispacyCandidatesRef.current = scispacyCandidates;
+    if(isPlainObject(scispacyCandidatesRef.current))
+      scispacyCandidatesRef.current = values(scispacyCandidatesRef.current)
   }, [scispacyCandidates]);
+
+  React.useEffect(() => {
+    rowStageRef.current = rowStage;
+  }, [rowStage]);
 
   const runBulkAIAnalysis = async (_rows) => {
     setLoadingMatches(true)
@@ -1127,7 +1204,7 @@ const MapProject = () => {
     for (let index = 0; index < _rows.length; index++) {
       if (abortRef.current) break;
 
-      await fetchBridgeCandidates(_rows[index]); // wait for completion
+      await fetchBridgeCandidates(_rows[index], 0, undefined, undefined, undefined, false, !scispacyEnabled, true); // wait for completion
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
     }
     const now = moment()
@@ -1137,7 +1214,7 @@ const MapProject = () => {
     }
     else if(inAIAssistantGroup && autoRunAIAnalysis)
       setTimeout(() => runBulkAIAnalysis(_rows), 1000)
-    else {
+    else if (isAllRerankingDone()) {
       setEndMatchingAt(now)
       setLoadingMatches(false)
     }
@@ -1149,14 +1226,15 @@ const MapProject = () => {
     for (let index = 0; index < _rows.length; index++) {
       if (abortRef.current) break;
 
-      await fetchScispacyCandidates(_rows[index]); // wait for completion
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+      setLoadingMatches(true)
+      await fetchScispacyCandidates(_rows[index], false, false, true, true); // wait for completion
+      await new Promise(resolve => setTimeout(resolve, 6000)); // 1s delay
     }
     const now = moment()
     setScispacyCandidatesEndedAt(now)
     if(inAIAssistantGroup && autoRunAIAnalysis)
       setTimeout(() => runBulkAIAnalysis(_rows), 1000)
-    else {
+    else if (isAllRerankingDone()) {
       setEndMatchingAt(now)
       setLoadingMatches(false)
     }
@@ -1493,6 +1571,7 @@ const MapProject = () => {
         '__map_concept_url__': concept?.url,
         '__map_type__': mapTypes[index],
         '__map_score__': concept?.search_meta?.search_normalized_score,
+        '__map_algorithm__': concept?.search_meta?.algorithm,
         '__match_type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
         '__oclai_match_quality__': get(aiRecommendation, 'recommendation') || null,
         '__oclai_confidence_score__': aiScore || null,
@@ -1557,6 +1636,18 @@ const MapProject = () => {
       result.results = null
       return newConcepts
     })
+    setBridgeCandidates(prev => {
+      let newConcepts = {...prev}
+      let result = find(newConcepts, c => c.row.__index === rowIndex)
+      result.results = null
+      return newConcepts
+    })
+    setScispacyCandidates(prev => {
+      let newConcepts = {...prev}
+      let result = find(newConcepts, c => c.row.__index === rowIndex)
+      result.results = null
+      return newConcepts
+    })
     fetchOtherCandidates(row, 0, undefined, undefined, undefined, true)
   }
 
@@ -1593,7 +1684,7 @@ const MapProject = () => {
     setMapSelected(prev => ({...prev, [rowIndex]: unmap ? null : {...concept, repo: {...repo, version: repoVersion?.id || repo.version, version_url: repoVersion?.version_url || repo.version_url}}}))
     setDecisions(prev => ({...prev, [rowIndex]: unmap ? null : 'map'}))
     if(concept?.url)
-      log({action: unmap ? 'unmapped' : 'mapped', extras: {object_url: concept?.url, map_type: mapType, name: getConceptLabel(concept)}})
+      log({action: unmap ? 'unmapped' : 'mapped', extras: {object_url: concept?.url, map_type: mapType, name: getConceptLabel(concept), algorithm: concept?.search_meta?.algorithm}})
 
   }
 
@@ -1611,7 +1702,19 @@ const MapProject = () => {
 
   const getConceptLabel = concept => `${concept?.repo?.short_code || repo?.short_code || repo?.id}:${concept.repo?.version || concept.repo?.id || repo?.version || repo?.id}:${concept.id} ${concept.display_name || ''}`
 
-  const isSelectedForMap = (concept, index) => (mapSelected[index || rowIndex]?.url == concept.url) && concept.url
+  const isSelectedForMap = (concept, index) => {
+    const selected = mapSelected[index || rowIndex]
+    return (
+      (selected?.url == concept.url && selected?.url) ||
+        (
+          (selected?.id == concept.id && selected?.id) &&
+            (
+              selected.repo?.url === concept.repo?.url ||
+                selected.search_meta?.algorithm === concept?.search_meta?.algorithm
+            )
+        )
+    ) && (concept?.url || concept?.id)
+  }
 
   const onStateTabChange = newValue => {
     setSelectedRowStatus(newValue)
@@ -1691,6 +1794,43 @@ const MapProject = () => {
       log({action: newValue || 'decision_changed', description: t('map_project.decision_changed_to_none'), extras: newValue ? {} : {decision: t('map_project.none')}})
   }
 
+  const initiateRowStage = index => {
+    const rowAlgos = {'ocl-semantic': 0}
+    if(bridgeEnabled)
+      rowAlgos['ocl-ciel-bridge'] = -1
+    if(scispacyEnabled)
+      rowAlgos['ocl-scispacy-loinc'] = -1
+    if(isMultiAlgo)
+      rowAlgos['rerank'] = -1
+
+    setRowStage(prev => {
+      if (Array.isArray(index)) {
+        const updates = Object.fromEntries(
+          compact(index).map(i => [i, rowAlgos])
+        )
+        return { ...prev, ...updates }
+      }
+      return { ...prev, [index]: rowAlgos }
+    })
+  }
+
+  const updateRowStage = (index, algo, state) => {
+    setRowStage(prev => {
+      const apply = (i) => ({
+        ...prev[i],
+        [algo]: state,
+      })
+
+      if (Array.isArray(index)) {
+        const updates = Object.fromEntries(
+          compact(index).map(i => [i, apply(i)])
+        )
+        return { ...prev, ...updates }
+      }
+
+      return { ...prev, [index]: apply(index) }
+    })
+  }
   const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
     setAlert(false)
     if(isAnyValidColumn()) {
@@ -1709,8 +1849,8 @@ const MapProject = () => {
         setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
         return
       }
+      initiateRowStage(__row.__index)
       setIsLoadingInDecisionView(true)
-
       const service = getMatchAPIService()
       service.post(
         payload,
@@ -1725,8 +1865,11 @@ const MapProject = () => {
           verbose: true,
           limit: CANDIDATES_LIMIT,
           offset: offset || 0,
-          semantic: ['llm', 'custom'].includes(algo)
+          semantic: ['llm', 'custom'].includes(algo),
+          reranker: !isMultiAlgo
         }).then(response => {
+          log({action: 'algo_finished', extras: {algo: 'ocl-semantic'}}, __row.__index)
+          setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-semantic': 1}}))
           if(response?.detail) {
             setAlert({message: response.detail, severity: 'error'})
             return
@@ -1747,6 +1890,7 @@ const MapProject = () => {
           }
           fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload)
           fetchScispacyCandidates(__row, scrollToBottom, forceReload)
+          rerank(__row.__index)
           if(scrollToBottom) {
             setTimeout(() => {
               const el = document.getElementById('candidates-list')
@@ -1761,32 +1905,121 @@ const MapProject = () => {
     }
   }
 
-  const fetchScispacyCandidates = (_row, scrollToBottom, forceReload=false) => {
+  const fetchScispacyCandidates = async (_row, scrollToBottom, forceReload=false, shouldRerank=true, isBulk=false) => {
     let __row = isEmpty(_row) ? row : _row
-    const existingCandidates = find(scispacyCandidates, c => c.row.__index === __row.__index)?.results
-    if(!forceReload && existingCandidates?.length> 0) {
+    const existingCandidates = find(scispacyCandidatesRef.current, c => c.row.__index === __row.__index)?.results
+    if(!isBulk && !forceReload && existingCandidates?.length> 0) {
       setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
-      return
+      return { skipped: true }
     }
     if(!scispacyEnabled)
-      return
+      return { skipped: true }
     let inputRow = prepareRow(__row)
     if(!inputRow.name) {
-      return
+      return { skipped: true }
     }
+    setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-scispacy-loinc': 0}}))
     setIsLoadingInDecisionView(true)
+
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
-    service.URL = SCISPACY_API_URL
-    service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
-      if(!isEmpty(response?.data)) {
-        let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
-        setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
-        setTimeout(() => highlightTexts([], null, false, compact([get(payload, 'rows.0.label')])), 100)
-      }
-      setIsLoadingInDecisionView(false)
-    })
+    try {
+      service.URL = SCISPACY_API_URL
+      service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
+        log({action: 'algo_finished', extras: {algo: 'ocl-scispacy-loinc'}}, __row.__index)
+        setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-scispacy-loinc': 1}}))
+        if(!isEmpty(response?.data)) {
+          let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
+          setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
+          setTimeout(() => highlightTexts([], null, false, compact([get(payload, 'rows.0.label')])), 100)
+          shouldRerank && setTimeout(() => rerank(__row.__index, isBulk), 1000)
+        }
+        return response
+      })
+    } catch (err) {
+      setRowStage(prev => ({
+        ...prev,
+        [__row.__index]: { ...prev[__row.__index], 'ocl-scispacy-loinc': -2 }
+      }));
+      throw err;
+    } finally {
+      setIsLoadingInDecisionView(false);
+    }
   }
+
+  const rerank = (_index, isBulk=false) => {
+    const index = isNumber(_index) ? _index : rowIndex
+    if(isNumber(index) && isReadyForRerank(index)) {
+      setRowStage(prev => ({...prev, [index]: {...prev[index], 'rerank': 0}}))
+      const service = APIService.concepts().appendToUrl('$rerank/')
+      service.post({
+        q: get(prepareRow(rows[index]), 'name'),
+        rows: [
+          ...getCandidatesForRow(index, otherMatchedConceptsRef.current),
+          ...getCandidatesForRow(index, bridgeCandidatesRef.current),
+          ...getCandidatesForRow(index, scispacyCandidatesRef.current),
+        ]
+      }).then(response => {
+        log({action: 'rerank_finished'}, index)
+        setRowStage(prev => {
+          let newState = {...prev, [index]: {...prev[index], 'rerank': 1}}
+          if(isBulk && isAllRerankingDone(newState)) {
+            setEndMatchingAt(moment())
+            setLoadingMatches(false)
+          }
+          return {...prev, [index]: {...prev[index], 'rerank': 1}}
+        })
+        const newScispacyCandidates = response.data?.filter(result => result.search_meta.algorithm === 'ocl-scispacy-loinc')
+        const newBridgeCandidates = response.data?.filter(result => result.search_meta.algorithm === 'ocl-ciel-bridge')
+        const newRestCandidates = response.data?.filter(result => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(result.search_meta.algorithm))
+        if (newRestCandidates?.length) {
+          const newMatches = [...otherMatchedConceptsRef.current]
+          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newRestCandidates
+          setOtherMatchedConcepts(newMatches)
+        }
+        if(newBridgeCandidates?.length) {
+          const newMatches = [...bridgeCandidatesRef.current]
+          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newBridgeCandidates
+          setBridgeCandidates(newMatches)
+        }
+
+        if(newScispacyCandidates?.length){
+          const newMatches = [...scispacyCandidatesRef.current]
+          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newScispacyCandidates
+          setScispacyCandidates(newMatches)
+        }
+        if(isBulk)
+          setTimeout(() => setAutoMatched([index]), 1000)
+        return response
+      })
+    }
+  }
+
+  const getCandidatesForRow = (index, _candidates, fullObject=false) => {
+    const result = find(_candidates, candidate => candidate.row.__index === index)
+    return fullObject ? result : (result?.results || [])
+  }
+
+  const isReadyForRerank = _index => {
+    const index = isNumber(_index) ? _index : rowIndex
+    if(isNumber(index) && get(rowStageRef.current, `${index}.rerank`) !== 0) {
+      const _candidates = getCandidatesForRow(index, otherMatchedConceptsRef.current, true)
+      const _bridgeCandidates = getCandidatesForRow(index, bridgeCandidatesRef.current, true)
+      const _scispacyCandidates = getCandidatesForRow(index, scispacyCandidatesRef.current, true)
+      return Boolean(
+        _candidates &&
+          (!bridgeEnabled || _bridgeCandidates) &&
+          (!scispacyEnabled || _scispacyCandidates) &&
+          (
+            filter(_candidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length ||
+              filter(_bridgeCandidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length ||
+              filter(_scispacyCandidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length)
+      )
+    }
+    return false
+  }
+
+  const isAllRerankingDone = _rowStage => Boolean(every((_rowStage || rowStageRef.current), stage => stage?.rerank && stage?.rerank === 1))
 
   const fromScispacyResultsToConcepts = results => {
     let formatted = []
@@ -1797,29 +2030,16 @@ const MapProject = () => {
     return formatted
   }
 
-  // const getAllCandidatesForReranking = () => {
-  //   if(rowIndex) {
-  //     let candidates = find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results || []
-  //     let _bridgeCandidates = find(bridgeCandidates, c => c.row.__index === rowIndex)?.results || []
-  //     let _scispacyCandidates = find(scispacyCandidates, c => c.row.__index === rowIndex)?.results || []
-  //     return [
-  //       ...(candidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$match'}}))),
-  //       ...(_bridgeCandidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$bridge-match'}}))),
-  //       ...(_scispacyCandidates.map(candidate => ({...candidate, search_meta: {...candidate.search_meta, algo: '$scispacy-loinc'}}))),
-  //     ]
-  //   }
-  //   return []
-  // }
-
-  const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
+  const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false, shouldRerank=true, isBulk=false) => {
     let __row = isEmpty(_row) ? row : _row
-    const existingCandidates = find(bridgeCandidates, c => c.row.__index === __row.__index)?.results
-    if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
+    const existingCandidates = find(bridgeCandidatesRef.current, c => c.row.__index === __row.__index)?.results
+    if(!isBulk && !forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
       setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
       return
     }
     if(!bridgeEnabled)
       return
+    setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-ciel-bridge': 0}}))
     setIsLoadingInDecisionView(true)
     const payload = getPayloadForMatching([__row], repo)
     let __offset = offset || 0
@@ -1828,6 +2048,8 @@ const MapProject = () => {
       __offset,
       isBoolean(_retired) ? _retired : retired,
       (candidates) => {
+        log({action: 'algo_finished', extras: {algo: 'ocl-ciel-bridge'}}, __row.__index)
+        setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-ciel-bridge': 1}}))
         if(__offset === 0)
           setBridgeCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
         else {
@@ -1855,6 +2077,8 @@ const MapProject = () => {
           }
         }
         setIsLoadingInDecisionView(false)
+        shouldRerank && setTimeout(() => rerank(__row.__index, isBulk), 1000)
+        return candidates
       },
       (response, errorMsg) => {
         setAlert({message: response?.detail || errorMsg, severity: 'error'})
@@ -1941,44 +2165,6 @@ const MapProject = () => {
   const getConcept = concept => concept?.url ? conceptCache[concept.url] || concept : concept
 
   const onProposedUpdate = proposedState => setProposed(prev => ({...prev, [rowIndex]: {...proposedState}}))
-
-  const onCandidatesOrderChange = (property, order) => {
-    setCandidatesOrderBy(property)
-    setCandidatesOrder(order)
-    let candidates = find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results || []
-    let _bridgeCandidates = find(bridgeCandidates, c => c.row.__index === rowIndex)?.results || []
-    let _scispacyCandidates = find(scispacyCandidates, c => c.row.__index === rowIndex)?.results || []
-    if(candidates.length) {
-      const newCandidates = [...otherMatchedConcepts]
-      const newBridgeCandidates = [...bridgeCandidates]
-      const newScispacyCandidates = [...scispacyCandidates]
-      const index = findIndex(otherMatchedConcepts, c => c.row.__index === rowIndex)
-      const bridgeIndex = findIndex(bridgeCandidates, c => c.row.__index === rowIndex)
-      const scispacyIndex = findIndex(scispacyCandidates, c => c.row.__index === rowIndex)
-      if(property === 'id' && every(candidates, c => isNumeric(c.id))) {
-        newCandidates[index].results = orderBy(candidates, candidate => parseFloat(candidate.id), order)
-        if(bridgeIndex > -1)
-          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, candidate => parseFloat(candidate.id), order)
-        if(scispacyIndex > -1)
-          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, candidate => parseFloat(candidate.id), order)
-      } else if (property === 'display_name') {
-        newCandidates[index].results = orderBy(candidates, candidate => candidate.display_name.toLowerCase(), order)
-        if(bridgeIndex > -1)
-          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, candidate => candidate.display_name.toLowerCase(), order)
-        if(scispacyIndex > -1)
-          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, candidate => candidate.display_name.toLowerCase(), order)
-      } else {
-        newCandidates[index].results = orderBy(candidates, property, order)
-        if(bridgeIndex > -1)
-          newBridgeCandidates[bridgeIndex].results = orderBy(_bridgeCandidates, property, order)
-        if(scispacyIndex > -1)
-          newScispacyCandidates[scispacyIndex].results = orderBy(_scispacyCandidates, property, order)
-      }
-      setOtherMatchedConcepts(newCandidates)
-      setBridgeCandidates(newBridgeCandidates)
-      setScispacyCandidates(newScispacyCandidates)
-    }
-  }
 
   const doubleClickCallback = useDoubleClick(onCSVRowSelect, () => {});
 
@@ -2690,6 +2876,7 @@ const MapProject = () => {
                   <CloseIconButton color='secondary' onClick={onCloseDecisions} />
                 </div>
                 <MappingDecisionResult
+                  candidatesScore={candidatesScore}
                   targetConcept={targetConcept}
                   repoVersion={repoVersion}
                   row={row}
@@ -2766,14 +2953,12 @@ const MapProject = () => {
                     <Candidates
                       candidatesScore={candidatesScore}
                       rowIndex={rowIndex}
+                      rowStage={rowStage[rowIndex]}
                       alert={alert}
                       setAlert={setAlert}
                       candidates={otherMatchedConcepts}
                       bridgeCandidates={bridgeCandidates}
                       scispacyCandidates={scispacyCandidates}
-                      orderBy={candidatesOrderBy}
-                      order={candidatesOrder}
-                      onOrderChange={onCandidatesOrderChange}
                       setShowItem={setShowItem}
                       showItem={showItem}
                       setShowHighlights={setShowHighlights}

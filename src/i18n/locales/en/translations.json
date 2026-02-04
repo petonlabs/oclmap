@@ -99,7 +99,8 @@
     "import": "Import",
     "download_csv": "Download CSV",
     "advance_settings": "Advanced Settings",
-    "sort": "Sort"
+    "sort": "Sort",
+    "group": "Group"
   },
   "errors": {
     "404": "Sorry your page could not be found.",
@@ -428,6 +429,7 @@
     "clear_filter": "Clear Filter",
     "configure_mapping_project_tooltip": "Configure Mapping Project",
     "auto_match": "Auto Match",
+    "auto_matched": "Auto Matched",
     "unmapped_only": "Unmapped Only",
     "map_target": "Map Target",
     "propose": "Propose",
@@ -531,7 +533,10 @@
     "bridge_terminology_search": "Bridge terminology search<0>Premium</0>",
     "bridge_terminology_search_description": "Include mappings in the <0>CIEL Interface Terminology</0> to identify additional high quality candidates. Only available for compatible target repositories and matching algorithms.",
     "scispacy_loinc_search": "Scispacy LOINC search<0>Premium</0>",
-    "ocl_ai_candidates_analysis": "OCL AI Assistant: Candidate Analysis"
+    "ocl_ai_candidates_analysis": "OCL AI Assistant: Candidate Analysis",
+    "group_by_match_quality": "Match Quality",
+    "ocl_semantic_algorithm": "OCL Semantic Algorithm",
+    "algorithm": "Algorithm"
   },
   "app": {
     "web_version": "Web Version",

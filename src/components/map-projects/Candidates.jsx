@@ -13,11 +13,16 @@ import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button'
 import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
 
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SortIcon from '@mui/icons-material/SwapVert';
+import GroupIcon from '@mui/icons-material/Workspaces';
 
 import find from 'lodash/find'
 import get from 'lodash/get'
@@ -25,6 +30,10 @@ import isEmpty from 'lodash/isEmpty'
 import flatten from 'lodash/flatten'
 import values from 'lodash/values'
 import startCase from 'lodash/startCase'
+import forEach from 'lodash/forEach'
+import uniq from 'lodash/uniq'
+import without from 'lodash/without'
+import orderBy from 'lodash/orderBy'
 
 import { highlightTexts, hasAuthGroup, getCurrentUser } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
@@ -37,6 +46,43 @@ import Concept from './Concept'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 import AIAssistantButton from './AIAssistantButton'
+
+const STAGES_ORDER = [
+  'ocl-semantic',
+  'ocl-ciel-bridge',
+  'ocl-scispacy-loinc',
+  'rerank',
+];
+
+const getRowProgressLabel = (stageMap) => {
+  if(!stageMap)
+    return {label: 'Preparing...', status: 'partial'}
+
+  const stages = STAGES_ORDER.map(k => stageMap[k]);
+
+  if (!stages.length || stages.every(v => v === -1)) {
+    return { label: 'Not started', status: 'idle' };
+  }
+
+  const runningIndex = stages.findIndex(v => v === 0);
+  if (runningIndex !== -1) {
+    return {
+      label: `Running: ${STAGES_ORDER[runningIndex]}...`,
+      status: 'running',
+    };
+  }
+
+  if (stages.every(v => v === 1)) {
+    return { label: 'Completed', status: 'done' };
+  }
+
+  const waitingIndex = stages.findIndex(v => v === -1)
+  if(waitingIndex !== -1) {
+    return {label: `Waiting: ${STAGES_ORDER[waitingIndex]}`, status: 'waiting'} // AutoMatch Bulk
+  }
+
+  return { label: 'Partially completed', status: 'partial' };
+}
 
 const Sort = ({ selected, onSort }) => {
   const { t } = useTranslation();
@@ -59,7 +105,7 @@ const Sort = ({ selected, onSort }) => {
         onClose={() => setAnchorEl(false)}
       sx={{'.MuiPaper-root': {backgroundColor: 'surface.n94'}}}
       >
-        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'score'}>
+        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'search_meta.search_score'}>
           <ListItemText primary={t('map_project.sort_by_raw_score')} />
         </ListItemButton>
         <ListItemButton id='sort_by_id' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('id')} selected={selected === 'id'}>
@@ -73,8 +119,45 @@ const Sort = ({ selected, onSort }) => {
   )
 }
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy}) => {
+const Group = ({ selected, onGroup }) => {
+  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = React.useState(false)
+  const onGroupClick = event => setAnchorEl(event.currentTarget)
+  const onClick = option => {
+    setAnchorEl(false)
+    onGroup(option)
+  }
+
+  return (
+    <>
+      <Button onClick={onGroupClick} variant='outlined' color='info.dark' value='check' size='small' sx={{textTransform: 'none', padding: '5px', marginRight: '8px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '2px'}}} startIcon={<GroupIcon fontSize='inherit' />}>
+        {t('common.group')}
+      </Button>
+
+      <Menu
+      anchorEl={anchorEl}
+      open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(false)}
+      sx={{'.MuiPaper-root': {backgroundColor: 'surface.n94'}}}
+      >
+        <ListItemButton id='group_by_quality' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('quality')} selected={selected === 'quality'}>
+          <ListItemText primary={t('map_project.group_by_match_quality')} />
+        </ListItemButton>
+        <ListItemButton id='group_by_algorithm' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('algorithm')} selected={selected === 'algorithm'}>
+          <ListItemText primary={t('map_project.algorithm')} />
+        </ListItemButton>
+    </Menu>
+    </>
+  )
+}
+
+
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
+  const isCollapsed = collapsed.includes(bucketId)
+  const onCollapseToggle = () => {
+    onCollapse(isCollapsed ? without(collapsed, bucketId): [...collapsed, bucketId])
+  }
 
   const getExtraColumns = () => {
     let cols = [
@@ -137,8 +220,15 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
               {
               showHeader &&
-              <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px'}}>
-                <b>{header}</b>
+                  <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', cursor: 'pointer', alignItems: 'center'}} onClick={onCollapseToggle}>
+                    <span style={{display: 'flex', alignItems: 'center'}}>
+                    {
+                      isCollapsed ?
+                        <ExpandMoreIcon fontSize='small' sx={{marginRight: '8px'}} /> :
+                      <ExpandLessIcon fontSize='small' sx={{marginRight: '8px'}} />
+                    }
+                      <b>{header}</b>
+                      </span>
                 <b>{count.toLocaleString()}</b>
               </ListSubheader>
               }
@@ -146,18 +236,25 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
           ) :
             (
               showHeader &&
-                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined}}>
-                  <b>{header}</b>
+                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined, cursor: 'pointer', alignItems: 'center'}} onClick={onCollapseToggle}>
+                  <span style={{display: 'flex', alignItems: 'center'}}>
+                  {
+                    isCollapsed ?
+                      <ExpandMoreIcon fontSize='small' sx={{marginRight: '8px'}} /> :
+                    <ExpandLessIcon fontSize='small' sx={{marginRight: '8px'}} />
+                  }
+                    <b>{header}</b>
+                    </span>
                   <b>{count.toLocaleString()}</b>
                 </ListSubheader>
             )
         }
         title=' '
-        renderer={props => <Concept {...props} key={`${bucketId}-${props?.concept?.uuid}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} bridge={bridge} scispacy={scispacy} notClickable={Boolean(scispacy)} />}
+        renderer={props => <Concept {...props} _id={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} key={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} notClickable={Boolean(scispacy)} showAlgo={showAlgo} candidatesScore={candidatesScore} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested
-        results={results}
+        results={isCollapsed ? [] : results}
         resource='concepts'
         noPagination
         noSorting
@@ -168,7 +265,6 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
         rightControl={rightControl}
         orderBy={orderBy}
         order={order}
-        onOrderByChange={onOrderChange}
         resultContainerStyle={{height: 'auto', '.MuiTable-root': {tableLayout: 'fixed'}}}
         onShowItemSelect={item => {
           setShowItem(item)
@@ -186,9 +282,12 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, onOrderCha
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOrderChange, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick, rowStage}) => {
   const { t } = useTranslation();
-  const [sortBy, setSortBy] = React.useState(false)
+  const [sortBy, setSortBy] = React.useState('search_meta.search_normalized_score')
+  const [groupBy, setGroupBy] = React.useState('quality')
+  const [collapsed, setCollapsed] = React.useState([])
+
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(getCurrentUser(), 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
@@ -202,56 +301,43 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   const scispacyResults = find(scispacyCandidates, c => c.row?.__index === rowIndex )?.results || []
   const isNoneLoaded = results === null || results === undefined
   const concepts = results || []
-  const canFetchMore = concepts?.length > 0
-  let recommended = []
-  let available = []
-  let lowRanked = []
+  const canFetchMore = results?.length > 0
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
-  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
+  const areAlgoRun = uniq(values(rowStage)).length === 1 && values(rowStage)[0] === 1
+  const { label } = getRowProgressLabel(rowStage);
+  let allCandidates = [...concepts, ...bridgeResults, ...scispacyResults]
 
-  concepts.forEach(concept => {
-    let score = concept?.search_meta?.search_normalized_score || 0
-    if(sortBy)
-      recommended.push(concept)
-    else {
-      if (score >= recommendedScore)
-        recommended.push(concept)
-      else if (score >= availableScore)
-        available.push(concept)
-      else
-        lowRanked.push(concept)
-    }
-  })
+  const byScore = sortBy.includes('score')
+  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
   let props = {
     rowIndex: rowIndex,
     onMap: onMap,
     isSelectedForMap: isSelectedForMap,
     setShowHighlights: setShowHighlights,
-    orderBy: orderBy,
-    order: order,
-    onOrderChange: onOrderChange,
+    orderBy: sortBy,
+    order: !byScore ? 'asc' : 'desc',
     setShowItem: setShowItem,
     showItem: showItem,
     isLoading: isLoading,
     display: display,
     repoVersion: repoVersion,
     AIRecommendedCandidateId: AIRecommendedCandidateId,
-    locales: locales
+    locales: locales,
+    candidatesScore: candidatesScore
   }
 
   const onSort = option => {
     let newOption = option
     if(option === sortBy) {
-      setSortBy(false)
-      newOption = 'search_meta.search_normalized_score'
+      setSortBy('search_meta.search_normalized_score')
+      setGroupBy('quality')
     } else if(option === 'score') {
       newOption = 'search_meta.search_score'
-      setSortBy(option)
+      setSortBy(newOption)
+      setGroupBy('algorithm')
     } else {
       setSortBy(option)
     }
-
-    onOrderChange(newOption, option === 'score' ? 'desc' : 'asc')
   }
 
   const onRecommend = () => {
@@ -259,17 +345,71 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
     onFetchRecommendation()
   }
 
+  const onGroup = option => {
+    setGroupBy(option)
+    if(option === 'algorithm')
+      setSortBy('search_meta.search_score')
+    if(!option || option === 'quality')
+      setSortBy('search_meta.search_normalized_score')
+  }
+
+  const getCandidates = () => {
+    const order = byScore ? 'desc' : 'asc'
+    if(groupBy === 'algorithm') {
+      const semanticOrdered = orderBy(concepts, sortBy, order)
+      const bridgeOrdered = orderBy(bridgeResults, sortBy, order)
+      const scispacyOrdered = orderBy(scispacyResults, sortBy, order)
+      return {
+        semanticOrdered, bridgeOrdered, scispacyOrdered
+      }
+    } else {
+      let recommended = []
+      let available = []
+      let lowRanked = []
+      forEach(orderBy(allCandidates, sortBy, order), concept => {
+        let score = concept?.search_meta?.search_normalized_score || 0
+        if(byScore) {
+          if (score >= recommendedScore)
+            recommended.push(concept)
+          else if (score >= availableScore)
+            available.push(concept)
+          else
+            lowRanked.push(concept)
+        } else {
+          available.push(concept)
+        }
+      })
+      return {
+        recommended, available, lowRanked
+      }
+    }
+  }
+
+  const { semanticOrdered, bridgeOrdered, scispacyOrdered } = getCandidates()
+  const { recommended, available, lowRanked } = getCandidates()
+
   const getRightControls = () => {
       return (
-        <span style={{display: 'flex'}}>
+        <span style={{display: 'flex', alignItems: 'center'}}>
           {
-            !noCandidatesFound &&
+            !areAlgoRun &&
+              <Chip icon={<CircularProgress sx={{width: '14px !important', height: '14px !important', marginLeft: '6px !important', marginRight: '0px !important'}} />} variant='outlined' color='warning' size='small' label={label} />
+          }
+          {
+            !noCandidatesFound && areAlgoRun &&
               <Button onClick={onRefreshClick} color='info.dark' variant='outlined' size='small' sx={{margin: '0 8px', padding: '5px', textTransform: 'none', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} startIcon={<RefreshIcon fontSize='inherit' />}>
                 {startCase(t('common.refresh'))}
               </Button>
           }
           {
-            !noCandidatesFound &&
+            !noCandidatesFound && areAlgoRun &&
+              <Group
+                onGroup={onGroup}
+                selected={groupBy}
+              />
+          }
+          {
+            !noCandidatesFound && areAlgoRun &&
               <Sort
                 onSort={onSort}
                 selected={sortBy}
@@ -283,6 +423,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                 onClick={onRecommend}
                 sx={{margin: '0 8px'}}
                 onModelChange={onModelChange}
+                disabled={!areAlgoRun}
               />
           }
         </span>
@@ -293,7 +434,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
   React.useEffect(() => {
     setOpenAIAnalysis(isEmpty(analysis) ? false : (openAIAnalysis !== false))
   }, [rowIndex])
-
 
   return (
     <div className='col-xs-12 padding-0'>
@@ -351,16 +491,19 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
           subheader={<li />}
           id='candidates-list'
         >
-          <li>
+          {
+            groupBy === 'quality' &&
+              <>
+                <li>
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
               <CandidateList
                 {...props}
                 candidates={recommended}
-                header={sortBy ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
+                header={!byScore ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
                 onFetchMore={onFetchMore}
-                bgColor={sortBy ? SCORES_COLOR.available : SCORES_COLOR.recommended}
+                bgColor={!byScore ? SCORES_COLOR.available : SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
                 noToolbar={false}
                 onDisplayChange={setDisplay}
@@ -377,6 +520,10 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                 showAnalysis
                 openAnalysis={Boolean(openAIAnalysis)}
                 onCloseAnalysis={() => setOpenAIAnalysis(false)}
+                showAlgo
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                candidatesScore={candidatesScore}
               />
             }
           </li>
@@ -391,30 +538,107 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, orderBy, order, onOr
                 onFetchMore={onFetchMore}
                 bgColor={SCORES_COLOR.available}
                 bucketId={`${rowIndex}-available`}
-                noToolbar />
+                noToolbar
+                showAlgo
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                candidatesScore={candidatesScore}
+              />
             }
           </li>
           <li>
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={lowRanked} header={t('map_project.low_ranked_candidates')} onFetchMore={onFetchMore} bgColor={SCORES_COLOR.low_ranked} bucketId={`${rowIndex}-low-ranked`} noToolbar />
+              <CandidateList
+                {...props}
+                candidates={lowRanked}
+                header={t('map_project.low_ranked_candidates')}
+                onFetchMore={onFetchMore}
+                bgColor={SCORES_COLOR.low_ranked}
+                bucketId={`${rowIndex}-low-ranked`}
+                noToolbar
+                showAlgo
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                candidatesScore={candidatesScore}
+              />
             }
           </li>
-          <li>
+              </>
+          }
+          {
+            groupBy === 'algorithm' &&
+              <>
+                <li>
             {
               (isLoading && isNoneLoaded) ?
                 <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={bridgeResults} header={t('map_project.ciel_bridge_terminology_candidates')} onFetchMore={onFetchMore} bucketId={`${rowIndex}-bridge`} noToolbar bridge />
+              <CandidateList
+                {...props}
+                candidates={semanticOrdered}
+                header={t('map_project.ocl_semantic_algorithm')}
+                onFetchMore={onFetchMore}
+                bucketId={`${rowIndex}-ocl-semantic`}
+                noToolbar={false}
+                onDisplayChange={setDisplay}
+                toolbarControl={
+                  <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+                    <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
+                      <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
+                    </Badge>
+                  </IconButton>
+                }
+                alignToolbarLeft
+                rightControl={getRightControls()}
+                analysis={analysis}
+                showAnalysis
+                openAnalysis={Boolean(openAIAnalysis)}
+                onCloseAnalysis={() => setOpenAIAnalysis(false)}
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                candidatesScore={candidatesScore}
+              />
             }
           </li>
-          <li>
-            {
-              (isLoading && isNoneLoaded) ?
-                <Skeleton height={60} /> :
-              <CandidateList {...props} candidates={scispacyResults} header={t('map_project.scispacy_candidates')} onFetchMore={onFetchMore} bucketId={`${rowIndex}-scispacy`} noToolbar scispacy />
-            }
-          </li>
+              <li>
+                {
+                  (isLoading && isNoneLoaded) ?
+                    <Skeleton height={60} /> :
+                  <CandidateList
+                    {...props}
+                    candidates={bridgeOrdered}
+                    header={t('map_project.ciel_bridge_terminology_candidates')}
+                    onFetchMore={onFetchMore}
+                    bucketId={`${rowIndex}-bridge`}
+                    noToolbar
+                    bridge
+                    collapsed={collapsed}
+                    onCollapse={setCollapsed}
+                    candidatesScore={candidatesScore}
+                  />
+                }
+              </li>
+                <li>
+                  {
+                    (isLoading && isNoneLoaded) ?
+                      <Skeleton height={60} /> :
+                    <CandidateList
+                      {...props}
+                      candidates={scispacyOrdered}
+                      header={t('map_project.scispacy_candidates')}
+                      onFetchMore={onFetchMore}
+                      bucketId={`${rowIndex}-scispacy`}
+                      noToolbar
+                      scispacy
+                      collapsed={collapsed}
+                      onCollapse={setCollapsed}
+                      candidatesScore={candidatesScore}
+                    />
+                  }
+                </li>
+              </>
+          }
         </List>
         {
           onFetchMore && canFetchMore &&

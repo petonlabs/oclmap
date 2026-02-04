@@ -20,6 +20,8 @@ import ExcludeIcon from '@mui/icons-material/Block';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import AssistantIcon from '@mui/icons-material/Assistant';
 import ReviewedIcon from '@mui/icons-material/FactCheckOutlined';
+import AlgoIcon from '@mui/icons-material/JoinRight';
+import RerankIcon from '@mui/icons-material/LowPriority';
 
 import map from 'lodash/map'
 import startCase from 'lodash/startCase'
@@ -50,6 +52,10 @@ const Discuss = ({ logs, onAdd }) => {
     if(['commented'].includes(log.action)) {
       return <b>{log.description}</b>
     }
+    if(log.action === 'algo_finished')
+      return <>Finished running <b>{log.extras.algo}</b></>
+    if(log.action === 'rerank_finished')
+      return <>Finished <b>Reranking</b></>
     return log.description || startCase(log.action)
   }
 
@@ -70,6 +76,10 @@ const Discuss = ({ logs, onAdd }) => {
       return <RejectIcon fontSize='small' color={color} />
     if(log.action === 'exclude')
       return <ExcludeIcon fontSize='small' color={color} />
+    if(log.action === 'algo_finished')
+      return <AlgoIcon fontSize='small' color={color} />
+    if(log.action === 'rerank_finished')
+      return <RerankIcon fontSize='small' color={color} />
     return log.user.slice(0, 2).toUpperCase()
   }
 
@@ -78,7 +88,7 @@ const Discuss = ({ logs, onAdd }) => {
       return 'error'
     if(['proposed'].includes(log.action))
       return 'warning'
-    if(['mapped', 'auto-matched', 'AIRecommendation', 'approved', 'reviewed'].includes(log.action))
+    if(['mapped', 'auto-matched', 'AIRecommendation', 'approved', 'reviewed', 'algo_finished', 'rerank_finished'].includes(log.action))
       return 'primary'
     return undefined
   }
@@ -126,6 +136,12 @@ const Discuss = ({ logs, onAdd }) => {
                     log.action === 'AIRecommendation' && log?.extras?.model?.id &&
                       <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
                         {log.extras.model.name}
+                      </Typography>
+                  }
+                  {
+                    log?.extras?.algorithm &&
+                      <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
+                        {t('map_project.algorithm')}: {log.extras.algorithm}
                       </Typography>
                   }
                   <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
