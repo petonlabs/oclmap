@@ -16,6 +16,7 @@ import RepoIcon from '../repos/RepoIcon'
 import HistoryIcon from '@mui/icons-material/ChangeHistory';
 import DownloadIcon from '@mui/icons-material/Download';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
+import StopIcon from '@mui/icons-material/Clear';
 
 import map from 'lodash/map'
 import orderBy from 'lodash/orderBy'
@@ -41,8 +42,10 @@ const ProjectLogs = ({onClose, logs}) => {
       return [<OpenIcon key='open' />, 'secondary']
     if(action === 'downloaded')
       return [<DownloadIcon key='download' />, 'secondary']
-    if(action === 'auto_matched')
-      return [<AutoMatchIcon key='auto_match' color='primary' />, 'primary']
+    if(action === 'auto_match_stopped_by_user')
+      return [<StopIcon key='stop' color='error' />, 'error']
+    if(['auto_match_started', 'auto_match_finished', 'auto_matched'].includes(action))
+      return [<AutoMatchIcon key='auto_match' color={['auto_match_finished', 'auto_matched'].includes(action) ? 'primary' : 'warning'} />, ['auto_match_finished', 'auto_matched'].includes(action) ? 'primary' : 'warning']
     return [<HistoryIcon key='log' color='warning' />, 'warning']
   }
 
@@ -68,9 +71,9 @@ const ProjectLogs = ({onClose, logs}) => {
                  {log.extras.id}
                </a>
              </span>
-    if(log.action === 'auto_matched') {
+    if(['auto_match_started', 'auto_match_finished', 'auto_matched'].includes(log.action)) {
       return <span>
-               {t('map_project.auto_matched')}
+               {startCase(log.action)}
                {
                  log.extras?.sub_actions?.length ?
                 <span style={{marginLeft: '4px'}}>

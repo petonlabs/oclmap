@@ -1051,7 +1051,10 @@ const MapProject = () => {
 
     // Function to process a single batch
     const processBatch = async (_repo, rowBatch) => {
-      if (abortRef.current) return [];
+      if (abortRef.current) {
+        setLoadingMatches(false)
+        return []
+      };
 
       const payload = getPayloadForMatching(rowBatch, _repo)
       payload.rows = filter(payload.rows, row => values(omit(row, '__index')).length > 0)
@@ -1101,7 +1104,10 @@ const MapProject = () => {
       while (queue.length > 0 || activeRequests.size > 0) {
         // Fill activeRequests up to MAX_CONCURRENT_REQUESTS
         while (queue.length > 0 && activeRequests.size < MAX_CONCURRENT_REQUESTS) {
-          if (abortRef.current) return;
+          if (abortRef.current) {
+            setLoadingMatches(false)
+            return
+          };
           const rowBatch = queue.shift();
           const promise = processBatch(_repo, rowBatch).then((data) => {
             if(!isMultiAlgo)
@@ -1122,7 +1128,6 @@ const MapProject = () => {
       }
     };
 
-    let action = 'auto_matched'
     let subActions = []
     if(!isMultiAlgo)
       subActions.push('with_reranker')
@@ -1134,6 +1139,8 @@ const MapProject = () => {
       subActions.push('with_scispacy_candidates')
     if(inAIAssistantGroup && autoRunAIAnalysis)
       subActions.push('with_ai_analysis')
+
+    projectLog({action: 'auto_match_started', extras: {sub_actions: subActions}})
 
     setRowStatuses(prev => {
       prev.unmapped = []
@@ -1155,7 +1162,8 @@ const MapProject = () => {
         setEndMatchingAt(moment())
       }
     }, 1000)
-    projectLog({action: action, extras: {sub_actions: subActions}})
+    if(!abortRef.current)
+      projectLog({action: 'auto_match_finished', extras: {sub_actions: subActions}})
   };
 
   React.useEffect(() => {
@@ -1207,7 +1215,10 @@ const MapProject = () => {
     setLoadingMatches(true)
     setBridgeCandidatesStartedAt(moment())
     for (let index = 0; index < _rows.length; index++) {
-      if (abortRef.current) break;
+      if (abortRef.current) {
+        setLoadingMatches(false)
+        break;
+      };
 
       await fetchBridgeCandidates(_rows[index], 0, undefined, undefined, undefined, false, !scispacyEnabled, true); // wait for completion
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
@@ -1229,7 +1240,10 @@ const MapProject = () => {
     setLoadingMatches(true)
     setScispacyCandidatesStartedAt(moment())
     for (let index = 0; index < _rows.length; index++) {
-      if (abortRef.current) break;
+      if (abortRef.current) {
+        setLoadingMatches(false)
+        break;
+      };
 
       setLoadingMatches(true)
       await fetchScispacyCandidates(_rows[index], false, false, true, true); // wait for completion
@@ -2495,6 +2509,7 @@ const MapProject = () => {
                         onClick={() => {
                           abortRef.current = true
                           setRandom(random + 1)
+                          projectLog({action: 'auto_match_stopped_by_user'})
                         }}
                         disabled={abortRef.current}
                       >
