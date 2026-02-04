@@ -27,7 +27,7 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping, showAlgo, candidatesScore}) => {
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping, showAlgo, candidatesScore, algoScoreFirst}) => {
   const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_url)
   let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   const conceptToMap = isValidBridge ?
@@ -92,7 +92,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
       <span style={{display: 'flex', alignItems: 'flex-start'}}>
         {
           !noScore &&
-            <Score concept={concept} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} candidatesScore={candidatesScore} />
+            <Score concept={concept} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
         }
         {
         isSelectedForMap &&
@@ -110,7 +110,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore}) => {
+const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst}) => {
   const bridge = concept?.search_meta?.algorithm === 'ocl-ciel-bridge'
   const scispacy = concept?.search_meta?.algorithm === 'ocl-scispacy-loinc'
   const id = concept?.version_url || concept?.url || concept?.id
@@ -141,11 +141,11 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
       let _isAIRecommended = !isAIRecommended && AIRecommendedCandidateId === mapping?.cascade_target_concept_code
       return notClickable ? (
         <ListItem {...props} key={index} id={_id}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} />
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
         </ListItem>
       ) : (
         <ListItemButton {...props} key={index} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} />
+          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
         </ListItemButton>
       )
     })
@@ -153,11 +153,11 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
 
   return notClickable ? (
     <ListItem {...props} id={_id}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
     </ListItem>
   ) : (
     <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined} id={_id}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} />
+      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
       </ListItemButton>
     )
 }

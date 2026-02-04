@@ -152,7 +152,7 @@ const Group = ({ selected, onGroup }) => {
 }
 
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
   const isCollapsed = collapsed.includes(bucketId)
   const onCollapseToggle = () => {
@@ -193,7 +193,6 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
   }
   const count = candidates.length
   const showHeader = count > 0
-
   return (
     <ul>
       <SearchResults
@@ -250,7 +249,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
             )
         }
         title=' '
-        renderer={props => <Concept {...props} _id={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} key={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} notClickable={Boolean(scispacy)} showAlgo={showAlgo} candidatesScore={candidatesScore} />}
+        renderer={props => <Concept {...props} _id={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} key={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} notClickable={Boolean(scispacy)} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested
@@ -309,6 +308,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
 
   const byScore = sortBy.includes('score')
   const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
+  const algoScoreFirst = groupBy === 'algorithm' || sortBy === 'search_meta.search_score'
   let props = {
     rowIndex: rowIndex,
     onMap: onMap,
@@ -323,7 +323,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     repoVersion: repoVersion,
     AIRecommendedCandidateId: AIRecommendedCandidateId,
     locales: locales,
-    candidatesScore: candidatesScore
+    candidatesScore: candidatesScore,
+    algoScoreFirst: algoScoreFirst
   }
 
   const onSort = option => {

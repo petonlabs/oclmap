@@ -15,7 +15,7 @@ import ConceptIcon from '../concepts/ConceptIcon'
 
 
 
-const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore}) => {
+const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore, algoScoreFirst}) => {
   const { t } = useTranslation();
   let percentile = concept?.search_meta?.search_normalized_score
   if(percentile && !isNumber(percentile))
@@ -35,6 +35,9 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
       qualityBucket = 'low'
   }
   let bucketColor = qualityBucket ? SCORES_COLOR[qualityBucket] : false
+
+  const rerankScore = `${parseFloat(hasPercentile ? percentile : score).toFixed(2)}%`
+  const algoScore = `${parseFloat(score).toFixed(2)}`
 
   return (
     <ListItem disablePadding sx={{display: 'inline-flex', width: 'auto'}}>
@@ -65,11 +68,11 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
               icon={<ConceptIcon fontSize='small' selected sx={{fill: bucketColor}} />}
               label={
                 <span style={{display: 'flex', alignItems: 'center'}}>
-                  <span>{`${parseFloat(hasPercentile ? percentile : score).toFixed(2)}%`}</span>
+                  <span>{algoScoreFirst ? algoScore : rerankScore}</span>
                   {
                     hasPercentile && !isNaN(score) && score ?
                       <span style={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.6)', marginLeft: '4px', fontStyle: 'italic'}}>
-                        {`(${parseFloat(score).toFixed(2)})`}
+                        {`(${algoScoreFirst ? rerankScore : algoScore})`}
                       </span> :
                     ''
                   }
