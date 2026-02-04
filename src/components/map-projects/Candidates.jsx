@@ -15,6 +15,7 @@ import Skeleton from '@mui/material/Skeleton'
 import Badge from '@mui/material/Badge'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import Divider from '@mui/material/Divider'
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -105,9 +106,13 @@ const Sort = ({ selected, onSort }) => {
         onClose={() => setAnchorEl(false)}
       sx={{'.MuiPaper-root': {backgroundColor: 'surface.n94'}}}
       >
-        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('score')} selected={selected === 'search_meta.search_score'}>
-          <ListItemText primary={t('map_project.sort_by_raw_score')} />
+        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('search_meta.search_normalized_score')} selected={selected === 'search_meta.search_normalized_score'}>
+          <ListItemText primary={t('map_project.sort_by_unified_score')} />
         </ListItemButton>
+        <ListItemButton id='sort_by_raw_score' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('search_meta.search_score')} selected={selected === 'search_meta.search_score'}>
+          <ListItemText primary={t('map_project.sort_by_raw_algo_score')} />
+        </ListItemButton>
+        <Divider />
         <ListItemButton id='sort_by_id' sx={{padding: '4px 10px', '&:hover': {color: 'inherit'}, '&:focus': {outline: 'none', textDecoration: 'none', color: 'inherit'}}} onClick={() => onClick('id')} selected={selected === 'id'}>
           <ListItemText primary={t('map_project.concept_id')} />
         </ListItemButton>
@@ -328,13 +333,11 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   }
 
   const onSort = option => {
-    let newOption = option
-    if(option === sortBy) {
+    if(option === sortBy || option === 'search_meta.search_normalized_score') {
       setSortBy('search_meta.search_normalized_score')
       setGroupBy('quality')
-    } else if(option === 'score') {
-      newOption = 'search_meta.search_score'
-      setSortBy(newOption)
+    } else if(option === 'search_meta.search_score') {
+      setSortBy(option)
       setGroupBy('algorithm')
     } else {
       setSortBy(option)
