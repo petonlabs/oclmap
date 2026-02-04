@@ -1384,37 +1384,60 @@ const MapProject = () => {
   }
 
   const showMatchSummary = Boolean(data?.length && (loadingMatches || matchedConcepts?.length))
+
+  const [_now, set_Now] = React.useState(() => moment());
+
+  React.useEffect(() => {
+    if (!loadingMatches) return;
+
+    const id = setInterval(() => set_Now(moment()), 1000);
+    return () => clearInterval(id);
+  }, [loadingMatches]);
+
   const getMatchingDuration = (start, end) => {
-    if(!end)
-      end = moment()
-    if(!start)
-      return false
-    return `${moment.duration(end.diff(start)).as('minutes').toFixed(2)} mins`;
+    if (!start) return "00:00";
+
+    const effectiveEnd = end ?? moment();
+    const diffMs = Math.max(effectiveEnd.diff(start), 0);
+
+    const d = moment.duration(diffMs);
+    const totalSeconds = Math.floor(d.asSeconds());
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 
   const getCandidatesButtonLabel = () => {
-    const matchingDuration = getMatchingDuration(startMatchingAt, endMatchingAt)
-    if(loadingMatches || matchedConcepts?.length)
-      return `${t('map_project.auto_match')} (${matchingDuration})`
-    return t('map_project.auto_match')
+    const effectiveEnd = loadingMatches ? _now : endMatchingAt;
+    const matchingDuration = getMatchingDuration(startMatchingAt, effectiveEnd);
+
+    if (loadingMatches || matchedConcepts?.length) {
+      return `${t("map_project.auto_match")} (${matchingDuration ?? "0.00 mins"})`;
+    }
+    return t("map_project.auto_match");
   }
 
   const getBulkBridgeCandidatesButtonLabel = () => {
-    const matchingDuration = getMatchingDuration(bridgeCandidatesStartedAt, bridgeCandidatesEndedAt)
+    const effectiveEnd = loadingMatches ? _now : bridgeCandidatesEndedAt;
+    const matchingDuration = getMatchingDuration(bridgeCandidatesStartedAt, effectiveEnd)
     if(loadingMatches || bridgeCandidates?.length)
       return `${t('map_project.bridge_candidates')} (${matchingDuration})`
     return t('map_project.bridge_candidates')
   }
 
   const getBulkScispacyCandidatesButtonLabel = () => {
-    const matchingDuration = getMatchingDuration(scispacyCandidatesStartedAt, scispacyCandidatesEndedAt)
+    const effectiveEnd = loadingMatches ? _now : scispacyCandidatesEndedAt;
+    const matchingDuration = getMatchingDuration(scispacyCandidatesStartedAt, effectiveEnd)
     if(loadingMatches || scispacyCandidates?.length)
       return `${t('map_project.scispacy_candidates')} (${matchingDuration})`
     return t('map_project.scispacy_candidates')
   }
 
   const getBulkAIAnalysisButtonLabel = () => {
-    const matchingDuration = getMatchingDuration(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt)
+    const effectiveEnd = loadingMatches ? _now : bulkAIAnalysisEndedAt;
+    const matchingDuration = getMatchingDuration(bulkAIAnalysisStartedAt, effectiveEnd)
     if(loadingMatches || !isEmpty(analysis))
       return `${t('map_project.ai_analysis')} (${matchingDuration})`
     return t('map_project.ai_analysis')
