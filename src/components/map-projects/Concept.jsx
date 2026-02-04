@@ -2,6 +2,7 @@ import React from 'react'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
+import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import isString from 'lodash/isString'
 import map from 'lodash/map'
@@ -27,8 +28,8 @@ const getBestSynonym = synonyms => {
 }
 
 
-const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, mapping, showAlgo, candidatesScore, algoScoreFirst}) => {
-  const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_url)
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, bridgeChild, mapping, showAlgo, candidatesScore, algoScoreFirst, placeholderMap}) => {
+  const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_code)
   let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   const conceptToMap = isValidBridge ?
         {
@@ -47,42 +48,54 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
         primary={
           <span>
             <span>
-              <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}</span>
-              <span style={{marginLeft: '4px'}} className='searchable'>
-                {
-                  !bridge && synonymPrefix &&
-                    <span className='searchable'>
-                      <span dangerouslySetInnerHTML={{__html: synonymPrefix}}/>
-                      <span style={{margin: '0 5px'}}>&rarr;</span>
-                    </span>
-                }
-                {concept.display_name}
-              </span>
+              {
+                !bridgeChild &&
+                  <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}</span>
+              }
+              {
+              !bridgeChild &&
+                  <span style={{marginLeft: '4px'}} className='searchable'>
+                    {
+                      !bridge && synonymPrefix &&
+                        <span className='searchable'>
+                          <span dangerouslySetInnerHTML={{__html: synonymPrefix}}/>
+                          <span style={{margin: '0 5px'}}>&rarr;</span>
+                        </span>
+                    }
+                    {concept.display_name}
+                  </span>
+              }
               {
                 bridgeMappingPrefix &&
                   <span>
-                    <span style={{margin: '0 5px'}}>&rarr;</span>
-                    <span>{`[${mapping.map_type}]`}</span>
-                    <span style={{margin: '0 5px'}}>&rarr;</span>
+                    {!bridgeChild && <span style={{margin: '0 5px'}}>&rarr;</span>}
+                    <span style={bridgeChild ? {marginRight: '8px'} : {}}>
+                      {
+                        bridgeChild ?
+                          <Chip size='small' label={mapping.map_type} /> :
+                        (`[${mapping.map_type}]`)
+                      }
+                    </span>
+                    {!bridgeChild && <span style={{margin: '0 5px'}}>&rarr;</span>}
                     <span className='searchable'>{bridgeMappingPrefix}</span>
                   </span>
               }
             </span>
-          {
-            concept.retired &&
-              <Retired size='small' style={{margin: '0 12px'}} />
-          }
+            {
+              concept.retired &&
+                <Retired size='small' style={{margin: '0 12px'}} />
+            }
           </span>
         }
         secondary={
           <div className='col-xs-12 padding-0'>
-          <div className='col-xs-12 padding-0'>
-          <ConceptSummaryProperties concept={concept} repoVersion={repoVersion} />
-          </div>
+            <div className='col-xs-12 padding-0'>
+              <ConceptSummaryProperties concept={concept} repoVersion={repoVersion} />
+            </div>
             {
-            showAlgo && concept.search_meta.algorithm ?
+              showAlgo && concept.search_meta.algorithm ?
                 <div className='col-xs-12 padding-0' style={{marginTop: '4px'}}>
-              <Chip size='small' label={concept.search_meta.algorithm} variant='outlined' color='warning' />
+                  <Chip size='small' label={concept.search_meta.algorithm} variant='outlined' color='warning' />
               </div> : null
             }
           </div>
@@ -92,7 +105,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
       <span style={{display: 'flex', alignItems: 'flex-start'}}>
         {
           !noScore &&
-            <Score concept={concept} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
+            <Score size='small' concept={concept} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
         }
         {
         isSelectedForMap &&
@@ -104,8 +117,30 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
               sx={{marginLeft: '8px'}}
             />
         }
+        {
+          !isSelectedForMap && placeholderMap &&
+            <Button size='small' sx={{visibility: 'none', minWidth: '100px'}} />
+        }
       </span>
     </>
+  )
+}
+
+
+const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, sx, onCardClick, id,  ...rest}) => {
+  const props = {
+    selected: isSelectedToShow,
+    sx: {padding: '4px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)', alignItems: 'flex-start', ...sx}
+  }
+
+  let item = <Item {...rest} />
+
+  return notClickable ? (
+    <ListItem {...props} id={_id}>{item}</ListItem>
+  ) : (
+    <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
+      {item}
+    </ListItemButton>
   )
 }
 
@@ -132,34 +167,82 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
   }
 
   const props = {
-    selected: isSelectedToShow,
-    sx: {padding: '8px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)', alignItems: 'flex-start', ...sx}
+    id: id,
+    _id: _id,
+    notClickable: notClickable,
+    firstChild: firstChild,
+    isSelectedToShow: isSelectedToShow,
+    sx: sx,
+    onCardClick: onCardClick,
   }
 
   if(bridge) {
-    return map(concept?.mappings, (mapping, index) => {
-      let _isAIRecommended = !isAIRecommended && AIRecommendedCandidateId === mapping?.cascade_target_concept_code
-      return notClickable ? (
-        <ListItem {...props} key={index} id={_id}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
-        </ListItem>
-      ) : (
-        <ListItemButton {...props} key={index} onClick={onCardClick ? event => onCardClick(event, id) : undefined}>
-          <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={_isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} mapping={mapping} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
-        </ListItemButton>
-      )
-    })
+    return (
+      <>
+      {
+        algoScoreFirst &&
+          <ConceptItem
+            {...props}
+            concept={concept}
+            repoVersion={repoVersion}
+            synonymPrefix={synonymPrefix}
+            setShowHighlights={setShowHighlights}
+            isSelectedForMap={false}
+            placeholderMap
+            onMap={onMap}
+            noScore={noScore}
+            showAlgo={showAlgo}
+            candidatesScore={candidatesScore}
+            algoScoreFirst={algoScoreFirst}
+          />
+      }
+        <div className='col-xs-12' style={{paddingRight: 0, paddingLeft: algoScoreFirst ? '12px' : 0}}>
+        {
+          map(concept?.mappings, (mapping, index) => {
+            return <ConceptItem
+                     key={index}
+                     {...props}
+                     concept={concept}
+                     repoVersion={repoVersion}
+                     synonymPrefix={synonymPrefix}
+                     setShowHighlights={setShowHighlights}
+                     isAIRecommended={
+                       !isAIRecommended &&
+                         AIRecommendedCandidateId === mapping?.cascade_target_concept_code
+                     }
+                     isSelectedForMap={isSelectedForMap}
+                     onMap={onMap}
+                     noScore={noScore}
+                     bridge={bridge}
+                     mapping={mapping}
+                     showAlgo={showAlgo}
+                     candidatesScore={candidatesScore}
+                     algoScoreFirst={algoScoreFirst}
+                     bridgeChild={algoScoreFirst}
+                   />
+          })
+        }
+        </div>
+      </>
+    )
   }
 
-  return notClickable ? (
-    <ListItem {...props} id={_id}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
-    </ListItem>
-  ) : (
-    <ListItemButton {...props} onClick={onCardClick ? event => onCardClick(event, id) : undefined} id={_id}>
-      <Item concept={concept} repoVersion={repoVersion} synonymPrefix={synonymPrefix} setShowHighlights={setShowHighlights} isAIRecommended={isAIRecommended} isSelectedForMap={isSelectedForMap} onMap={onMap} noScore={noScore} bridge={bridge} scispacy={scispacy} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />
-      </ListItemButton>
-    )
+  return <ConceptItem
+           {...props}
+           concept={concept}
+           repoVersion={repoVersion}
+           synonymPrefix={synonymPrefix}
+           setShowHighlights={setShowHighlights}
+           isAIRecommended={isAIRecommended}
+           isSelectedForMap={isSelectedForMap}
+           onMap={onMap}
+           noScore={noScore}
+           bridge={bridge}
+           scispacy={scispacy}
+           showAlgo={showAlgo}
+           candidatesScore={candidatesScore}
+           algoScoreFirst={algoScoreFirst}
+         />
 }
 
 export default Concept;

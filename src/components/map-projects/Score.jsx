@@ -15,7 +15,7 @@ import ConceptIcon from '../concepts/ConceptIcon'
 
 
 
-const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore, algoScoreFirst}) => {
+const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore, algoScoreFirst, size}) => {
   const { t } = useTranslation();
   let percentile = concept?.search_meta?.search_normalized_score
   if(percentile && !isNumber(percentile))
@@ -65,6 +65,7 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
           sx={{margin: 0, '.MuiListItemText-primary': {fontSize: '14px'}, '.MuiListItemText-secondary': {fontSize: '12px'}}}
           primary={
             <Chip
+              size={size || 'medium'}
               icon={<ConceptIcon fontSize='small' selected sx={{fill: bucketColor}} />}
               label={
                 <span style={{display: 'flex', alignItems: 'center'}}>
