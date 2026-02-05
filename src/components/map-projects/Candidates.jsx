@@ -56,6 +56,8 @@ const STAGES_ORDER = [
 ];
 
 const getRowProgressLabel = (stageMap) => {
+  if(stageMap === undefined)
+    return {label: false}
   if(!stageMap)
     return {label: 'Preparing...', status: 'partial'}
 
@@ -392,7 +394,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
       return (
         <span style={{display: 'flex', alignItems: 'center'}}>
           {
-            !areAlgoRun &&
+            !areAlgoRun && label &&
               <Chip icon={<CircularProgress sx={{width: '14px !important', height: '14px !important', marginLeft: '6px !important', marginRight: '0px !important'}} />} variant='outlined' color='warning' size='small' label={label} />
           }
           {
