@@ -13,7 +13,7 @@ import MapButton from './MapButton'
 import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 
 
-const getBestSynonym = synonyms => {
+const getBestSynonym = (synonyms = []) => {
   return synonyms
     .map(text => {
       const matches = [...text.matchAll(/<em>(.*?)<\/em>/g)];
@@ -23,23 +23,17 @@ const getBestSynonym = synonyms => {
       );
 
       const emTag = `<em>${longestMatch}</em>`;
-      const startsWithMatch = text.indexOf(emTag) === 0;
-
-      // prefer exact "<em>...</em>"
-      const isExactEmOnly = text.trim() === emTag;
-
       return {
         text,
-        longestMatch,
         length: longestMatch.length,
-        startsWithMatch,
-        isExactEmOnly
+        isExact: text.trim() === emTag,
+        startsWith: text.startsWith(emTag)
       };
     })
     .sort((a, b) => {
-      if (b.length !== a.length) return b.length - a.length;                // longest match first
-      if (b.isExactEmOnly !== a.isExactEmOnly) return b.isExactEmOnly ? 1 : -1; // ✅ exact "<em>...</em>" wins
-      if (b.startsWithMatch !== a.startsWithMatch) return b.startsWithMatch ? 1 : -1; // prefer start
+      if (b.isExact !== a.isExact) return b.isExact ? 1 : -1;   // ✅ exact ALWAYS first
+      if (b.length !== a.length) return b.length - a.length;   // longer match
+      if (b.startsWith !== a.startsWith) return b.startsWith ? 1 : -1;
       return 0;
     })[0]?.text;
 };
