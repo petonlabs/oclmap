@@ -236,6 +236,7 @@ const MapProject = () => {
   const bridgeCandidatesRef = React.useRef([]);
   const scispacyCandidatesRef = React.useRef([]);
   const rowStageRef = React.useRef([]);
+  const algoRef = React.useRef([]);
 
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
@@ -921,7 +922,7 @@ const MapProject = () => {
     const isLLMAlgoAllowed = version?.match_algorithms?.includes('llm')
     newAlgos[1].disabled = !isLLMAlgoAllowed
     setAlgos(newAlgos)
-    if(!isLLMAlgoAllowed && algo === 'llm') {
+    if(!isLLMAlgoAllowed && algoRef.current === 'llm') {
       onAlgoSelect('es')
     }
   }
@@ -1194,6 +1195,9 @@ const MapProject = () => {
   React.useEffect(() => {
     rowStageRef.current = rowStage;
   }, [rowStage]);
+  React.useEffect(() => {
+    algoRef.current = algo;
+  }, [algo]);
 
   const runBulkAIAnalysis = async (_rows) => {
     setLoadingMatches(true)
