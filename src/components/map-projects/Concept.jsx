@@ -6,6 +6,7 @@ import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import isString from 'lodash/isString'
 import map from 'lodash/map'
+import orderBy from 'lodash/orderBy'
 
 import Retired from '../common/Retired'
 import Score from './Score'
@@ -13,7 +14,7 @@ import MapButton from './MapButton'
 import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 
 const getBestSynonym = synonyms => {
-  return synonyms
+  return orderBy(synonyms, match => match.length)
     .map(text => {
       const matches = [...text.matchAll(/<em>(.*?)<\/em>/g)];
       const longestMatch = matches.reduce((a, b) => (b[1].length > a.length ? b[1] : a), "");
