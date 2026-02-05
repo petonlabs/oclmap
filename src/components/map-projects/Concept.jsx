@@ -6,27 +6,43 @@ import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import isString from 'lodash/isString'
 import map from 'lodash/map'
-import orderBy from 'lodash/orderBy'
 
 import Retired from '../common/Retired'
 import Score from './Score'
 import MapButton from './MapButton'
 import ConceptSummaryProperties from '../concepts/ConceptSummaryProperties'
 
+
 const getBestSynonym = synonyms => {
-  return orderBy(synonyms, match => match.length)
+  return synonyms
     .map(text => {
       const matches = [...text.matchAll(/<em>(.*?)<\/em>/g)];
-      const longestMatch = matches.reduce((a, b) => (b[1].length > a.length ? b[1] : a), "");
-      const startsWithMatch = text.indexOf(`<em>${longestMatch}</em>`) === 0;
-      return { text, longestMatch, length: longestMatch.length, startsWithMatch };
+      const longestMatch = matches.reduce(
+        (a, b) => (b[1].length > a.length ? b[1] : a),
+        ""
+      );
+
+      const emTag = `<em>${longestMatch}</em>`;
+      const startsWithMatch = text.indexOf(emTag) === 0;
+
+      // prefer exact "<em>...</em>"
+      const isExactEmOnly = text.trim() === emTag;
+
+      return {
+        text,
+        longestMatch,
+        length: longestMatch.length,
+        startsWithMatch,
+        isExactEmOnly
+      };
     })
     .sort((a, b) => {
-      if (b.length !== a.length) return b.length - a.length; // longest match first
+      if (b.length !== a.length) return b.length - a.length;                // longest match first
+      if (b.isExactEmOnly !== a.isExactEmOnly) return b.isExactEmOnly ? 1 : -1; // ✅ exact "<em>...</em>" wins
       if (b.startsWithMatch !== a.startsWithMatch) return b.startsWithMatch ? 1 : -1; // prefer start
       return 0;
-    })[0].text; // return best match's text
-}
+    })[0]?.text;
+};
 
 
 const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, bridgeChild, mapping, showAlgo, candidatesScore, algoScoreFirst, placeholderMap}) => {
