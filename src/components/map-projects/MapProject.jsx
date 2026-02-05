@@ -1677,19 +1677,22 @@ const MapProject = () => {
     setOtherMatchedConcepts(prev => {
       let newConcepts = {...prev}
       let result = find(newConcepts, c => c.row.__index === rowIndex)
-      result.results = null
+      if(result)
+        result.results = null
       return newConcepts
     })
     setBridgeCandidates(prev => {
       let newConcepts = {...prev}
       let result = find(newConcepts, c => c.row.__index === rowIndex)
-      result.results = null
+      if(result)
+        result.results = null
       return newConcepts
     })
     setScispacyCandidates(prev => {
       let newConcepts = {...prev}
       let result = find(newConcepts, c => c.row.__index === rowIndex)
-      result.results = null
+      if(result)
+        result.results = null
       return newConcepts
     })
     fetchOtherCandidates(row, 0, undefined, undefined, undefined, true)
