@@ -17,7 +17,7 @@ import ConceptIcon from '../concepts/ConceptIcon'
 
 const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore, algoScoreFirst, size}) => {
   const { t } = useTranslation();
-  let percentile = concept?.search_meta?.search_normalized_score
+  let percentile = concept?.search_meta?.search_normalized_score || ((concept?.search_meta?.search_rerank_score || concept?.search_meta?.search_score) * 100)
   if(percentile && !isNumber(percentile))
     percentile = parseFloat(percentile)
   const score = concept?.search_meta?.search_score
