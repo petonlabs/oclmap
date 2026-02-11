@@ -82,6 +82,7 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
     },
     {
       'id': 'ocl-scispacy-loinc',
+      'getIcon': (props) => <img src="https://allenai.github.io/scispacy/scispacy-logo-square.png" style={{objectFit: 'cover', width: '28px', height: '28px', ...props.sx}}/>,
       'name': (
         <Trans
           i18nKey='map_project.scispacy_loinc_search'
