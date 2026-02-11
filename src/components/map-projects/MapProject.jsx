@@ -1,7 +1,7 @@
 /*eslint no-process-env: 0*/
 
 import React from 'react'
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 import Split from 'react-split';
@@ -21,8 +21,6 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
@@ -35,8 +33,6 @@ import Badge from '@mui/material/Badge';
 import { DataGrid } from '@mui/x-data-grid';
 
 
-import DownIcon from '@mui/icons-material/ArrowDropDown';
-import MatchingIcon from '@mui/icons-material/DeviceHub';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
@@ -78,7 +74,6 @@ import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
 import isNumber from 'lodash/isNumber'
 import times from 'lodash/times'
-import isPlainObject from 'lodash/isPlainObject'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -90,12 +85,10 @@ import { useDoubleClick } from '../common/useDoubleClick'
 import CloseIconButton from '../common/CloseIconButton';
 import SearchHighlightsDialog from '../search/SearchHighlightsDialog'
 import ConceptHome from '../concepts/ConceptHome'
-import RepoSearchAutocomplete from '../repos/RepoSearchAutocomplete'
-import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplete'
 import DraggablePaperComponent from '../common/DraggablePaperComponent'
 import LoaderDialog from '../common/LoaderDialog'
 import Error403 from '../errors/Error403'
-import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS, SEMANTIC_BATCH_SIZE, ES_BATCH_SIZE } from './constants'
+import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
 import Controls from './Controls'
@@ -113,10 +106,10 @@ import Concept from './Concept'
 import AIAssistantButton from './AIAssistantButton'
 import ImportToCollection from './ImportToCollection'
 import ProjectLogs from './ProjectLogs';
+import { useAlgos } from './algorithms'
 
 import './MapProject.scss'
 import '../common/ResizablePanel.scss'
-
 
 // const LOG = {
 //   action: '',
@@ -133,7 +126,6 @@ const MapProject = () => {
   const params = useParams()
   const history = useHistory()
   const bridgeRef = React.useRef()
-
   // project state
   const [project, setProject] = React.useState(null)
   const [name, setName] = React.useState('')
@@ -147,14 +139,15 @@ const MapProject = () => {
   const [decisionFilters, setDecisionFilters] = React.useState([])
   const [matchTypes, setMatchTypes] = React.useState({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
   const [matchedConcepts, setMatchedConcepts] = React.useState([]);
-  const [otherMatchedConcepts, setOtherMatchedConcepts] = React.useState([]);
-  const [bridgeCandidates, setBridgeCandidates] = React.useState([]);
-  const [scispacyCandidates, setScispacyCandidates] = React.useState([]);
+
+  // Algo Candidates
+  const [allCandidates, setAllCandidates] = React.useState({}); // ocl-scispacy-loinc
+
   const [searchedConcepts, setSearchedConcepts] = React.useState({});
   const [facets, setFacets] = React.useState({});
   const [appliedFacets, setAppliedFacets] = React.useState({});
   const [searchResponse, setSearchResponse] = React.useState({});
-  const [algo, setAlgo] = React.useState('llm')
+  const [algosSelected, setAlgosSelected] = React.useState([])
   const [notes, setNotes] = React.useState({})
   const [mapTypes, setMapTypes] = React.useState({})
   const [proposed, setProposed] = React.useState({})
@@ -168,11 +161,6 @@ const MapProject = () => {
   const [scispacyCandidatesStartedAt, setScispacyCandidatesStartedAt] = React.useState(false)
   const [scispacyCandidatesEndedAt, setScispacyCandidatesEndedAt] = React.useState(false)
   const [searchStr, setSearchStr] = React.useState('') // concept search
-  const [matchAPI, setMatchAPI] = React.useState('')
-  const [matchAPIToken, setMatchAPIToken] = React.useState('')
-  const [semanticBatchSize, setSemanticBatchSize] = React.useState(SEMANTIC_BATCH_SIZE)
-  const [bridgeEnabled, setBridgeEnabled] = React.useState(false)
-  const [scispacyEnabled, setScispacyEnabled] = React.useState(false)
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
   const [filters, setFilters] = React.useState({})
   const [AIModel, setAIModel] = React.useState('')
@@ -187,7 +175,6 @@ const MapProject = () => {
   const [selectedRowStatus, setSelectedRowStatus] = React.useState('all')
   const [selectedMatchBucket, setSelectedMatchBucket] = React.useState(false)
   const [decisionTab, setDecisionTab] = React.useState('candidates')
-  const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
   const [searchText, setSearchText] = React.useState('')  // csv row search
   const [selectedCandidatesScoreBucket, setSelectedCandidatesScoreBucket] = React.useState(false)
   const [scoreBucketSortBy, setScoreBucketSortBy] = React.useState('desc')
@@ -230,13 +217,17 @@ const MapProject = () => {
 
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
-  const [rowStage, setRowStage] = React.useState({})  // {'0': {'algo1': -2, -1, 0, 1, 'rerank': -2, -1, 0, 1}} --> -2: failed, -1: not run yet, 0: running, 1: done
-
-  const otherMatchedConceptsRef = React.useRef([]);
-  const bridgeCandidatesRef = React.useRef([]);
-  const scispacyCandidatesRef = React.useRef([]);
   const rowStageRef = React.useRef([]);
-  const algoRef = React.useRef([]);
+  const [rowStage, _setRowStage] = React.useState({})  // {'0': {'algo1': -2, -1, 0, 1, 'rerank': -2, -1, 0, 1}} --> -2: failed, -1: not run yet, 0: running, 1: done
+  const setRowStage = React.useCallback((updater) => {
+    _setRowStage(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      rowStageRef.current = next; // ✅ always in sync with the committed update
+      return next;
+    });
+  }, []);
+
+  const allCandidatesRef = React.useRef({})
 
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
@@ -245,15 +236,13 @@ const MapProject = () => {
   const CANDIDATES_LIMIT = 15
   const canBridge = bridgeRef?.current?.canBridge()
   const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
-  const isMultiAlgo = bridgeEnabled || scispacyEnabled
+  const isMultiAlgo = algosSelected.length > 1
+  const scispacyEnabled = find(algosSelected, {type: 'ocl-scispacy'})
+  const bridgeEnabled = find(algosSelected, {type: 'ocl-ciel-bridge'})
 
 
   // algos - computed based on current language
-  const baseAlgos = React.useMemo(() => [
-    {id: 'es', label: t('map_project.algorithm_es_label'), description: t('map_project.algorithm_es_description')},
-    {id: 'llm', label: t('map_project.algorithm_llm_label'), description: t('map_project.algorithm_llm_description'), disabled: !toggles?.SEMANTIC_SEARCH_TOGGLE},
-    {id: 'custom', label: t('map_project.algorithm_custom_label'), description: t('map_project.algorithm_custom_description')}
-  ], [t, toggles?.SEMANTIC_SEARCH_TOGGLE])
+  const baseAlgos = React.useMemo(() => useAlgos(t, toggles, canBridge, canScispacy, Trans), [t, toggles?.SEMANTIC_SEARCH_TOGGLE, canBridge, canScispacy])
 
   const [algos, setAlgos] = React.useState(baseAlgos)
 
@@ -264,7 +253,7 @@ const MapProject = () => {
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
-  let headers = ['llm', 'custom'].includes(algo) ? SEMANTIC_SEARCH_HEADERS : HEADERS
+  let headers = find(algosSelected, {type: 'ocl-semantic'})?.id ? SEMANTIC_SEARCH_HEADERS : HEADERS
   if(repoVersion?.properties)
     headers = [...headers, ...compact(repoVersion?.filters?.map(_filter => {
       if(_filter?.code && !['concept_class', 'datatype'].includes(_filter.code))
@@ -325,7 +314,7 @@ const MapProject = () => {
           const sheet = workbook.Sheets[sheetName];
           const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: '' })
           setProjectFromData(data, response.data)
-          setAlgo(response?.data?.matching_algorithm || algo)
+          setAlgosSelected(response?.data?.algorithms || [])
           if (response?.data.columns?.length > 0) {
             const _columns = response.data.columns.map(col => ({...omit(col, ['hidden'])}))
             setColumns(_columns)
@@ -361,38 +350,21 @@ const MapProject = () => {
       } else {
         setLoadingProject(false)
       }
-      let _candidates = []
-      let _bridgeCandidates = []
-      let _scispacyCandidates = []
       let _rowStage = {}
+      let _allCandidates = {}
       forEach((response?.data?.candidates || []), candidate => {
-        _rowStage[candidate.row.__index] = {'ocl-semantic': 1}
         let algo = get(candidate.results, '0.search_meta.algorithm')
-        if(algo === 'ocl-ciel-bridge') {
-          _bridgeCandidates.push(candidate)
-          _rowStage[candidate.row.__index]['ocl-ciel-bridge'] = 1
-        }
-        else if(algo === 'ocl-scispacy-loinc') {
-          _scispacyCandidates.push(candidate)
-          _rowStage[candidate.row.__index]['ocl-scispacy-loinc'] = 1
-        }
-        else
-          _candidates.push(candidate)
+        _rowStage[candidate.row.__index] = {..._rowStage[candidate.row.__index], [algo]: 1}
+        _allCandidates[algo] = [...(_allCandidates[algo] || []), candidate]
       })
+
+      setAllCandidates(_allCandidates)
+      setAlgosSelected(response.data.algorithms)
       setRowStage(_rowStage)
-      setOtherMatchedConcepts(_candidates)
-      setBridgeCandidates(_bridgeCandidates)
-      setScispacyCandidates(_scispacyCandidates)
       setName(response.data?.name || '')
       setDescription(response.data?.description || '')
       setOwner(response.data?.owner_url)
       setRetired(Boolean(response.data?.include_retired))
-      setMatchAPI(response.data?.match_api_url)
-      setMatchAPIToken(response.data?.match_api_token)
-      setBridgeEnabled(Boolean(response.data?.bridge_enabled))
-      setScispacyEnabled(Boolean(response.data?.scispacy_enabled))
-      if(response.data?.match_api_url)
-        setSemanticBatchSize(response.data?.batch_size || SEMANTIC_BATCH_SIZE)
       setCandidatesScore(response.data?.score_configuration)
       setProject(response.data)
       setConfigure(false)
@@ -502,8 +474,8 @@ const MapProject = () => {
       width: columnWidth['_targetCode_'] || 300,
       renderCell: params => {
         const targetConcept = mapSelected[params.row.__index]
-        if(targetConcept?.url) {
-          return <Concept key={`${params.row.__index}-${targetConcept.url}`} sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix />
+        if(targetConcept?.id) {
+          return <Concept key={`${params.row.__index}-${targetConcept.id}`} sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix asTarget />
         }
       }
     })
@@ -555,7 +527,7 @@ const MapProject = () => {
     setDecisionFilters([])
     setMatchTypes({very_high: 0, high: 0, medium: 0, low: 0, no_match: 0})
     setMatchedConcepts([])
-    setOtherMatchedConcepts([])
+    setAllCandidates({})
     setSearchedConcepts({})
     setFacets({})
     setSearchResponse({})
@@ -577,7 +549,6 @@ const MapProject = () => {
     setEdit([])
     setSelectedRowStatus('all')
     setDecisionTab('candidates')
-    setAlgoMenuAnchorEl(null)
     setSearchText('')
     setShowItem(false)
     setAutoMatchUnmappedOnly(true)
@@ -807,9 +778,7 @@ const MapProject = () => {
       })
       return __candidates
     }
-    const candidates = [
-      ..._getCandidates(otherMatchedConcepts), ..._getCandidates(bridgeCandidates), ..._getCandidates(scispacyCandidates, true)
-    ]
+    const candidates = flatten(map(allCandidates, (_candidates, _algo) => _getCandidates(_candidates, _algo.includes('scispacy'))))
     const formData = new FormData();
     formData.append('file', f);
     formData.append('candidates', JSON.stringify(candidates))
@@ -819,20 +788,10 @@ const MapProject = () => {
     formData.append('columns', JSON.stringify(map(columns, col => ({...col, hidden: columnVisibilityModel[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined, ai_assistant_hidden: AIAssistantColumns[col.dataKey] === false}))))
     if(repoVersion?.version_url)
       formData.append('target_repo_url', repoVersion.version_url)
-    formData.append('matching_algorithm', algo)
+    formData.append('algorithms', JSON.stringify(map(algosSelected, algo => omit(algo, ['__key']))))
     formData.append('score_configuration', JSON.stringify(candidatesScore))
     formData.append('include_retired', retired)
-    if(matchAPI && algo === 'custom') {
-      formData.append('match_api_url', matchAPI)
-      formData.append('match_api_token', matchAPIToken)
-      formData.append('batch_size', semanticBatchSize)
-    } else {
-      formData.append('match_api_url', '')
-      formData.append('match_api_token', '')
-    }
     formData.append('filters', JSON.stringify(getFilters()))
-    formData.append('bridge_enabled', bridgeEnabled)
-    formData.append('scispacy_enabled', scispacyEnabled)
     const isUpdate = Boolean(project?.id)
     let service = APIService.new().overrideURL(owner).appendToUrl('map-projects/')
     if(isUpdate)
@@ -920,18 +879,12 @@ const MapProject = () => {
   const updateAlgosByRepoVersion = version => {
     const newAlgos = [...algos]
     const isLLMAlgoAllowed = version?.match_algorithms?.includes('llm')
-    newAlgos[1].disabled = !isLLMAlgoAllowed
+    const index = newAlgos.findIndex(algo => algo.type === 'ocl-semantic')
+    newAlgos[index].disabled = !isLLMAlgoAllowed
     setAlgos(newAlgos)
-    if(!isLLMAlgoAllowed && algoRef.current === 'llm') {
-      onAlgoSelect('es')
+    if(find(algosSelected, {type: 'ocl-semantic'}) && !isLLMAlgoAllowed) {
+      setAlgosSelected(reject(algosSelected, {type: 'ocl-semantic'}))
     }
-  }
-
-  const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
-
-  const onAlgoSelect = newAlgo => {
-    setAlgo(newAlgo)
-    setAlgoMenuAnchorEl(null)
   }
 
   const getFilters = () => {
@@ -955,11 +908,11 @@ const MapProject = () => {
     }
   }
 
-  const getMatchAPIService = () => {
+  const getMatchAPIService = (algo) => {
     let service;
-    if(matchAPI && algo === 'custom') {
+    if(algo?.url && algo?.type === 'custom') {
       service = APIService.new()
-      service.URL = matchAPI
+      service.URL = algo.url
     } else {
       service = APIService.concepts().appendToUrl('$match/')
     }
@@ -998,7 +951,12 @@ const MapProject = () => {
 
   const setAutoMatched = (indexes) => {
     forEach(indexes, index => {
-      const topCandidate = orderBy(flatten(map(filter([...(otherMatchedConceptsRef.current || {}), ...(bridgeCandidatesRef.current || {}), ...(scispacyCandidatesRef.current || {})], candidate => candidate.row.__index === index), _candidate => _candidate?.results || [])), 'search_meta.search_normalized_score', 'desc')[0]
+      const topCandidate = orderBy(
+        flatten(
+          map(filter(flatten(values(allCandidatesRef.current)), candidate => candidate?.row?.__index === index), _candidate => _candidate?.results || [])
+        ),
+        'search_meta.search_normalized_score', 'desc'
+      )[0]
       if(topCandidate?.search_meta?.search_normalized_score >= candidatesScore.recommended) {
         const isBridge = topCandidate.search_meta.algorithm.includes('bridge')
         let conceptToMap = topCandidate
@@ -1041,9 +999,10 @@ const MapProject = () => {
 
   const getRowsResults = async (rows) => {
     abortRef.current = false;
+    const algoDef = getFirstAlgoDef()
 
-    const CHUNK_SIZE = ['llm', 'custom'].includes(algo) ? semanticBatchSize : ES_BATCH_SIZE; // Number of rows per batch
-    const MAX_CONCURRENT_REQUESTS = 2; // Number of parallel API requests allowed
+    const CHUNK_SIZE = algoDef.batch_size || 10 // Number of rows per batch
+    const MAX_CONCURRENT_REQUESTS = algoDef.concurrent_requests || 1; // Number of parallel API requests allowed
     if(autoMatchUnmappedOnly)
       rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
     else
@@ -1074,23 +1033,21 @@ const MapProject = () => {
         reranker: !isMultiAlgo
       }
 
-      const rowIds = map(rowBatch, '__index')
-
-      initiateRowStage(rowIds)
+      forEach(rowBatch, __row => markAlgo(__row.__index, algoDef.id, 0))
 
       try {
-        const service = getMatchAPIService()
+        const service = getMatchAPIService(algoDef)
         const response = await service.post(
           payload,
-          (algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null,
+          (algoDef.type === 'custom' && algoDef.url && algoDef.token) ? algoDef.token : null,
           null,
           {
             includeSearchMeta: true,
-            semantic: ['llm', 'custom'].includes(algo),
+            ...(algoDef.query_params || {}),
             ...extraParams
-         }
+          }
         );
-        updateRowStage(rowIds, 'ocl-semantic', 1)
+        forEach(rowBatch, __row => markAlgo(__row.__index, algoDef.id, 1))
         return response.data || [];
       } catch {
         return [];
@@ -1114,8 +1071,8 @@ const MapProject = () => {
             if(!isMultiAlgo)
               setStateViews(data, _repo)
             forEach(data, concept => {
-              setOtherMatchedConcepts(prev => {
-                return [...reject(prev, c => c.row.__index === concept.row.__index), concept]
+              setAllCandidates(prev => {
+                return {...prev, [algoDef.id]: [...reject(prev[algoDef.id], c => c.row.__index === concept.row.__index), concept]}
               })
             })
             setMatchedConcepts(prev => [...prev, ...data]);
@@ -1129,15 +1086,11 @@ const MapProject = () => {
       }
     };
 
-    let subActions = []
+    let subActions = [...map(algosSelected, algo => algo.name || algo.id)]
     if(!isMultiAlgo)
-      subActions.push('with_reranker')
+      subActions.push('reranker')
     if(autoMatchUnmappedOnly)
       subActions.push('unmatched_only')
-    if(bridgeEnabled)
-      subActions.push('with_bridge_candidates')
-    if(scispacyEnabled)
-      subActions.push('with_scispacy_candidates')
     if(inAIAssistantGroup && autoRunAIAnalysis)
       subActions.push('with_ai_analysis')
 
@@ -1151,12 +1104,20 @@ const MapProject = () => {
     })
     await processWithConcurrency(repo);
 
-    setTimeout(() => {
-      if(bridgeEnabled)
-        fetchBulkBridgeCandidates(rows)
-      else if(scispacyEnabled)
-        fetchBulkScispacyCandidates(rows)
-      else if(inAIAssistantGroup && autoRunAIAnalysis)
+    setTimeout(async () => {
+      let nextAlgo = getNextAlgoDef(algoDef.id)
+      while(nextAlgo?.id) {
+        if(nextAlgo.type === 'ocl-ciel-bridge' && canBridge)
+          await fetchBulkBridgeCandidates(rows, nextAlgo)
+        else if(nextAlgo.type === 'ocl-scispacy' && canScispacy)
+          await fetchBulkScispacyCandidates(rows, nextAlgo)
+        nextAlgo = getNextAlgoDef(nextAlgo.id)
+      }
+
+      for (const row of rows) {
+        await rerank(row.__index, true)
+      }
+      if(inAIAssistantGroup && autoRunAIAnalysis)
         setTimeout(() => runBulkAIAnalysis(rows), 1000)
       else {
         setLoadingMatches(false)
@@ -1168,36 +1129,8 @@ const MapProject = () => {
   };
 
   React.useEffect(() => {
-    otherMatchedConceptsRef.current = otherMatchedConcepts;
-    if(isPlainObject(otherMatchedConceptsRef.current))
-      otherMatchedConceptsRef.current = values(otherMatchedConceptsRef.current)
-  }, [otherMatchedConcepts]);
-
-  React.useEffect(() => {
-    if(bridgeEnabled && canBridge === false)
-      setBridgeEnabled(false)
-    if(scispacyEnabled && canBridge === false && !canScispacy)
-      setScispacyEnabled(false)
-  }, [canBridge, bridgeEnabled, canScispacy, scispacyEnabled])
-
-  React.useEffect(() => {
-    bridgeCandidatesRef.current = bridgeCandidates;
-    if(isPlainObject(bridgeCandidatesRef.current))
-      bridgeCandidatesRef.current = values(bridgeCandidatesRef.current);
-  }, [bridgeCandidates]);
-
-  React.useEffect(() => {
-    scispacyCandidatesRef.current = scispacyCandidates;
-    if(isPlainObject(scispacyCandidatesRef.current))
-      scispacyCandidatesRef.current = values(scispacyCandidatesRef.current)
-  }, [scispacyCandidates]);
-
-  React.useEffect(() => {
-    rowStageRef.current = rowStage;
-  }, [rowStage]);
-  React.useEffect(() => {
-    algoRef.current = algo;
-  }, [algo]);
+    allCandidatesRef.current = allCandidates;
+  }, [allCandidates]);
 
   const runBulkAIAnalysis = async (_rows) => {
     setLoadingMatches(true)
@@ -1215,7 +1148,7 @@ const MapProject = () => {
     setLoadingMatches(false)
   }
 
-  const fetchBulkBridgeCandidates = async (_rows) => {
+  const fetchBulkBridgeCandidates = async (_rows, algo) => {
     setLoadingMatches(true)
     setBridgeCandidatesStartedAt(moment())
     for (let index = 0; index < _rows.length; index++) {
@@ -1223,24 +1156,26 @@ const MapProject = () => {
         setLoadingMatches(false)
         break;
       };
+      markAlgo(_rows[index].__index, algo.id, 0)
 
-      await fetchBridgeCandidates(_rows[index], 0, undefined, undefined, undefined, false, !scispacyEnabled, true); // wait for completion
+      await fetchBridgeCandidates(_rows[index], 0, undefined, undefined, undefined, false, true, ((response, payload) => {
+        const index = payload.rows[0].__index
+        log({action: 'algo_finished', extras: {algo: algo.id}}, index)
+        markAlgo(index, algo.id, 1)
+        setAllCandidates(prev => {
+          const newCandidates = {...prev}
+          const results = (isArray(response) ? response : response?.data)
+          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == index), ...(results || [])]
+          return newCandidates
+        })
+      })); // wait for completion
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
     }
     const now = moment()
     setBridgeCandidatesEndedAt(now)
-    if(scispacyEnabled) {
-      fetchBulkScispacyCandidates(_rows)
-    }
-    else if(inAIAssistantGroup && autoRunAIAnalysis)
-      setTimeout(() => runBulkAIAnalysis(_rows), 1000)
-    else if (isAllRerankingDone()) {
-      setEndMatchingAt(now)
-      setLoadingMatches(false)
-    }
   }
 
-  const fetchBulkScispacyCandidates = async (_rows) => {
+  const fetchBulkScispacyCandidates = async (_rows, algo) => {
     setLoadingMatches(true)
     setScispacyCandidatesStartedAt(moment())
     for (let index = 0; index < _rows.length; index++) {
@@ -1249,18 +1184,24 @@ const MapProject = () => {
         break;
       };
 
+      markAlgo(_rows[index].__index, algo.id, 0)
+
       setLoadingMatches(true)
-      await fetchScispacyCandidates(_rows[index], false, false, true, true); // wait for completion
+      await fetchScispacyCandidates(_rows[index], false, false, true, (response => {
+        const _index = _rows[index].__index
+        log({action: 'algo_finished', extras: {algo: algo.id}}, _index)
+        markAlgo(_index, algo.id, 1)
+        setAllCandidates(prev => {
+          const newCandidates = {...prev}
+          const results = [{row: _rows[index], results: fromScispacyResultsToConcepts(get(response.data, index) || [])}]
+          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == _index), ...(results || [])]
+          return newCandidates
+        })
+      })); // wait for completion
       await new Promise(resolve => setTimeout(resolve, 6000)); // 1s delay
     }
     const now = moment()
     setScispacyCandidatesEndedAt(now)
-    if(inAIAssistantGroup && autoRunAIAnalysis)
-      setTimeout(() => runBulkAIAnalysis(_rows), 1000)
-    else if (isAllRerankingDone()) {
-      setEndMatchingAt(now)
-      setLoadingMatches(false)
-    }
   }
 
   const isRunningBulkAnalysis = bulkAIAnalysisEndedAt ? moment().isBetween(bulkAIAnalysisStartedAt, bulkAIAnalysisEndedAt) : Boolean(bulkAIAnalysisStartedAt)
@@ -1426,7 +1367,7 @@ const MapProject = () => {
   const getBulkBridgeCandidatesButtonLabel = () => {
     const effectiveEnd = loadingMatches ? _now : bridgeCandidatesEndedAt;
     const matchingDuration = getMatchingDuration(bridgeCandidatesStartedAt, effectiveEnd)
-    if(loadingMatches || bridgeCandidates?.length)
+    if(loadingMatches || allCandidatesRef.current['ocl-ciel-bridge']?.length)
       return `${t('map_project.bridge_candidates')} (${matchingDuration})`
     return t('map_project.bridge_candidates')
   }
@@ -1434,7 +1375,7 @@ const MapProject = () => {
   const getBulkScispacyCandidatesButtonLabel = () => {
     const effectiveEnd = loadingMatches ? _now : scispacyCandidatesEndedAt;
     const matchingDuration = getMatchingDuration(scispacyCandidatesStartedAt, effectiveEnd)
-    if(loadingMatches || scispacyCandidates?.length)
+    if(loadingMatches || allCandidatesRef.current['ocl-scispacy-loinc']?.length)
       return `${t('map_project.scispacy_candidates')} (${matchingDuration})`
     return t('map_project.scispacy_candidates')
   }
@@ -1556,42 +1497,29 @@ const MapProject = () => {
     return workbook
   }
 
-  const getTopRowCandidates = (index) => {
-    let _candidates = orderBy(find(otherMatchedConcepts, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
-    let _bridgeCandidates = orderBy(find(bridgeCandidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
-    let _scispacyCandidates = orderBy(find(scispacyCandidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
-    return [times(CANDIDATES_LIMIT, i => _candidates[i]), times(CANDIDATES_LIMIT, i => _bridgeCandidates[i]), times(CANDIDATES_LIMIT, i => _scispacyCandidates[i])]
-  }
-
   const twoDigit = n => String(n).padStart(2, '0')
 
   const getRowCandidatesForDownload = index => {
-    let _candidates = {};
-    let _bridgeCandidates = {};
-    let _scispacyCandidates = {};
-    const [__candidates, __bridgeCandidates, __scispacyCandidates] = getTopRowCandidates(index)
-    forEach(__candidates, (candidate, i) => {
-      if(candidate?.id) {
-        let algo = candidate.search_meta.algorithm || 'ocl-semantic'
-        algo = algo.replaceAll('-', '')
-        _candidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
-      }
+    let candidates = {};
+    forEach(allCandidatesRef.current, (_candidates, algoId) => {
+      let algoKey = algoId.replaceAll('-', '').replaceAll(' ', '').replaceAll('_', '').toLowerCase()
+      let __candidates = orderBy(find(_candidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
+      __candidates = times(CANDIDATES_LIMIT, i => __candidates[i])
+      forEach(__candidates, (candidate, i) => {
+        if(candidate?.id) {
+          const isBridge = algoId === 'ocl-ciel-briddge'
+          candidates[`__result_${algoKey}_${twoDigit(i + 1)}__`] = candidate?.id ?
+            (
+              isBridge ?
+                bridgeRef.current?.getCandidateLabelForDownload(candidate) :
+                compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n')
+            ) :
+            null
+        }
+      })
+
     })
-    forEach(__bridgeCandidates, (candidate, i) => {
-      if(candidate?.id) {
-        let algo = candidate.search_meta.algorithm || 'ocl-ciel-bridge'
-        algo = algo.replaceAll('-', '')
-        _bridgeCandidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? bridgeRef.current?.getCandidateLabelForDownload(candidate) : null
-      }
-    })
-    forEach(__scispacyCandidates, (candidate, i) => {
-      if(candidate?.id) {
-        let algo = candidate.search_meta.algorithm || 'ocl-scispacy-loinc'
-        algo = algo.replaceAll('-', '')
-        _scispacyCandidates[`__result_${algo}_${twoDigit(i + 1)}__`] = candidate?.id ? compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n') : null
-      }
-    })
-    return {..._candidates, ..._bridgeCandidates, ..._scispacyCandidates}
+    return candidates
   }
 
   const getRowsForDownload = () => {
@@ -1665,7 +1593,7 @@ const MapProject = () => {
       if(!appliedFacets[csvRow.__index] && !isEmpty(_filters) && _filters) {
         setAppliedFacets({...appliedFacets, [csvRow.__index]: getAppliedFacetFromQueryParam(_filters)})
       }
-      fetchOtherCandidates(csvRow, 0, undefined, undefined, getAppliedFacetFromQueryParam(_filters))
+      fetchAllCandidatesForRow(null, csvRow, 0, undefined, undefined, getAppliedFacetFromQueryParam(_filters))
       if(isEmpty(facets[csvRow.__index]))
         getFacets(true, csvRow.__index)
 
@@ -1678,28 +1606,19 @@ const MapProject = () => {
   }
 
   const onRefreshClick = () => {
-    setOtherMatchedConcepts(prev => {
-      let newConcepts = {...prev}
-      let result = find(newConcepts, c => c.row.__index === rowIndex)
-      if(result)
-        result.results = null
-      return newConcepts
+    setAllCandidates(prev => {
+      let newCandidates = {...prev}
+      keys(newCandidates).forEach(algoId => {
+        const newConcepts = newCandidates[algoId]
+        let result = find(newConcepts, c => c.row.__index === rowIndex)
+        if(result)
+          result.results = null
+
+        newCandidates[algoId] = newConcepts
+      })
+      return newCandidates
     })
-    setBridgeCandidates(prev => {
-      let newConcepts = {...prev}
-      let result = find(newConcepts, c => c.row.__index === rowIndex)
-      if(result)
-        result.results = null
-      return newConcepts
-    })
-    setScispacyCandidates(prev => {
-      let newConcepts = {...prev}
-      let result = find(newConcepts, c => c.row.__index === rowIndex)
-      if(result)
-        result.results = null
-      return newConcepts
-    })
-    fetchOtherCandidates(row, 0, undefined, undefined, undefined, true)
+    fetchAllCandidatesForRow(getFirstAlgoDef()?.id, row, 0, undefined, undefined, undefined, true)
   }
 
   const onCloseDecisions = () => {
@@ -1792,8 +1711,9 @@ const MapProject = () => {
   const onDecisionTabChange = (event, newValue) => {
     setShowItem(false)
     setDecisionTab(newValue)
-    if(newValue === 'candidates' && repo?.id && !find(otherMatchedConcepts, c => c.row.__index === rowIndex)?.results?.length) {
-      fetchOtherCandidates()
+    const firstAlgo = getFirstAlgoDef()?.id
+    if(newValue === 'candidates' && repo?.id && !find(allCandidatesRef.current[firstAlgo?.id], c => c.row.__index === rowIndex)?.results?.length) {
+      fetchAllCandidatesForRow(firstAlgo.id)
     }
     if(['candidates', 'search'].includes(newValue) && isEmpty(facets[rowIndex]))
       getFacets(true)
@@ -1845,103 +1765,131 @@ const MapProject = () => {
       log({action: newValue || 'decision_changed', description: t('map_project.decision_changed_to_none'), extras: newValue ? {} : {decision: t('map_project.none')}})
   }
 
-  const initiateRowStage = index => {
-    const rowAlgos = {'ocl-semantic': 0}
-    if(bridgeEnabled)
-      rowAlgos['ocl-ciel-bridge'] = -1
-    if(scispacyEnabled)
-      rowAlgos['ocl-scispacy-loinc'] = -1
-    if(isMultiAlgo)
-      rowAlgos['rerank'] = -1
+  const selectedAlgoIds = map(algosSelected, 'id')
+  const computedAlgoIds = keys(allCandidatesRef.current)
 
+  const ensureRow = (prev, rowId, selectedAlgoIds, needsRerank) => {
+    const base = prev[rowId] ?? {};
+    const next = { ...base };
+
+    selectedAlgoIds.forEach(id => {
+      if (!Number.isFinite(next[id])) next[id] = -1;
+    });
+    if (needsRerank && !has(next, 'rerank')) next.rerank = -1;
+
+    return next;
+  };
+
+  const markAlgo = (rowId, algoId, value) => {
     setRowStage(prev => {
-      if (Array.isArray(index)) {
-        const updates = Object.fromEntries(
-          compact(index).map(i => [i, rowAlgos])
-        )
-        return { ...prev, ...updates }
-      }
-      return { ...prev, [index]: rowAlgos }
-    })
+      const needsRerank = isMultiAlgo || find(algosSelected, { type: "custom" });
+      const row = ensureRow(prev, rowId, selectedAlgoIds, needsRerank);
+
+      row[algoId] = value;
+
+      return { ...prev, [rowId]: row };
+    });
+  };
+
+  const getAlgoDef = algoId => find(algosSelected, {id: algoId})
+  const getNextAlgoDef = (algoId) => {
+    const algoDef = getAlgoDef(algoId);
+    if (!algoDef) return;
+
+    const sorted = [...algosSelected].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const idx = sorted.findIndex(a => a.id === algoDef.id);
+
+    return idx >= 0 ? sorted[idx + 1] : undefined;
+  };
+
+  const getFirstAlgoDef = () => orderBy(algosSelected, 'order')[0]
+
+  const fetchOCLOrCustomCandidates = (algoDef, _row, offset=0, _retired, _filters, callback) => {
+    // can be algo=ocl-search | ocl-semantic | custom
+    let __row = isEmpty(_row) ? row : _row
+    const payload = getPayloadForMatching([__row], repo, _filters)
+
+    if(!values(omit(payload.rows[0], '__index')).length){
+      setAlert({message: t('map_project.no_valid_columns_for_matching')})
+      setTimeout(() => setAlert(false), 6000)
+      return
+    }
+    const service = getMatchAPIService(algoDef)
+    service.post(
+      payload,
+      (algoDef.type === 'custom' && algoDef.url) ? algoDef.token : null,
+      null,
+      {
+        includeSearchMeta: true,
+        includeRetired: isBoolean(_retired) ? _retired : retired,
+        includeMappings: true,
+        mappingBrief: true,
+        mapTypes: 'SAME-AS,SAME AS,SAME_AS',
+        verbose: true,
+        limit: algoDef.limit || CANDIDATES_LIMIT,
+        offset: offset || 0,
+        semantic: ['ocl-semantic', 'custom'].includes(algoDef.type),
+        reranker: !isMultiAlgo && algoDef.provider === 'ocl'
+      }).then(response => callback(response, payload))
   }
 
-  const updateRowStage = (index, algo, state) => {
-    setRowStage(prev => {
-      const apply = (i) => ({
-        ...prev[i],
-        [algo]: state,
-      })
-
-      if (Array.isArray(index)) {
-        const updates = Object.fromEntries(
-          compact(index).map(i => [i, apply(i)])
-        )
-        return { ...prev, ...updates }
-      }
-
-      return { ...prev, [index]: apply(index) }
-    })
-  }
-  const fetchOtherCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
+  const fetchAllCandidatesForRow = (algoId, _row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
     setAlert(false)
     if(isAnyValidColumn()) {
-      let __row = isEmpty(_row) ? row : _row
-      const payload = getPayloadForMatching([__row], repo, _filters)
-
-      if(!values(omit(payload.rows[0], '__index')).length){
-        setAlert({message: t('map_project.no_valid_columns_for_matching')})
-        setTimeout(() => setAlert(false), 6000)
+      let algoDef
+      if (!algoId) {
+        algoDef = getFirstAlgoDef()
+        algoId = algoDef?.id
+      } else
+        algoDef = getAlgoDef(algoId)
+      if(!algoId)
         return
-      }
+      let __row = isEmpty(_row) ? row : _row
 
-      const existingCandidates = find(otherMatchedConcepts, c => c.row.__index === __row.__index)?.results
+      const existingCandidates = find(allCandidates[algoId], c => c.row.__index === __row.__index)?.results
 
       if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
         setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
         return
       }
-      initiateRowStage(__row.__index)
+      markAlgo(__row.__index, algoId, 0)
       setIsLoadingInDecisionView(true)
-      const service = getMatchAPIService()
-      service.post(
-        payload,
-        (algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null,
-        null,
-        {
-          includeSearchMeta: true,
-          includeRetired: isBoolean(_retired) ? _retired : retired,
-          includeMappings: true,
-          mappingBrief: true,
-          mapTypes: 'SAME-AS,SAME AS,SAME_AS',
-          verbose: true,
-          limit: CANDIDATES_LIMIT,
-          offset: offset || 0,
-          semantic: ['llm', 'custom'].includes(algo),
-          reranker: !isMultiAlgo
-        }).then(response => {
-          log({action: 'algo_finished', extras: {algo: 'ocl-semantic'}}, __row.__index)
-          setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-semantic': 1}}))
-          if(response?.detail) {
-            setAlert({message: response.detail, severity: 'error'})
-            return
-          }
-          if(offset === 0)
-            setOtherMatchedConcepts([...reject(otherMatchedConcepts, c => c.row.__index == __row.__index), ...(response?.data || [])])
-          else {
-            const newMatches = [...otherMatchedConcepts]
+
+      const onResponse = (response, payload) => {
+        log({action: 'algo_finished', extras: {algo: algoId}}, __row.__index)
+          markAlgo(__row.__index, algoId, 1)
+        if(response?.detail) {
+          setAlert({message: response.detail, severity: 'error'})
+          return
+        }
+        let data = isArray(response) ? response : (response?.data || [])
+        setAllCandidates(prev => {
+          if(offset === 0) {
+            const newCandidates = {...prev}
+            const results = algoId === 'ocl-scispacy-loinc' ? [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}] : data
+            newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
+            return newCandidates
+          } else {
+            const newMatches = [...(prev[algoId] || [])]
             const index = findIndex(newMatches, match => match.row.__index === __row.__index)
-            newMatches[index].results = [...newMatches[index].results, ...(response?.data[0]?.results || [])]
-            setOtherMatchedConcepts(newMatches)
+            newMatches[index].results = [...newMatches[index].results, ...(get(data, '0.results') || [])]
+            return {...prev, [algoId]: newMatches}
           }
-          setIsLoadingInDecisionView(false)
-          let items = get(response?.data, '0.results') || []
-          if(items.length > 0){
-            const synonyms = get(payload, 'rows.0.synonyms')
-            setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
-          }
-          fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload)
-          fetchScispacyCandidates(__row, scrollToBottom, forceReload)
-          rerank(__row.__index)
+        })
+        setIsLoadingInDecisionView(false)
+        let items = get(response?.data, '0.results') || []
+        if(items.length > 0){
+          const synonyms = get(payload, 'rows.0.synonyms')
+          setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
+        }
+        const nextAlgoId = getNextAlgoDef(algoId)?.id
+        if(nextAlgoId && (offset === 0 || nextAlgoId !== 'ocl-scispacy-loinc')) {
+          markAlgo(__row.__index, nextAlgoId, 0)
+          fetchAllCandidatesForRow(nextAlgoId, __row, offset, _retired, scrollToBottom, _filters, forceReload)
+        } else {
+          markAlgo(__row.__index, 'rerank', -1)
+          setTimeout(() => rerank(__row.__index), 1000)
+        }
           if(scrollToBottom) {
             setTimeout(() => {
               const el = document.getElementById('candidates-list')
@@ -1949,16 +1897,23 @@ const MapProject = () => {
                 el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
             }, 100)
           }
-        });
+        }
+      if(['ocl-semantic', 'ocl-search', 'custom'].includes(algoId)) {
+        fetchOCLOrCustomCandidates(algoDef, _row, offset, _retired, _filters, onResponse)
+      } else if (algoId === 'ocl-scispacy-loinc') {
+        fetchScispacyCandidates(__row, scrollToBottom, forceReload, false, onResponse)
+      } else if (algoId === 'ocl-ciel-bridge') {
+        fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload, false, onResponse)
+      }
     } else {
       setAlert({message: t('map_project.no_valid_columns_for_matching')})
       setTimeout(() => setAlert(false), 6000)
     }
   }
 
-  const fetchScispacyCandidates = async (_row, scrollToBottom, forceReload=false, shouldRerank=true, isBulk=false) => {
+  const fetchScispacyCandidates = async (_row, scrollToBottom, forceReload=false, isBulk=false, callback) => {
     let __row = isEmpty(_row) ? row : _row
-    const existingCandidates = find(scispacyCandidatesRef.current, c => c.row.__index === __row.__index)?.results
+    const existingCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row.__index === __row.__index)?.results
     if(!isBulk && !forceReload && existingCandidates?.length> 0) {
       setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
       return { skipped: true }
@@ -1969,7 +1924,6 @@ const MapProject = () => {
     if(!inputRow.name) {
       return { skipped: true }
     }
-    setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-scispacy-loinc': 0}}))
     setIsLoadingInDecisionView(true)
 
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
@@ -1977,14 +1931,8 @@ const MapProject = () => {
     try {
       service.URL = SCISPACY_API_URL
       service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
-        log({action: 'algo_finished', extras: {algo: 'ocl-scispacy-loinc'}}, __row.__index)
-        setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-scispacy-loinc': 1}}))
-        if(!isEmpty(response?.data)) {
-          let candidates = [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}]
-          setScispacyCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
-          setTimeout(() => highlightTexts([], null, false, compact([get(payload, 'rows.0.label')])), 100)
-          shouldRerank && setTimeout(() => rerank(__row.__index, isBulk), 1000)
-        }
+        if(callback)
+          callback(response, payload)
         return response
       })
     } catch (err) {
@@ -1998,47 +1946,27 @@ const MapProject = () => {
     }
   }
 
-  const rerank = (_index, isBulk=false) => {
+  const rerank = async (_index, isBulk=false) => {
     const index = isNumber(_index) ? _index : rowIndex
-    if(isNumber(index) && isReadyForRerank(index)) {
-      setRowStage(prev => ({...prev, [index]: {...prev[index], 'rerank': 0}}))
+    if(isNumber(index) && (isBulk || isReadyForRerank(index))) {
+      markAlgo(index, 'rerank', 0)
       const service = APIService.concepts().appendToUrl('$rerank/')
       service.post({
         q: get(prepareRow(rows[index]), 'name'),
-        rows: [
-          ...getCandidatesForRow(index, otherMatchedConceptsRef.current),
-          ...getCandidatesForRow(index, bridgeCandidatesRef.current),
-          ...getCandidatesForRow(index, scispacyCandidatesRef.current),
-        ]
+        rows: flatten(map(allCandidatesRef.current, candidates => getCandidatesForRow(index, candidates)))
       }).then(response => {
         log({action: 'rerank_finished'}, index)
-        setRowStage(prev => {
-          let newState = {...prev, [index]: {...prev[index], 'rerank': 1}}
-          if(isBulk && isAllRerankingDone(newState)) {
-            setEndMatchingAt(moment())
-            setLoadingMatches(false)
-          }
-          return {...prev, [index]: {...prev[index], 'rerank': 1}}
+        markAlgo(index, 'rerank', 1)
+        setAllCandidates(prev => {
+          const newCandidates = {...allCandidatesRef.current}
+          forEach(keys(prev), algoId => {
+            const existingCandidates = [...allCandidatesRef.current[algoId]]
+            const ranked = response.data?.filter(result => result.search_meta.algorithm === algoId)
+            if(ranked.length > 0)
+              existingCandidates[findIndex(existingCandidates, match => match.row.__index === index)].results = ranked
+          })
+          return newCandidates
         })
-        const newScispacyCandidates = response.data?.filter(result => result.search_meta.algorithm === 'ocl-scispacy-loinc')
-        const newBridgeCandidates = response.data?.filter(result => result.search_meta.algorithm === 'ocl-ciel-bridge')
-        const newRestCandidates = response.data?.filter(result => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(result.search_meta.algorithm))
-        if (newRestCandidates?.length) {
-          const newMatches = [...otherMatchedConceptsRef.current]
-          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newRestCandidates
-          setOtherMatchedConcepts(newMatches)
-        }
-        if(newBridgeCandidates?.length) {
-          const newMatches = [...bridgeCandidatesRef.current]
-          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newBridgeCandidates
-          setBridgeCandidates(newMatches)
-        }
-
-        if(newScispacyCandidates?.length){
-          const newMatches = [...scispacyCandidatesRef.current]
-          newMatches[findIndex(newMatches, match => match.row.__index === index)].results = newScispacyCandidates
-          setScispacyCandidates(newMatches)
-        }
         if(isBulk)
           setTimeout(() => setAutoMatched([index]), 1000)
         return response
@@ -2054,23 +1982,10 @@ const MapProject = () => {
   const isReadyForRerank = _index => {
     const index = isNumber(_index) ? _index : rowIndex
     if(isNumber(index) && get(rowStageRef.current, `${index}.rerank`) !== 0) {
-      const _candidates = getCandidatesForRow(index, otherMatchedConceptsRef.current, true)
-      const _bridgeCandidates = getCandidatesForRow(index, bridgeCandidatesRef.current, true)
-      const _scispacyCandidates = getCandidatesForRow(index, scispacyCandidatesRef.current, true)
-      return Boolean(
-        _candidates &&
-          (!bridgeEnabled || _bridgeCandidates) &&
-          (!scispacyEnabled || _scispacyCandidates) &&
-          (
-            filter(_candidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length ||
-              filter(_bridgeCandidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length ||
-              filter(_scispacyCandidates?.results, r => !isNumber(r?.search_meta?.search_rerank_score))?.length)
-      )
+      return Boolean(every(selectedAlgoIds, algoId => rowStageRef.current[index][algoId] === 1))
     }
     return false
   }
-
-  const isAllRerankingDone = _rowStage => Boolean(every((_rowStage || rowStageRef.current), stage => stage?.rerank && stage?.rerank === 1))
 
   const fromScispacyResultsToConcepts = results => {
     let formatted = []
@@ -2081,16 +1996,15 @@ const MapProject = () => {
     return formatted
   }
 
-  const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false, shouldRerank=true, isBulk=false) => {
+  const fetchBridgeCandidates = (_row, offset=0, _retired, scrollToBottom, _filters, forceReload=false, isBulk=false, callback) => {
     let __row = isEmpty(_row) ? row : _row
-    const existingCandidates = find(bridgeCandidatesRef.current, c => c.row.__index === __row.__index)?.results
+    const existingCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row.__index === __row.__index)?.results
     if(!isBulk && !forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
       setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
       return
     }
     if(!bridgeEnabled)
       return
-    setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-ciel-bridge': 0}}))
     setIsLoadingInDecisionView(true)
     const payload = getPayloadForMatching([__row], repo)
     let __offset = offset || 0
@@ -2099,37 +2013,8 @@ const MapProject = () => {
       __offset,
       isBoolean(_retired) ? _retired : retired,
       (candidates) => {
-        log({action: 'algo_finished', extras: {algo: 'ocl-ciel-bridge'}}, __row.__index)
-        setRowStage(prev => ({...prev, [__row.__index]: {...prev[__row.__index], 'ocl-ciel-bridge': 1}}))
-        if(__offset === 0)
-          setBridgeCandidates(prev => [...reject(prev, c => c.row.__index == __row.__index), ...(candidates || [])])
-        else {
-          setBridgeCandidates(prev => {
-            const newMatches = [...prev]
-            let index = findIndex(newMatches, match => match.row.__index === __row.__index)
-            if(index < 0) {
-              newMatches[candidates[0].row.__index] = candidates[0]
-            } else {
-              newMatches[index].results = [...newMatches[index].results, ...(candidates[0]?.results || [])]
-            }
-            return newMatches
-          })
-          let items = get(candidates, '0.results') || []
-          if(items.length > 0){
-            const synonyms = get(payload, 'rows.0.synonyms')
-            setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
-          }
-          if(scrollToBottom) {
-            setTimeout(() => {
-              const el = document.getElementById('candidates-list')
-              if(el)
-                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-            }, 100)
-          }
-        }
-        setIsLoadingInDecisionView(false)
-        shouldRerank && setTimeout(() => rerank(__row.__index, isBulk), 1000)
-        return candidates
+        if(callback)
+          callback(candidates, payload)
       },
       (response, errorMsg) => {
         setAlert({message: response?.detail || errorMsg, severity: 'error'})
@@ -2139,8 +2024,9 @@ const MapProject = () => {
   }
 
   const onFetchMoreCandidates = () => {
-    const currentResults = find(otherMatchedConcepts, matched => matched.row.__index === rowIndex)?.results?.length || 0
-    fetchOtherCandidates(null, currentResults, undefined, true)
+    const algoDef = getFirstAlgoDef()
+    const currentResults = find(allCandidatesRef.current[algoDef?.id], matched => matched.row.__index === rowIndex)?.results?.length || 0
+    fetchAllCandidatesForRow(algoDef?.id, null, currentResults, undefined, true)
   }
 
   const search = (event, page, pageSize, includeRetired, appliedFilters) => {
@@ -2222,7 +2108,7 @@ const MapProject = () => {
   const isConfigureInSplitView = configure && file?.name
   const columnsForTable = getColumnsForTable()
   let targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex]) : false
-  const targetConceptFromCandidate = find(otherMatchedConcepts[rowIndex]?.results, {url: targetConcept?.url})
+  const targetConceptFromCandidate = !isEmpty(allCandidatesRef.current) ? find(allCandidatesRef.current[getFirstAlgoDef()?.id][rowIndex]?.results, {url: targetConcept?.url}) : false
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
   else if(!targetConcept?.search_meta?.search_normalized_score) {
@@ -2290,9 +2176,9 @@ const MapProject = () => {
       __row = _row
       __index = _row.__index
     }
-    let _candidates = find(otherMatchedConceptsRef.current, c => c.row?.__index === __index)?.results || []
-    let _bridgeCandidates = find(bridgeCandidatesRef.current, c => c.row?.__index === __index)?.results || []
-    let _scispacyCandidates = find(scispacyCandidatesRef.current, c => c.row?.__index === __index)?.results || []
+    let _candidates = flatten(map(filter(computedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
+    let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
+    let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       let rowData = prepareRow(__row, true, true)
       let cols = filter(map(columns, col => ({...col, hidden: AIAssistantColumns[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
@@ -2382,9 +2268,9 @@ const MapProject = () => {
       mappedSources={mappedSources}
       targetSourcesFromRows={targetSourcesFromRows}
       versions={versions}
-      algo={algo}
-      onAlgoSelect={onAlgoSelect}
       algos={algos}
+      algosSelected={algosSelected}
+      setAlgosSelected={setAlgosSelected}
       validColumns={headers}
       columns={columns}
       isValidColumnValue={isValidColumnValue}
@@ -2395,12 +2281,6 @@ const MapProject = () => {
       setColumnVisibilityModel={setColumnVisibilityModel}
       onSave={onSave}
       isSaving={isSaving}
-      matchAPI={matchAPI}
-      setMatchAPI={setMatchAPI}
-      matchAPIToken={matchAPIToken}
-      setMatchAPIToken={setMatchAPIToken}
-      semanticBatchSize={semanticBatchSize}
-      setSemanticBatchSize={setSemanticBatchSize}
       candidatesScore={candidatesScore}
       onScoreChange={setCandidatesScore}
       includeDefaultFilter={includeDefaultFilter}
@@ -2410,11 +2290,9 @@ const MapProject = () => {
       locales={locales}
       isLoadingLocales={isLoadingLocales}
       bridgeEnabled={bridgeEnabled}
-      setBridgeEnabled={setBridgeEnabled}
       canBridge={canBridge}
       canScispacy={canScispacy}
       scispacyEnabled={scispacyEnabled}
-      setScispacyEnabled={setScispacyEnabled}
       setAIAssistantColumns={setAIAssistantColumns}
       AIAssistantColumns={AIAssistantColumns}
       inAIAssistantGroup={inAIAssistantGroup}
@@ -2429,7 +2307,6 @@ const MapProject = () => {
             service={getMatchAPIService()}
             repo={repoVersion}
             bridgeRepoURL='/orgs/CIEL/sources/CIEL/'
-            token={(algo === 'custom' && matchAPI && matchAPIToken) ? matchAPIToken : null}
             limit={CANDIDATES_LIMIT}
             user={user}
             ref={bridgeRef}
@@ -2791,20 +2668,6 @@ const MapProject = () => {
             {t('map_project.auto_match')}
           </DialogTitle>
           <DialogContent sx={{paddingTop: '12px !important'}}>
-            <Button
-              component="label"
-              role={undefined}
-              variant="outlined"
-              tabIndex={-1}
-              sx={{textTransform: 'none', margin: '0 0 10px 0', padding: '6.5px 15px', minWidth: '300px'}}
-              startIcon={<MatchingIcon />}
-              endIcon={<DownIcon />}
-              onClick={onAlgoButtonClick}
-            >
-              {algos.find(_algo => _algo.id === algo).label}
-            </Button>
-            <RepoSearchAutocomplete label={t('map_project.map_target')} size='small' onChange={(id, item) => onRepoChange(item)} value={repo} />
-            <RepoVersionSearchAutocomplete versions={versions} label={t('common.version')} size='small' onChange={(id, item) => onRepoVersionChange(item)} value={repoVersion} sx={{marginTop: '10px'}} />
             <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label={t('map_project.unmapped_only')} />
             <FormHelperText sx={{marginTop: '-4px'}}>
               {
@@ -2966,9 +2829,7 @@ const MapProject = () => {
                       rowStage={rowStage[rowIndex]}
                       alert={alert}
                       setAlert={setAlert}
-                      candidates={otherMatchedConcepts}
-                      bridgeCandidates={bridgeCandidates}
-                      scispacyCandidates={scispacyCandidates}
+                      candidates={allCandidatesRef.current}
                       setShowItem={setShowItem}
                       showItem={showItem}
                       setShowHighlights={setShowHighlights}
@@ -2986,7 +2847,7 @@ const MapProject = () => {
                       filters={getFilters(rowIndex)}
                       setAppliedFacets={(filters) => {
                         setAppliedFacets(() => ({...appliedFacets, [rowIndex]: filters}))
-                        fetchOtherCandidates(null, 0, false, false, filters, true)
+                        fetchAllCandidatesForRow(null, 0, false, false, filters, true)
                       }}
                       locales={filters.locale || ''}
                       models={AIModels}
@@ -2994,6 +2855,7 @@ const MapProject = () => {
                       onModelChange={setAIModel}
                       onRefreshClick={onRefreshClick}
                       inAIAssistantGroup={inAIAssistantGroup}
+                      algosSelected={algosSelected}
                     />
                 }
                 {
@@ -3041,29 +2903,6 @@ const MapProject = () => {
         }
     </Paper>
     </Split>
-      <Menu
-        id="matching-algo"
-        anchorEl={algoMenuAnchorEl}
-        open={Boolean(algoMenuAnchorEl)}
-        onClose={onAlgoButtonClick}
-        MenuListProps={{
-          'aria-labelledby': 'matching-algo',
-          role: 'listbox',
-        }}
-      >
-        {
-          algos.map(_algo => (
-            <MenuItem
-              key={_algo.id}
-              disabled={_algo.disabled}
-              selected={_algo.id === algo}
-              onClick={() => onAlgoSelect(_algo.id)}
-            >
-              {_algo.label}
-            </MenuItem>
-          ))
-        }
-      </Menu>
       {
         deleteProject && project?.id &&
           <MapProjectDeleteConfirmDialog open={deleteProject} onClose={() => setDeleteProject(false)} project={project} />

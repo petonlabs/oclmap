@@ -456,7 +456,7 @@
     "algorithm_es_label": "Generic Elastic Search Matching",
     "algorithm_es_description": "Token and Keyword based search using ES",
     "algorithm_llm_label": "Semantic Search (all-MiniLM-L6-v2)",
-    "algorithm_llm_description": "Vector based search powered by MiniLM",
+    "algorithm_llm_description": "Vector based search powered by 'all-MiniLM-L6-v2'",
     "algorithm_custom_label": "Custom API",
     "algorithm_custom_description": "Custom $match API",
     "target_code": "Target Code",
@@ -537,8 +537,14 @@
     "ocl_ai_candidates_analysis": "OCL AI Assistant: Candidate Analysis",
     "group_by_match_quality": "Match Quality",
     "ocl_semantic_algorithm": "OCL Semantic Algorithm",
+    "ocl_search_algorithm": "OCL Search Algorithm",
+    "ocl_ciel_bridge_algorithm": "OCL CIEL Bridge Terminology",
+    "ocl_scispacy_loinc_algorithm": "OCL ScispaCy LOINC Algorithm",
+    "ocl_custom_algorithm": "OCL Custom Algorithm",
     "algorithm": "Algorithm",
-    "column_send_to_ai_assistant": "Send to AI Assistant"
+    "column_send_to_ai_assistant": "Send to AI Assistant",
+    "algo_conflicting_id": "Conflicting ID",
+    "algo_conflicting_name": "Conflicting Name"
   },
   "app": {
     "web_version": "Web Version",

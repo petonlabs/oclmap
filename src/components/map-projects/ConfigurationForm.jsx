@@ -1,13 +1,10 @@
 import React from 'react'
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import Typography from '@mui/material/Typography'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import FormHelperText from '@mui/material/FormHelperText'
 import Button from '@mui/material/Button'
-import Menu from '@mui/material/Menu';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton'
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -17,8 +14,6 @@ import { styled } from '@mui/material/styles';
 
 import JoinRightIcon from '@mui/icons-material/JoinRight';
 import UploadIcon from '@mui/icons-material/Upload';
-import DownIcon from '@mui/icons-material/ArrowDropDown';
-import MatchingIcon from '@mui/icons-material/DeviceHub';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -33,8 +28,9 @@ import RepoVersionSearchAutocomplete from '../repos/RepoVersionSearchAutocomplet
 import CloseIconButton from '../common/CloseIconButton';
 import ColumnMapTable from './ColumnMapTable'
 import ScoreConfiguration from './ScoreConfiguration'
-import { SCORES_COLOR, SEMANTIC_BATCH_SIZE } from './constants'
+import { SCORES_COLOR } from './constants'
 import FilterTable from './FilterTable'
+import MultiAlgoSelector from './MultiAlgoSelector'
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -49,15 +45,8 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algo, onAlgoSelect, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, matchAPI, setMatchAPI, matchAPIToken, setMatchAPIToken, candidatesScore, onScoreChange, semanticBatchSize, setSemanticBatchSize, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, canBridge, bridgeEnabled, setBridgeEnabled, canScispacy, scispacyEnabled, setScispacyEnabled, setAIAssistantColumns, AIAssistantColumns, inAIAssistantGroup }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algosSelected, setAlgosSelected, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, candidatesScore, onScoreChange, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, setAIAssistantColumns, AIAssistantColumns, inAIAssistantGroup }) => {
   const { t } = useTranslation();
-  const [algoMenuAnchorEl, setAlgoMenuAnchorEl] = React.useState(null)
-  const onAlgoButtonClick = event => setAlgoMenuAnchorEl(algoMenuAnchorEl ? null : event.currentTarget)
-  const onAlgoChange = id => {
-    setAlgoMenuAnchorEl(null)
-    onAlgoSelect(id)
-  }
-
   const isLLMAlgoNotAllowed = !repoVersion?.match_algorithms?.includes('llm')
   const appliedLocales = filters?.locale ? filters?.locale?.split(',') : []
 
@@ -213,133 +202,11 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
       <FormHelperText sx={{marginTop: 0}}>
         {t('map_project.matching_algorithm_description')}
       </FormHelperText>
-      <Button
-        component="label"
-        role={undefined}
-        variant="outlined"
-        tabIndex={-1}
-        sx={{textTransform: 'none', margin: '0 0 10px 0', padding: '6.5px 15px', width: '100%', marginTop: '12px'}}
-        startIcon={<MatchingIcon />}
-        endIcon={<DownIcon />}
-        onClick={onAlgoButtonClick}
-      >
-        {algos.find(_algo => _algo.id === algo).label}
-      </Button>
-      <Menu
-        id="matching-algo"
-        anchorEl={algoMenuAnchorEl}
-        open={Boolean(algoMenuAnchorEl)}
-        onClose={onAlgoButtonClick}
-        MenuListProps={{
-          'aria-labelledby': 'matching-algo',
-          role: 'listbox',
-        }}
-      >
-        {algos.map(_algo => (
-          <ListItemButton
-            key={_algo.id}
-            disabled={_algo.disabled}
-            selected={_algo.id === algo}
-            onClick={() => onAlgoChange(_algo.id)}
-          >
-            <ListItemText primary={_algo.label} secondary={_algo.description} />
-          </ListItemButton>
-        ))}
-      </Menu>
-      {
-        algo === 'custom' &&
-          <>
-            <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
-              {t('map_project.custom_match_api')}
-            </Typography>
-            <FormHelperText sx={{marginTop: 0}}>
-              {t('map_project.custom_match_api_description')}
-            </FormHelperText>
-            <TextField
-              fullWidth
-              sx={{marginTop: '12px'}}
-              label={t('map_project.match_api_url')}
-              placeholder={t('map_project.match_api_url_placeholder')}
-              value={matchAPI}
-              onChange={event => setMatchAPI(event.target.value || '')}
-            />
-            <TextField
-              fullWidth
-              sx={{marginTop: '12px', width: 'calc(100% - 160px)'}}
-              label={t('map_project.match_api_token')}
-              placeholder={t('map_project.match_api_token_placeholder')}
-              value={matchAPIToken}
-              onChange={event => setMatchAPIToken(event.target.value || '')}
-            />
-            <TextField
-              fullWidth
-              required
-              type='number'
-              inputProps={{min: 1, max: 100, step: 1}}
-              sx={{marginTop: '12px', width: '160px', paddingLeft: '8px', '.MuiFormHelperText-root': {marginLeft: '4px'}, '.MuiInputLabel-root': {left: '6px'}}}
-              label={t('map_project.batch_size')}
-              value={semanticBatchSize}
-              onChange={event => setSemanticBatchSize(event.target.value || '')}
-              onBlur={() => semanticBatchSize ? undefined : setSemanticBatchSize(SEMANTIC_BATCH_SIZE)}
-              helperText={t('map_project.rows_per_match_api')}
-            />
-          </>
-      }
-      {
-        algo != 'es' &&
-          <>
-            <FormControlLabel
-              sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
-              size='small'
-              control={
-                <Checkbox
-                  size='small'
-                  disabled={!canBridge}
-                  checked={bridgeEnabled}
-                  sx={{padding: '8px 4px'}}
-                  onChange={() => setBridgeEnabled(!bridgeEnabled)}
-                />
-              }
-              label={
-                <Trans
-                  i18nKey='map_project.bridge_terminology_search'
-                  components={[
-                    <sup key="1"/>
-                  ]}
-                />
-              }
-            />
-            <FormHelperText sx={{marginTop: 0}}>
-              <Trans
-                i18nKey='map_project.bridge_terminology_search_description'
-                components={[
-                  <a key="0" href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
-                ]}
-              />
-            </FormHelperText>
-            <FormControlLabel
-              sx={{width: '100%', marginLeft: '-4px', marginTop: '6px', alignItems: 'flex-start', '.MuiCheckbox-root': {paddingTop: '2px'}}}
-              size='small'
-              control={
-                <Checkbox
-                  size='small'
-                  disabled={!canScispacy}
-                  checked={scispacyEnabled}
-                  sx={{padding: '8px 4px'}}
-                  onChange={() => setScispacyEnabled(!scispacyEnabled)}
-                />
-              }
-              label={
-                <Trans
-                  i18nKey='map_project.scispacy_loinc_search'
-                  components={[
-                    <sup key="1"/>
-                  ]}
-                />
-              }
-            />
-          </>
-      }
+      <MultiAlgoSelector
+        algos={algos}
+        value={algosSelected}
+        onChange={setAlgosSelected}
+      />
       <>
         <Typography component="div" sx={{fontSize: '16px', fontWeight: 'bold', marginTop: '20px'}}>
           {t('map_project.score_configuration')}

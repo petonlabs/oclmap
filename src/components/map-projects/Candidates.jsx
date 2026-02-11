@@ -35,6 +35,10 @@ import forEach from 'lodash/forEach'
 import uniq from 'lodash/uniq'
 import without from 'lodash/without'
 import orderBy from 'lodash/orderBy'
+import map from 'lodash/map'
+import compact from 'lodash/compact'
+import every from 'lodash/every'
+import times from 'lodash/every'
 
 import { highlightTexts } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
@@ -288,7 +292,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, bridgeCandidates, scispacyCandidates, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup, algosSelected}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState('search_meta.search_normalized_score')
   const [groupBy, setGroupBy] = React.useState('quality')
@@ -298,19 +302,16 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   const [openAIAnalysis, setOpenAIAnalysis] = React.useState(undefined)
   const recommendedScore = candidatesScore?.recommended
   const availableScore = candidatesScore?.available
-  const results = find(candidates, c => c.row?.__index === rowIndex )?.results
-  const bridgeResults = find(bridgeCandidates, c => c.row?.__index === rowIndex )?.results || []
-  const scispacyResults = find(scispacyCandidates, c => c.row?.__index === rowIndex )?.results || []
-  const isNoneLoaded = results === null || results === undefined
-  const concepts = results || []
-  const canFetchMore = results?.length > 0
+  const rawResults = flatten(map(candidates, _candidates => find(_candidates, c => c.row?.__index === rowIndex)?.results))
+  let allCandidates = compact(rawResults)
+  const isNoneLoaded = every(rawResults, r => r === null)
+  const canFetchMore = allCandidates?.length > 0
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
   const areAlgoRun = uniq(values(rowStage)).length === 1 && values(rowStage)[0] === 1
   const { label } = getRowProgressLabel(rowStage);
-  let allCandidates = [...concepts, ...bridgeResults, ...scispacyResults]
 
   const byScore = sortBy.includes('score')
-  const noCandidatesFound = !isLoading && !isNoneLoaded && results?.length === 0
+  const noCandidatesFound = !isLoading && !isNoneLoaded && allCandidates.length === 0
   const algoScoreFirst = groupBy === 'algorithm' || sortBy === 'search_meta.search_score'
   let props = {
     rowIndex: rowIndex,
@@ -358,11 +359,12 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   const getCandidates = () => {
     const order = byScore ? 'desc' : 'asc'
     if(groupBy === 'algorithm') {
-      const semanticOrdered = orderBy(concepts, sortBy, order)
-      const bridgeOrdered = orderBy(bridgeResults, sortBy, order)
-      const scispacyOrdered = orderBy(scispacyResults, sortBy, order)
+      let byAlgoCandidates = []
+      forEach(orderBy(algosSelected, 'order'), algo => {
+        byAlgoCandidates.push({ algo: algo, candidates: orderBy(candidates[algo.id], sortBy, order) })
+      })
       return {
-        semanticOrdered, bridgeOrdered, scispacyOrdered
+        byAlgoCandidates
       }
     } else {
       let recommended = []
@@ -387,9 +389,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     }
   }
 
-  const { semanticOrdered, bridgeOrdered, scispacyOrdered } = getCandidates()
+  const { byAlgoCandidates } = getCandidates()
   const { recommended, available, lowRanked } = getCandidates()
-
   const getRightControls = () => {
       return (
         <span style={{display: 'flex', alignItems: 'center'}}>
@@ -571,74 +572,61 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
           }
           {
             groupBy === 'algorithm' &&
-              <>
-                <li>
-            {
               (isLoading && isNoneLoaded) ?
-                <Skeleton height={60} /> :
+              <>
+                {
+                  times(algosSelected?.length || 1, i => {
+                    return <Skeleton key={i} height={60} />
+                  })
+                }
+              </> :
+              <>
+                {
+                  map(
+                    byAlgoCandidates, (result, i) => {
+                      const algo = result.algo
+                      return (
+                        <li key={i}>
               <CandidateList
                 {...props}
-                candidates={semanticOrdered}
-                header={t('map_project.ocl_semantic_algorithm')}
+                candidates={result.candidates[0].results}
+                header={algo.name || startCase(algo.id)}
                 onFetchMore={onFetchMore}
-                bucketId={`${rowIndex}-ocl-semantic`}
-                noToolbar={false}
-                onDisplayChange={setDisplay}
-                toolbarControl={
-                  <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
-                    <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
-                      <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
-                    </Badge>
-                  </IconButton>
-                }
-                alignToolbarLeft
-                rightControl={getRightControls()}
-                analysis={analysis}
-                showAnalysis
-                openAnalysis={Boolean(openAIAnalysis)}
-                onCloseAnalysis={() => setOpenAIAnalysis(false)}
+                bucketId={`${rowIndex}-${algo.id}`}
+                noToolbar={i !== 0}
+                bridge={algo.id === 'ocl-ciel-bridge'}
+                scispacy={algo.id === 'ocl-scispacy-loinc'}
                 collapsed={collapsed}
                 onCollapse={setCollapsed}
                 candidatesScore={candidatesScore}
-              />
-            }
-          </li>
-              <li>
                 {
-                  (isLoading && isNoneLoaded) ?
-                    <Skeleton height={60} /> :
-                  <CandidateList
-                    {...props}
-                    candidates={bridgeOrdered}
-                    header={t('map_project.ciel_bridge_terminology_candidates')}
-                    onFetchMore={onFetchMore}
-                    bucketId={`${rowIndex}-bridge`}
-                    noToolbar
-                    bridge
-                    collapsed={collapsed}
-                    onCollapse={setCollapsed}
-                    candidatesScore={candidatesScore}
-                  />
+                  ...(
+                    i === 0 ?
+                      {
+                        onDisplayChange: setDisplay,
+                        toolbarControl: (
+                          <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+                            <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
+                              <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
+                            </Badge>
+                          </IconButton>
+                        ),
+                        alignToolbarLeft: true,
+                        rightControl: getRightControls(),
+                        analysis: analysis,
+                        showAnalysis: true,
+                        openAnalysis: Boolean(openAIAnalysis),
+                        onCloseAnalysis: () => setOpenAIAnalysis(false)
+                      } :
+                    {}
+                  )
                 }
-              </li>
-                <li>
-                  {
-                    (isLoading && isNoneLoaded) ?
-                      <Skeleton height={60} /> :
-                    <CandidateList
-                      {...props}
-                      candidates={scispacyOrdered}
-                      header={t('map_project.scispacy_candidates')}
-                      onFetchMore={onFetchMore}
-                      bucketId={`${rowIndex}-scispacy`}
-                      noToolbar
-                      scispacy
-                      collapsed={collapsed}
-                      onCollapse={setCollapsed}
-                      candidatesScore={candidatesScore}
-                    />
-                  }
-                </li>
+              />
+          </li>
+                      )
+                    }
+                  )
+                }
               </>
           }
         </List>

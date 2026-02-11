@@ -156,7 +156,7 @@ const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, sx, onCar
 }
 
 
-const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst}) => {
+const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst, asTarget}) => {
   const bridge = concept?.search_meta?.algorithm === 'ocl-ciel-bridge'
   const scispacy = concept?.search_meta?.algorithm === 'ocl-scispacy-loinc'
   const id = concept?.version_url || concept?.url || concept?.id
@@ -207,6 +207,18 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
             algoScoreFirst={algoScoreFirst}
           />
       }
+        {
+          asTarget ?
+            <ConceptItem
+              {...props}
+              concept={concept}
+              repoVersion={repoVersion}
+              isSelectedForMap={false}
+              placeholderMap
+              noScore
+              showAlgo={false}
+            /> :
+
         <div className='col-xs-12' style={{paddingRight: 0, paddingLeft: algoScoreFirst ? '12px' : 0}}>
         {
           map(concept?.mappings, (mapping, index) => {
@@ -234,6 +246,7 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
           })
         }
         </div>
+        }
       </>
     )
   }
