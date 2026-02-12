@@ -548,7 +548,10 @@
     "lookup_configuration": "Lookup Configuration",
     "lookup_configuration_url": "Repository URL",
     "lookup_configuration_token": "Token",
-    "lookup_configuration_description": "Configure a Source/CodeSystem for lookup operation to fetch candidates definitions."
+    "lookup_configuration_description": "Configure a Source/CodeSystem for lookup operation to fetch candidates definitions.",
+    "refresh_candidates_tooltip": "This will wipe out existing candidates AND existing AI Assistant recommendations (though everything is maintained in the log history)",
+    "group_candidates": "Group By",
+    "sort_candidates": "Sort"
   },
   "app": {
     "web_version": "Web Version",

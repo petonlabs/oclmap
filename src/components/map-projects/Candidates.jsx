@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import Menu from '@mui/material/Menu';
@@ -16,21 +17,21 @@ import Badge from '@mui/material/Badge'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
+import Tooltip from '@mui/material/Tooltip'
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import SortIcon from '@mui/icons-material/SwapVert';
-import GroupIcon from '@mui/icons-material/Workspaces';
+import SortIcon from '@mui/icons-material/Sort';
+import GroupIcon from '@mui/icons-material/Layers';
 
 import find from 'lodash/find'
 import get from 'lodash/get'
 import isEmpty from 'lodash/isEmpty'
 import flatten from 'lodash/flatten'
 import values from 'lodash/values'
-import startCase from 'lodash/startCase'
 import forEach from 'lodash/forEach'
 import uniq from 'lodash/uniq'
 import without from 'lodash/without'
@@ -96,10 +97,11 @@ const Sort = ({ selected, onSort }) => {
 
   return (
     <>
-      <Button onClick={onSortClick} variant='outlined' color='info.dark' value='check' size='small' sx={{textTransform: 'none', padding: '5px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} startIcon={<SortIcon fontSize='inherit' />}>
-        {t('common.sort')}
-      </Button>
-
+      <Tooltip title={t('map_project.sort_candidates')}>
+        <IconButton onClick={onSortClick}>
+        <SortIcon />
+        </IconButton>
+        </Tooltip>
       <Menu
       anchorEl={anchorEl}
       open={Boolean(anchorEl)}
@@ -135,9 +137,11 @@ const Group = ({ selected, onGroup }) => {
 
   return (
     <>
-      <Button onClick={onGroupClick} variant='outlined' color='info.dark' value='check' size='small' sx={{textTransform: 'none', padding: '5px', marginRight: '8px', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '2px'}}} startIcon={<GroupIcon fontSize='inherit' />}>
-        {t('common.group')}
-      </Button>
+      <Tooltip title={t('map_project.group_candidates')}>
+      <IconButton onClick={onGroupClick}>
+        <GroupIcon />
+      </IconButton>
+        </Tooltip>
 
       <Menu
       anchorEl={anchorEl}
@@ -394,24 +398,18 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
               <Chip icon={<CircularProgress sx={{width: '14px !important', height: '14px !important', marginLeft: '6px !important', marginRight: '0px !important'}} />} variant='outlined' color='warning' size='small' label={label} sx={{margin: '0 8px'}} />
           }
           {
-            !noCandidatesFound && areAlgoRun &&
-              <Button onClick={onRefreshClick} color='info.dark' variant='outlined' size='small' sx={{margin: '0 8px', padding: '5px', textTransform: 'none', '.MuiButton-startIcon': {marginTop: '-2px', marginRight: '4px'}}} startIcon={<RefreshIcon fontSize='inherit' />}>
-                {startCase(t('common.refresh'))}
-              </Button>
-          }
-          {
             !noCandidatesFound &&
-              <Group
-                onGroup={onGroup}
-                selected={groupBy}
-              />
-          }
-          {
-            !noCandidatesFound &&
-              <Sort
-                onSort={onSort}
-                selected={sortBy}
-              />
+              <ButtonGroup color='info.dark' variant='outlined' size='small'>
+                    <Tooltip title={t('map_project.refresh_candidates_tooltip')}>
+                      <span>
+                        <IconButton onClick={onRefreshClick} disabled={!areAlgoRun}>
+                        <RefreshIcon />
+                      </IconButton>
+                        </span>
+                    </Tooltip>
+                <Group onGroup={onGroup} selected={groupBy} />
+                <Sort onSort={onSort} selected={sortBy} />
+              </ButtonGroup>
           }
           {
             inAIAssistantGroup &&

@@ -113,6 +113,7 @@ const AIAssistantButton = ({ models, selected, onClick, onModelChange, popperPro
           aria-label="select merge strategy"
           aria-haspopup="menu"
           onClick={handleToggle}
+          sx={{minWidth: 'auto !important', padding: '0px !important'}}
         >
           <ArrowDropDownIcon />
         </Button>
