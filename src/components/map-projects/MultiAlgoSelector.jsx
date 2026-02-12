@@ -16,7 +16,9 @@ import {
   InputAdornment,
   ListItemText,
   ListItemIcon,
-  ListItemButton
+  ListItemButton,
+  FormControlLabel,
+  Checkbox
 } from "@mui/material";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
@@ -65,7 +67,8 @@ export default function MultiAlgoSelector({
   algos,
   value,
   onChange,
-  maxAlgos=5
+  maxAlgos=5,
+  repo
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(() => new Map());
@@ -165,6 +168,7 @@ export default function MultiAlgoSelector({
       name: name,
       batch_size: algo.batch_size ?? 10,
       concurrent_requests: algo.concurrent_requests ?? 1,
+      lookup_required: algo.lookup_required,
       __key: Math.random(100).toString()
     };
 
@@ -188,7 +192,7 @@ export default function MultiAlgoSelector({
   return (
     <Box sx={{ width: "100%" }}>
       <Stack spacing={1.5}>
-        {(value || []).map((sel) => {
+        {(value || []).map((sel, i) => {
           const algo = find(algos, {type: sel.type});
           if (!algo) return null;
 
@@ -197,7 +201,7 @@ export default function MultiAlgoSelector({
 
           return (
             <Paper
-              key={sel.__key}
+              key={i}
               variant="outlined"
               sx={{
                 borderRadius: 2,
@@ -236,11 +240,11 @@ export default function MultiAlgoSelector({
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {algo.name}
+                      {sel.name || algo.name}
                     </Typography>
 
                     <Typography variant="caption" sx={{ color: "text.secondary", lineHeight: 0 }}>
-                      {algo.description ? algo.description : ""}
+                      {sel.id}
                     </Typography>
                   </Box>
 
@@ -331,9 +335,9 @@ export default function MultiAlgoSelector({
                             onChange={(e) => updateSelected(sel.__key, { url: e.target.value })}
                             placeholder="https://example.com/match"
                           />
-
                           <TextField
                             fullWidth
+                            type='password'
                             label="API Token"
                             value={sel.token || ""}
                             onChange={(e) => updateSelected(sel.__key, { token: e.target.value })}
@@ -365,6 +369,7 @@ export default function MultiAlgoSelector({
                                 })
                               }
                             />
+                            <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' checked={sel.lookup_required || false} />} label="Lookup Required" onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
                           </Stack>
 
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
@@ -405,6 +410,7 @@ export default function MultiAlgoSelector({
                             })
                           }
                         />
+                        <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' disabled={algo.provider === 'ocl'} checked={sel.lookup_required || false} />} label="Lookup Required" onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
                       </Stack>
                     )}
                   </Stack>
@@ -437,10 +443,12 @@ export default function MultiAlgoSelector({
                 MenuProps={{PaperProps: {style: {maxWidth: '350px'}}}}
               >
                 {
-                  addableOptions.map((a) => {
+                  addableOptions.map((a, index) => {
                     let isDisabled = a.disabled || (a.type === 'ocl-semantic' && find(value, {type: 'ocl-search'})) || (a.type === 'ocl-search' && find(value, {type: 'ocl-semantic'}))
+                    if(a.type === 'ocl-semantic' && !repo?.match_algorithms?.includes('llm') && !isDisabled)
+                      isDisabled = true
                   return (
-                    <ListItemButton id={a.id} key={a.id} value={a.id} disabled={isDisabled} onClick={() => addAlgo(a.id)}>
+                    <ListItemButton id={a.id} key={index} value={a.id} disabled={isDisabled} onClick={() => addAlgo(a.id)}>
                       <ListItemIcon sx={{minWidth: 'auto', marginRight: '16px'}}>
                         {renderAlgoIcon(a)}
                       </ListItemIcon>

@@ -112,7 +112,7 @@ const ProjectLogs = ({onClose, logs}) => {
             map(orderBy(logs, log => moment(log.created_at), ['desc']), (log, index) => {
               const [icon, color] = getIconAndColor(log)
               return (
-                <TimelineItem key={log.created_at.toString()}>
+                <TimelineItem key={index}>
                   <TimelineSeparator>
                     <Tooltip title={startCase(log.action)}>
                       <TimelineDot color={color} variant="outlined">

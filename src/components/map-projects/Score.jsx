@@ -38,7 +38,6 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
 
   const rerankScore = `${parseFloat(hasPercentile ? percentile : score).toFixed(2)}%`
   const algoScore = `${parseFloat(score).toFixed(2)}`
-
   return (
     <ListItem disablePadding sx={{display: 'inline-flex', width: 'auto'}}>
       <ListItemButton

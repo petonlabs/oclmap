@@ -38,7 +38,8 @@ import orderBy from 'lodash/orderBy'
 import map from 'lodash/map'
 import compact from 'lodash/compact'
 import every from 'lodash/every'
-import times from 'lodash/every'
+import times from 'lodash/times'
+import filter from 'lodash/filter'
 
 import { highlightTexts } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
@@ -52,20 +53,13 @@ import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 import AIAssistantButton from './AIAssistantButton'
 
-const STAGES_ORDER = [
-  'ocl-semantic',
-  'ocl-ciel-bridge',
-  'ocl-scispacy-loinc',
-  'rerank',
-];
-
-const getRowProgressLabel = (stageMap) => {
+const getRowProgressLabel = (stageMap, algos) => {
   if(stageMap === undefined)
     return {label: false}
   if(!stageMap)
     return {label: 'Preparing...', status: 'partial'}
 
-  const stages = STAGES_ORDER.map(k => stageMap[k]);
+  const stages = algos.map(k => stageMap[k.id]);
 
   if (!stages.length || stages.every(v => v === -1)) {
     return { label: 'Not started', status: 'idle' };
@@ -74,18 +68,18 @@ const getRowProgressLabel = (stageMap) => {
   const runningIndex = stages.findIndex(v => v === 0);
   if (runningIndex !== -1) {
     return {
-      label: `Running: ${STAGES_ORDER[runningIndex]}...`,
+      label: `Running: ${algos[runningIndex].id}...`,
       status: 'running',
     };
   }
 
   if (stages.every(v => v === 1)) {
-    return { label: 'Completed', status: 'done' };
+    return true
   }
 
   const waitingIndex = stages.findIndex(v => v === -1)
   if(waitingIndex !== -1) {
-    return {label: `Waiting: ${STAGES_ORDER[waitingIndex]}`, status: 'waiting'} // AutoMatch Bulk
+    return {label: `Waiting: ${algos[waitingIndex].id}`, status: 'waiting'} // AutoMatch Bulk
   }
 
   return { label: 'Partially completed', status: 'partial' };
@@ -163,7 +157,7 @@ const Group = ({ selected, onGroup }) => {
 }
 
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
   const isCollapsed = collapsed.includes(bucketId)
   const onCollapseToggle = () => {
@@ -260,7 +254,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
             )
         }
         title=' '
-        renderer={props => <Concept {...props} _id={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} key={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} notClickable={Boolean(scispacy)} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} />}
+        renderer={props => <Concept {...props} _id={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}`} key={`${bucketId}-${props?.concept?.uuid || props?.concept?.id}-${Math.random(100).toString()}`} onMap={onMap} isSelectedForMap={isSelectedForMap} setShowHighlights={setShowHighlights} repoVersion={repoVersion} isAIRecommended={AIRecommendedCandidateId === props?.concept?.id} AIRecommendedCandidateId={AIRecommendedCandidateId} locales={locales} notClickable={Boolean(scispacy)} showAlgo={showAlgo} candidatesScore={candidatesScore} algoScoreFirst={algoScoreFirst} conceptCache={conceptCache} />}
         display={display}
         onDisplayChange={onDisplayChange}
         nested
@@ -292,7 +286,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup, algosSelected}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup, algosSelected, conceptCache}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState('search_meta.search_normalized_score')
   const [groupBy, setGroupBy] = React.useState('quality')
@@ -308,7 +302,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   const canFetchMore = allCandidates?.length > 0
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
   const areAlgoRun = uniq(values(rowStage)).length === 1 && values(rowStage)[0] === 1
-  const { label } = getRowProgressLabel(rowStage);
+  const { label } = getRowProgressLabel(rowStage, algosSelected);
 
   const byScore = sortBy.includes('score')
   const noCandidatesFound = !isLoading && !isNoneLoaded && allCandidates.length === 0
@@ -328,7 +322,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     AIRecommendedCandidateId: AIRecommendedCandidateId,
     locales: locales,
     candidatesScore: candidatesScore,
-    algoScoreFirst: algoScoreFirst
+    algoScoreFirst: algoScoreFirst,
+    conceptCache: conceptCache
   }
 
   const onSort = option => {
@@ -361,7 +356,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     if(groupBy === 'algorithm') {
       let byAlgoCandidates = []
       forEach(orderBy(algosSelected, 'order'), algo => {
-        byAlgoCandidates.push({ algo: algo, candidates: orderBy(candidates[algo.id], sortBy, order) })
+        byAlgoCandidates.push({ algo: algo, candidates: orderBy(flatten(map(filter(candidates[algo.id], candidate => candidate?.row?.__index === rowIndex), 'results') || []), sortBy, order) })
       })
       return {
         byAlgoCandidates
@@ -396,7 +391,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
         <span style={{display: 'flex', alignItems: 'center'}}>
           {
             !areAlgoRun && label &&
-              <Chip icon={<CircularProgress sx={{width: '14px !important', height: '14px !important', marginLeft: '6px !important', marginRight: '0px !important'}} />} variant='outlined' color='warning' size='small' label={label} />
+              <Chip icon={<CircularProgress sx={{width: '14px !important', height: '14px !important', marginLeft: '6px !important', marginRight: '0px !important'}} />} variant='outlined' color='warning' size='small' label={label} sx={{margin: '0 8px'}} />
           }
           {
             !noCandidatesFound && areAlgoRun &&
@@ -405,14 +400,14 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
               </Button>
           }
           {
-            !noCandidatesFound && areAlgoRun &&
+            !noCandidatesFound &&
               <Group
                 onGroup={onGroup}
                 selected={groupBy}
               />
           }
           {
-            !noCandidatesFound && areAlgoRun &&
+            !noCandidatesFound &&
               <Sort
                 onSort={onSort}
                 selected={sortBy}
@@ -498,9 +493,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
             groupBy === 'quality' &&
               <>
                 <li>
-            {
-              (isLoading && isNoneLoaded) ?
-                <Skeleton height={60} /> :
               <CandidateList
                 {...props}
                 candidates={recommended}
@@ -528,7 +520,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 onCollapse={setCollapsed}
                 candidatesScore={candidatesScore}
               />
-            }
           </li>
           <li>
             {
@@ -589,8 +580,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                         <li key={i}>
               <CandidateList
                 {...props}
-                candidates={result.candidates[0].results}
-                header={algo.name || startCase(algo.id)}
+                candidates={result.candidates || []}
+                header={algo.name ? `${algo.name} (${algo.id})` : algo.id}
                 onFetchMore={onFetchMore}
                 bucketId={`${rowIndex}-${algo.id}`}
                 noToolbar={i !== 0}

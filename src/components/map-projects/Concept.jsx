@@ -6,6 +6,8 @@ import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import isString from 'lodash/isString'
 import map from 'lodash/map'
+import find from 'lodash/find'
+import keys from 'lodash/keys'
 
 import Retired from '../common/Retired'
 import Score from './Score'
@@ -39,9 +41,17 @@ const getBestSynonym = (synonyms = []) => {
 };
 
 
-const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, bridgeChild, mapping, showAlgo, candidatesScore, algoScoreFirst, placeholderMap}) => {
+const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, repoVersion, synonymPrefix, isAIRecommended, bridge, bridgeChild, mapping, showAlgo, candidatesScore, algoScoreFirst, placeholderMap, conceptCache}) => {
   const isValidBridge = Boolean(bridge && mapping.cascade_target_concept_code)
-  let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
+  const findConceptInCache = resource => {
+    let id = resource?.id || resource?.code
+    if(id) {
+      let url = find(keys(conceptCache), url => url.endsWith(`/concepts/${id}/`))
+      if(url)
+        return conceptCache[url]
+    }
+    return null
+  }
   const conceptToMap = isValidBridge ?
         {
           id: mapping.cascade_target_concept_code,
@@ -52,6 +62,17 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
           type: 'Concept',
           search_meta: concept.search_meta
         } : concept
+  const cached = findConceptInCache(conceptToMap)
+  if(cached)
+    isValidBridge ? conceptToMap.target_concept = cached : conceptToMap._source = cached
+  const getConceptDisplay = () => {
+    if(bridge) {
+      if(conceptToMap?.target_concept?.id)
+        return `${conceptToMap.source || conceptToMap.target_concept.source}:${conceptToMap.target_concept.id} ${conceptToMap.target_concept.display_name}`
+      return `${conceptToMap.source}:${conceptToMap.id} ${conceptToMap.display_name || ''}`
+    }
+  }
+  let bridgeMappingPrefix = bridge && mapping.cascade_target_concept_code ? `${mapping.cascade_target_source_name}:${mapping.cascade_target_concept_code} ${mapping.cascade_target_concept_name || ''}` : false
   const mapTypeToApply = isValidBridge ? mapping?.map_type || concept?.search_meta?.map_type : concept?.search_meta?.map_type
   return (
     <>
@@ -61,7 +82,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
             <span>
               {
                 !bridgeChild &&
-                  <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id}:${concept.id}`}</span>
+                  <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id || concept?.search_meta?.source}:${concept.id}`}</span>
               }
               {
               !bridgeChild &&
@@ -88,7 +109,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
                       }
                     </span>
                     {!bridgeChild && <span style={{margin: '0 5px'}}>&rarr;</span>}
-                    <span className='searchable'>{bridgeMappingPrefix}</span>
+                    <span className='searchable'>{getConceptDisplay()}</span>
                   </span>
               }
             </span>
@@ -156,7 +177,7 @@ const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, sx, onCar
 }
 
 
-const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst, asTarget}) => {
+const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst, asTarget, conceptCache}) => {
   const bridge = concept?.search_meta?.algorithm === 'ocl-ciel-bridge'
   const scispacy = concept?.search_meta?.algorithm === 'ocl-scispacy-loinc'
   const id = concept?.version_url || concept?.url || concept?.id
@@ -185,6 +206,7 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
     isSelectedToShow: isSelectedToShow,
     sx: sx,
     onCardClick: onCardClick,
+    conceptCache: conceptCache
   }
 
   if(bridge) {
@@ -223,7 +245,7 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
         {
           map(concept?.mappings, (mapping, index) => {
             return <ConceptItem
-                     key={index}
+                     key={`${index}-${crypto.randomUUID()}`}
                      {...props}
                      concept={concept}
                      repoVersion={repoVersion}

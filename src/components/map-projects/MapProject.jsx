@@ -210,6 +210,7 @@ const MapProject = () => {
   const [includeDefaultFilter, setIncludeDefaultFilter] = React.useState(true)
   const [analysis, setAnalysis] = React.useState({})
   const [AIModels, setAIModels] = React.useState([])
+  const [lookupConfig, setLookupConfig] = React.useState({})
 
   // import
   const [openImportToCollection, setOpenImportToCollection] = React.useState(false)
@@ -352,12 +353,21 @@ const MapProject = () => {
       }
       let _rowStage = {}
       let _allCandidates = {}
+      let _cache = {}
       forEach((response?.data?.candidates || []), candidate => {
         let algo = get(candidate.results, '0.search_meta.algorithm')
+        forEach(candidate.results, concept => {
+          if(concept?.url && concept?.id && concept.display_name && concept.owner)
+            _cache[concept.url] = concept
+          forEach(concept?.mappings, mapping => {
+            if(mapping?.target_code?.id)
+              _cache[mapping.target_code.url] = mapping.target_code
+          })
+        })
         _rowStage[candidate.row.__index] = {..._rowStage[candidate.row.__index], [algo]: 1}
         _allCandidates[algo] = [...(_allCandidates[algo] || []), candidate]
       })
-
+      setConceptCache(_cache)
       setAllCandidates(_allCandidates)
       setAlgosSelected(response.data.algorithms)
       setRowStage(_rowStage)
@@ -366,6 +376,7 @@ const MapProject = () => {
       setOwner(response.data?.owner_url)
       setRetired(Boolean(response.data?.include_retired))
       setCandidatesScore(response.data?.score_configuration)
+      setLookupConfig(response.data?.lookup_config)
       setProject(response.data)
       setConfigure(false)
     })
@@ -473,7 +484,7 @@ const MapProject = () => {
       headerName: t('map_project.target_code'),
       width: columnWidth['_targetCode_'] || 300,
       renderCell: params => {
-        const targetConcept = mapSelected[params.row.__index]
+        const targetConcept = getConcept(mapSelected[params.row.__index])
         if(targetConcept?.id) {
           return <Concept key={`${params.row.__index}-${targetConcept.id}`} sx={{padding: 0}} repoVersion={repoVersion} notClickable firstChild concept={targetConcept} noScore onCardClick={false} noSynonymPrefix asTarget />
         }
@@ -767,14 +778,26 @@ const MapProject = () => {
         decision: decisions[i] || 'None',
         note: notes[i] || undefined,
         proposed: isEmpty(proposed[i]) ? undefined : JSON.stringify(proposed[i]),
-        rowIndex: i
+        rowIndex: i,
+        concept: getConcept(data)
       }
     })
     let _getCandidates = (_candidates, returnAll) => {
       let __candidates = []
       forEach(_candidates, ___candidates => {
-        if(___candidates?.results?.length)
-          __candidates.push({...___candidates, results: returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)})
+        if(___candidates?.results?.length) {
+          let results = returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)
+          results = map(results, result => getConcept(result))
+          results.forEach(result => {
+            forEach(result.mappings, (mapping, index) => {
+              const target = getConceptFromMapping(mapping, false)
+              if(target?.id)
+                result.mappings[index] = ({...mapping, target_concept: target})
+            })
+          })
+          __candidates.push({...___candidates, results: results})
+        }
+
       })
       return __candidates
     }
@@ -790,6 +813,7 @@ const MapProject = () => {
       formData.append('target_repo_url', repoVersion.version_url)
     formData.append('algorithms', JSON.stringify(map(algosSelected, algo => omit(algo, ['__key']))))
     formData.append('score_configuration', JSON.stringify(candidatesScore))
+    formData.append('lookup_config', JSON.stringify(lookupConfig))
     formData.append('include_retired', retired)
     formData.append('filters', JSON.stringify(getFilters()))
     const isUpdate = Boolean(project?.id)
@@ -999,18 +1023,9 @@ const MapProject = () => {
 
   const getRowsResults = async (rows) => {
     abortRef.current = false;
-    const algoDef = getFirstAlgoDef()
-
-    const CHUNK_SIZE = algoDef.batch_size || 10 // Number of rows per batch
-    const MAX_CONCURRENT_REQUESTS = algoDef.concurrent_requests || 1; // Number of parallel API requests allowed
-    if(autoMatchUnmappedOnly)
-      rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
-    else
-      rows = filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
-    const rowChunks = chunk(rows, CHUNK_SIZE);
 
     // Function to process a single batch
-    const processBatch = async (_repo, rowBatch) => {
+    const processBatch = async (_repo, rowBatch, algo) => {
       if (abortRef.current) {
         setLoadingMatches(false)
         return []
@@ -1033,21 +1048,21 @@ const MapProject = () => {
         reranker: !isMultiAlgo
       }
 
-      forEach(rowBatch, __row => markAlgo(__row.__index, algoDef.id, 0))
+      forEach(rowBatch, __row => markAlgo(__row.__index, algo.id, 0))
 
       try {
-        const service = getMatchAPIService(algoDef)
+        const service = getMatchAPIService(algo)
         const response = await service.post(
           payload,
-          (algoDef.type === 'custom' && algoDef.url && algoDef.token) ? algoDef.token : null,
+          (algo.type === 'custom' && algo.url && algo.token) ? algo.token : null,
           null,
           {
             includeSearchMeta: true,
-            ...(algoDef.query_params || {}),
+            ...(algo.query_params || {}),
             ...extraParams
           }
         );
-        forEach(rowBatch, __row => markAlgo(__row.__index, algoDef.id, 1))
+        forEach(rowBatch, __row => markAlgo(__row.__index, algo.id, 1))
         return response.data || [];
       } catch {
         return [];
@@ -1055,7 +1070,15 @@ const MapProject = () => {
     };
 
     // Function to handle concurrency
-    const processWithConcurrency = async (_repo) => {
+    const processWithConcurrency = async (_repo, algo) => {
+      const CHUNK_SIZE = algo.batch_size || 10 // Number of rows per batch
+      const MAX_CONCURRENT_REQUESTS = algo.concurrent_requests || 1; // Number of parallel API requests allowed
+      if(autoMatchUnmappedOnly)
+        rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
+      else
+        rows = filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
+      const rowChunks = chunk(rows, CHUNK_SIZE);
+
       const queue = rowChunks.slice(); // Copy of all chunks to be processed
       const activeRequests = new Set();
 
@@ -1067,14 +1090,15 @@ const MapProject = () => {
             return
           };
           const rowBatch = queue.shift();
-          const promise = processBatch(_repo, rowBatch).then((data) => {
+          const promise = processBatch(_repo, rowBatch, algo).then((data) => {
             if(!isMultiAlgo)
               setStateViews(data, _repo)
             forEach(data, concept => {
               setAllCandidates(prev => {
-                return {...prev, [algoDef.id]: [...reject(prev[algoDef.id], c => c.row.__index === concept.row.__index), concept]}
+                return {...prev, [algo.id]: [...reject(prev[algo.id], c => c.row.__index === concept.row.__index), concept]}
               })
             })
+            lookupCandidates(algo.id, flatten(map(data, 'results')))
             setMatchedConcepts(prev => [...prev, ...data]);
             activeRequests.delete(promise); // Remove from active set after completion
           });
@@ -1102,12 +1126,13 @@ const MapProject = () => {
         prev.readyForReview = []
       return prev
     })
-    await processWithConcurrency(repo);
 
     setTimeout(async () => {
-      let nextAlgo = getNextAlgoDef(algoDef.id)
+      let nextAlgo = {...getFirstAlgoDef()}
       while(nextAlgo?.id) {
-        if(nextAlgo.type === 'ocl-ciel-bridge' && canBridge)
+        if(['custom', 'ocl-search', 'ocl-semantic'].includes(nextAlgo.type))
+          await processWithConcurrency(repo, nextAlgo);
+        else if(nextAlgo.type === 'ocl-ciel-bridge' && canBridge)
           await fetchBulkBridgeCandidates(rows, nextAlgo)
         else if(nextAlgo.type === 'ocl-scispacy' && canScispacy)
           await fetchBulkScispacyCandidates(rows, nextAlgo)
@@ -1166,6 +1191,7 @@ const MapProject = () => {
           const newCandidates = {...prev}
           const results = (isArray(response) ? response : response?.data)
           newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == index), ...(results || [])]
+          lookupCandidates(algo.id, results)
           return newCandidates
         })
       })); // wait for completion
@@ -1195,6 +1221,7 @@ const MapProject = () => {
           const newCandidates = {...prev}
           const results = [{row: _rows[index], results: fromScispacyResultsToConcepts(get(response.data, index) || [])}]
           newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == _index), ...(results || [])]
+          lookupCandidates(algo.id, results)
           return newCandidates
         })
       })); // wait for completion
@@ -1342,8 +1369,8 @@ const MapProject = () => {
   const getMatchingDuration = (start, end) => {
     if (!start) return "00:00";
 
-    const effectiveEnd = end ?? moment();
-    const diffMs = Math.max(effectiveEnd.diff(start), 0);
+    const effectiveEnd = end || moment();
+    const diffMs = Math.max(effectiveEnd?.diff(start), 0);
 
     const d = moment.duration(diffMs);
     const totalSeconds = Math.floor(d.asSeconds());
@@ -1575,7 +1602,7 @@ const MapProject = () => {
 
     const matched = get(find(matchedConcepts, concept => concept.row.__index === csvRow.__index), 'results.0') || mapSelected[csvRow.__index]
     let url = matched?.url
-    if(url && !conceptCache[url])
+    if(url && !getKeyFromCache(url))
       APIService
       .new()
       .overrideURL(url)
@@ -1849,30 +1876,42 @@ const MapProject = () => {
       const existingCandidates = find(allCandidates[algoId], c => c.row.__index === __row.__index)?.results
 
       if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
+        markAlgo(__row.__index, algoId, 1)
         setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+        const nextAlgo = getNextAlgoDef(algoId)
+        if(nextAlgo?.id && (offset === 0 || nextAlgo.type !== 'ocl-scispacy')) {
+          markAlgo(__row.__index, nextAlgo.id, 0)
+          fetchAllCandidatesForRow(nextAlgo.id, __row, offset, _retired, scrollToBottom, _filters, forceReload)
+        } else {
+          markAlgo(__row.__index, 'rerank', -1)
+          setTimeout(() => rerank(__row.__index), 1000)
+        }
         return
       }
       markAlgo(__row.__index, algoId, 0)
       setIsLoadingInDecisionView(true)
-
       const onResponse = (response, payload) => {
-        log({action: 'algo_finished', extras: {algo: algoId}}, __row.__index)
-          markAlgo(__row.__index, algoId, 1)
         if(response?.detail) {
+          log({action: 'algo_failed', extras: {algo: algoId}}, __row.__index)
           setAlert({message: response.detail, severity: 'error'})
+          markAlgo(__row.__index, algoId, -2)
           return
         }
+        log({action: 'algo_finished', extras: {algo: algoId}}, __row.__index)
+        markAlgo(__row.__index, algoId, 1)
         let data = isArray(response) ? response : (response?.data || [])
         setAllCandidates(prev => {
           if(offset === 0) {
             const newCandidates = {...prev}
             const results = algoId === 'ocl-scispacy-loinc' ? [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}] : data
-            newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
+              newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
+            lookupCandidates(algoId, get(results, '0.results'))
             return newCandidates
           } else {
             const newMatches = [...(prev[algoId] || [])]
             const index = findIndex(newMatches, match => match.row.__index === __row.__index)
             newMatches[index].results = [...newMatches[index].results, ...(get(data, '0.results') || [])]
+            lookupCandidates(algoId, get(data, '0.results'))
             return {...prev, [algoId]: newMatches}
           }
         })
@@ -1882,10 +1921,10 @@ const MapProject = () => {
           const synonyms = get(payload, 'rows.0.synonyms')
           setTimeout(() => highlightTexts(items, null, false, compact([get(payload, 'rows.0.name'), ...(isArray(synonyms) ? synonyms : [synonyms])])), 100)
         }
-        const nextAlgoId = getNextAlgoDef(algoId)?.id
-        if(nextAlgoId && (offset === 0 || nextAlgoId !== 'ocl-scispacy-loinc')) {
-          markAlgo(__row.__index, nextAlgoId, 0)
-          fetchAllCandidatesForRow(nextAlgoId, __row, offset, _retired, scrollToBottom, _filters, forceReload)
+        const nextAlgo = getNextAlgoDef(algoId)
+        if(nextAlgo?.id && (offset === 0 || nextAlgo.type !== 'ocl-scispacy')) {
+          markAlgo(__row.__index, nextAlgo.id, 0)
+          fetchAllCandidatesForRow(nextAlgo.id, __row, offset, _retired, scrollToBottom, _filters, forceReload)
         } else {
           markAlgo(__row.__index, 'rerank', -1)
           setTimeout(() => rerank(__row.__index), 1000)
@@ -1898,11 +1937,12 @@ const MapProject = () => {
             }, 100)
           }
         }
-      if(['ocl-semantic', 'ocl-search', 'custom'].includes(algoId)) {
+
+      if(['ocl-semantic', 'ocl-search', 'custom'].includes(algoDef.type)) {
         fetchOCLOrCustomCandidates(algoDef, _row, offset, _retired, _filters, onResponse)
-      } else if (algoId === 'ocl-scispacy-loinc') {
+      } else if (algoDef.type === 'ocl-scispacy') {
         fetchScispacyCandidates(__row, scrollToBottom, forceReload, false, onResponse)
-      } else if (algoId === 'ocl-ciel-bridge') {
+      } else if (algoDef.type === 'ocl-ciel-bridge') {
         fetchBridgeCandidates(__row, offset, _retired, scrollToBottom, _filters, forceReload, false, onResponse)
       }
     } else {
@@ -1930,7 +1970,7 @@ const MapProject = () => {
     const service = APIService.new()
     try {
       service.URL = SCISPACY_API_URL
-      service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
+      service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
         if(callback)
           callback(response, payload)
         return response
@@ -1951,17 +1991,19 @@ const MapProject = () => {
     if(isNumber(index) && (isBulk || isReadyForRerank(index))) {
       markAlgo(index, 'rerank', 0)
       const service = APIService.concepts().appendToUrl('$rerank/')
-      service.post({
-        q: get(prepareRow(rows[index]), 'name'),
-        rows: flatten(map(allCandidatesRef.current, candidates => getCandidatesForRow(index, candidates)))
-      }).then(response => {
+      try {
+        const response = await service.post({
+          q: get(prepareRow(rows[index]), 'name'),
+          rows: getAllCandidatesForRow(index),
+        });
         log({action: 'rerank_finished'}, index)
         markAlgo(index, 'rerank', 1)
+
         setAllCandidates(prev => {
           const newCandidates = {...allCandidatesRef.current}
           forEach(keys(prev), algoId => {
             const existingCandidates = [...allCandidatesRef.current[algoId]]
-            const ranked = response.data?.filter(result => result.search_meta.algorithm === algoId)
+            const ranked = filter(response.data, result => result.search_meta.algorithm === algoId)
             if(ranked.length > 0)
               existingCandidates[findIndex(existingCandidates, match => match.row.__index === index)].results = ranked
           })
@@ -1970,7 +2012,10 @@ const MapProject = () => {
         if(isBulk)
           setTimeout(() => setAutoMatched([index]), 1000)
         return response
-      })
+      } catch (e) {
+        markAlgo(index, 'rerank', -2); // optional: failed state
+        return null;
+      }
     }
   }
 
@@ -1978,6 +2023,8 @@ const MapProject = () => {
     const result = find(_candidates, candidate => candidate.row.__index === index)
     return fullObject ? result : (result?.results || [])
   }
+
+  const getAllCandidatesForRow = index => flatten(map(allCandidatesRef.current, candidates => getCandidatesForRow(index, candidates)))
 
   const isReadyForRerank = _index => {
     const index = isNumber(_index) ? _index : rowIndex
@@ -2021,6 +2068,45 @@ const MapProject = () => {
         setIsLoadingInDecisionView(false)
       }
     );
+  }
+
+  const lookupCandidates = (algoId, candidates) => {
+    const algo = algoId ? getAlgoDef(algoId) : null
+    if(algo?.lookup_required && lookupConfig?.url && candidates && isArray(candidates) && candidates.length) {
+      candidates.forEach(concept => {
+        if(algo.type === 'ocl-ciel-bridge') {
+          forEach(concept.mappings, mapping => {
+            lookupCode(mapping.cascade_target_concept_code)
+          })
+        } else {
+          lookupCode(concept.id)
+        }
+      })
+                                                                                                             }
+  }
+
+  const findConceptByIdOrURLFromCache = (id) => {
+    let key = getKeyFromCache(id)
+    return key ? conceptCache[key] : false
+  }
+
+  const getKeyFromCache = id => {
+    if(!id)
+      return false
+    return find(keys(conceptCache), url => url === id || url.endsWith(`/concepts/${id}/`) || url.endsWith(`/concepts/${encodeURIComponent(id)}/`)) || false
+  }
+
+  const lookupCode = (code) => {
+    if (getKeyFromCache(code))
+      return
+    if(code && lookupConfig?.url) {
+      const service = APIService.new()
+      service.URL = lookupConfig.url
+      service.appendToUrl(`concepts/${code}/`).get(lookupConfig.token).then(response => {
+        if(response?.data?.url)
+          setConceptCache(prev => ({...prev, [response.data.url]: response.data}))
+      })
+    }
   }
 
   const onFetchMoreCandidates = () => {
@@ -2099,7 +2185,20 @@ const MapProject = () => {
   const isSplitView = equalSplitView || (project?.id && showProjectLogs)
   const rows = getRows()
 
-  const getConcept = concept => concept?.url ? conceptCache[concept.url] || concept : concept
+  const getConcept = (concept, returnSelf=true) => {
+    let cached = (concept?.url || concept?.id) ? findConceptByIdOrURLFromCache(concept?.url || concept?.id) : false
+    if(cached && concept?.search_meta)
+      cached.search_meta = concept.search_meta
+    if(cached && concept?.source)
+      cached.source = concept.source
+    return returnSelf ? (cached || concept) : cached
+  }
+
+  const getConceptFromMapping = (mapping, returnSelf=true) => {
+    let cached = (mapping?.cascade_target_concept_code) ? findConceptByIdOrURLFromCache(mapping?.cascade_target_concept_code) : false
+    return returnSelf ? (cached || mapping) : cached
+  }
+
 
   const onProposedUpdate = proposedState => setProposed(prev => ({...prev, [rowIndex]: {...proposedState}}))
 
@@ -2108,7 +2207,7 @@ const MapProject = () => {
   const isConfigureInSplitView = configure && file?.name
   const columnsForTable = getColumnsForTable()
   let targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex]) : false
-  const targetConceptFromCandidate = !isEmpty(allCandidatesRef.current) ? find(allCandidatesRef.current[getFirstAlgoDef()?.id][rowIndex]?.results, {url: targetConcept?.url}) : false
+  const targetConceptFromCandidate = (!isEmpty(allCandidatesRef.current) && isNumber(rowIndex) && targetConcept?.url) ? find(getAllCandidatesForRow(rowIndex), {url: targetConcept.url}) : false
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
   else if(!targetConcept?.search_meta?.search_normalized_score) {
@@ -2296,6 +2395,8 @@ const MapProject = () => {
       setAIAssistantColumns={setAIAssistantColumns}
       AIAssistantColumns={AIAssistantColumns}
       inAIAssistantGroup={inAIAssistantGroup}
+      lookupConfig={lookupConfig}
+      setLookupConfig={setLookupConfig}
     />
   )
 
@@ -2749,6 +2850,7 @@ const MapProject = () => {
                   <CloseIconButton color='secondary' onClick={onCloseDecisions} />
                 </div>
                 <MappingDecisionResult
+                  conceptCache={conceptCache}
                   candidatesScore={candidatesScore}
                   targetConcept={targetConcept}
                   repoVersion={repoVersion}
@@ -2826,7 +2928,7 @@ const MapProject = () => {
                     <Candidates
                       candidatesScore={candidatesScore}
                       rowIndex={rowIndex}
-                      rowStage={rowStage[rowIndex]}
+                      rowStage={rowStageRef.current[rowIndex]}
                       alert={alert}
                       setAlert={setAlert}
                       candidates={allCandidatesRef.current}
@@ -2856,6 +2958,7 @@ const MapProject = () => {
                       onRefreshClick={onRefreshClick}
                       inAIAssistantGroup={inAIAssistantGroup}
                       algosSelected={algosSelected}
+                      conceptCache={conceptCache}
                     />
                 }
                 {

@@ -19,7 +19,8 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
         'semantic': true
       },
       'disabled': !toggles.SEMANTIC_SEARCH_TOGGLE,
-      'allow_multiple': false
+      'allow_multiple': false,
+      'lookup_required': false
     },
     {
       'id': 'ocl-search',
@@ -32,7 +33,8 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       'batch_size': 50,
       'concurrent_requests': 2,
       'disabled': false,
-      'allow_multiple': false
+      'allow_multiple': false,
+      'lookup_required': false
     },
     {
       'id': 'custom',
@@ -42,12 +44,13 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       'description': t('map_project.algorithm_custom_description'),
       'provider': 'external',
       'batch_size': 1,
-      'order': 2,
+      'order': 5,
       'url': undefined,
       'token': undefined,
       'concurrent_requests': 1,
       'disabled': false,
-      'allow_multiple': true
+      'allow_multiple': true,
+      'lookup_required': true
     },
     {
       'id': 'ocl-ciel-bridge',
@@ -71,14 +74,15 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       'type': 'ocl-ciel-bridge',
       'provider': 'ocl',
       'batch_size': 10,
-      'order': 3,
+      'order': 2,
       'concurrent_requests': 2,
       'target_repo_url': '/orgs/CIEL/sources/CIEL/',
       'query_params': {
         'semantic': true
       },
       'disabled': !canBridge,
-      'allow_multiple': true
+      'allow_multiple': true,
+      'lookup_required': true
     },
     {
       'id': 'ocl-scispacy-loinc',
@@ -93,11 +97,12 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       ),
       'type': 'ocl-scispacy',
       'provider': 'ocl',
-      'order': 4,
+      'order': 3,
       'batch_size': 2,
       'concurrent_requests': 1,
       'disabled': !canScispacy,
-      'allow_multiple': false
+      'allow_multiple': false,
+      'lookup_required': true
     }
   ]
   return orderBy(algos, 'order')

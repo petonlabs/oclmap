@@ -544,7 +544,11 @@
     "algorithm": "Algorithm",
     "column_send_to_ai_assistant": "Send to AI Assistant",
     "algo_conflicting_id": "Conflicting ID",
-    "algo_conflicting_name": "Conflicting Name"
+    "algo_conflicting_name": "Conflicting Name",
+    "lookup_configuration": "Lookup Configuration",
+    "lookup_configuration_url": "Repository URL",
+    "lookup_configuration_token": "Token",
+    "lookup_configuration_description": "Configure a Source/CodeSystem for lookup operation to fetch candidates definitions."
   },
   "app": {
     "web_version": "Web Version",
