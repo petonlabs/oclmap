@@ -122,7 +122,7 @@ const ProjectLogs = ({onClose, logs, project}) => {
           }}
         >
           {
-            map(orderBy(logs, log => moment(log.created_at), ['desc']), (log, index) => {
+            map(orderBy(logs, log => moment(log.created_at), ['asc']), (log, index) => {
               const [icon, color] = getIconAndColor(log)
               return (
                 <TimelineItem key={index}>
