@@ -10,6 +10,7 @@ const CardResults = ({bgColor, handleClick, handleRowClick, results, resource, i
         resource === 'concepts' && map(rows, (row, index) => {
           let props = {
             firstChild: index === 0,
+            lastChild: index === (rows.length - 1),
             isSelected: isSelected,
             selected: selected,
             isShown: isItemShown,

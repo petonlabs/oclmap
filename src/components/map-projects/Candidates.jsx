@@ -49,6 +49,7 @@ import SearchFilters from '../search/SearchFilters'
 import NoResults from '../search/NoResults';
 import Mappings from './Mappings'
 import Concept from './Concept'
+import ConceptIcon from '../concepts/ConceptIcon'
 import MapButton from './MapButton'
 import AICandidatesAnalysis from './AICandidatesAnalysis'
 import AIAssistantButton from './AIAssistantButton'
@@ -159,8 +160,30 @@ const Group = ({ selected, onGroup }) => {
   )
 }
 
+const SubHeader = ({count, onClick, isCollapsed, header, indicatorColor, isFirst}) => {
+  return (
+    <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: '2px solid', cursor: 'pointer', alignItems: 'center', opacity: count === 0 ? 0.5 : 1, marginTop: isFirst ? 0 : '16px'}} onClick={count === 0 ? undefined : onClick}>
+      <span style={{display: 'flex', alignItems: 'center'}}>
+        {
+          isCollapsed ?
+            <ExpandMoreIcon fontSize='small' sx={{marginRight: '4px'}} /> :
+          <ExpandLessIcon fontSize='small' sx={{marginRight: '4px'}} />
+        }
+        {
+          indicatorColor &&
+            <ConceptIcon fontSize='small' selected sx={{fill: indicatorColor, fontSize: '0.85rem', marginRight: '6px'}} />
+        }
+        <b>{header}</b>
+      </span>
+      <span className="tag-count-label--count" style={{backgroundColor: PRIMARY_COLORS['90'], fontSize: '12px', height: '22px'}}>
+        {count.toLocaleString()}
+      </span>
+    </ListSubheader>
+  )
+}
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache, byAlgorithm}) => {
+
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache, byAlgorithm, isFirst}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
   const isCollapsed = collapsed.includes(bucketId)
   const onCollapseToggle = () => {
@@ -226,34 +249,14 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
             <div className='col-xs-12 padding-0' style={{display: 'inline-flex', flexDirection: 'column'}}>
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
               {
-              showHeader &&
-                  <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', cursor: 'pointer', alignItems: 'center', opacity: count === 0 ? 0.5 : 1}} onClick={count === 0 ? undefined : onCollapseToggle}>
-                    <span style={{display: 'flex', alignItems: 'center'}}>
-                    {
-                      isCollapsed ?
-                        <ExpandMoreIcon fontSize='small' sx={{marginRight: '8px'}} /> :
-                      <ExpandLessIcon fontSize='small' sx={{marginRight: '8px'}} />
-                    }
-                      <b>{header}</b>
-                      </span>
-                <b>{count.toLocaleString()}</b>
-              </ListSubheader>
+                showHeader &&
+                  <SubHeader count={count} onClick={onCollapseToggle} isCollapsed={isCollapsed} header={header} indicatorColor={bgColor} isFirst={isFirst} />
               }
             </div>
           ) :
             (
               showHeader &&
-                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined, cursor: 'pointer', alignItems: 'center', opacity: count === 0 ? 0.5 : 1}} onClick={count === 0 ? undefined : onCollapseToggle}>
-                  <span style={{display: 'flex', alignItems: 'center'}}>
-                  {
-                    isCollapsed ?
-                      <ExpandMoreIcon fontSize='small' sx={{marginRight: '8px'}} /> :
-                    <ExpandLessIcon fontSize='small' sx={{marginRight: '8px'}} />
-                  }
-                    <b>{header}</b>
-                    </span>
-                  <b>{count.toLocaleString()}</b>
-                </ListSubheader>
+                <SubHeader count={count} onClick={onCollapseToggle} isCollapsed={isCollapsed} header={header} indicatorColor={bgColor} isFirst={isFirst} />
             )
         }
         title=' '
@@ -538,6 +541,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 collapsed={collapsed}
                 onCollapse={setCollapsed}
                 candidatesScore={candidatesScore}
+                isFirst={recommended.length > 0}
               />
           </li>
           <li>
@@ -556,6 +560,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 collapsed={collapsed}
                 onCollapse={setCollapsed}
                 candidatesScore={candidatesScore}
+                isFirst={recommended.length === 0 && available.length > 0}
               />
             }
           </li>
@@ -575,6 +580,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 collapsed={collapsed}
                 onCollapse={setCollapsed}
                 candidatesScore={candidatesScore}
+                isFirst={recommended.length === 0 && available.length === 0 && lowRanked.length > 0}
               />
             }
           </li>
@@ -605,6 +611,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 onFetchMore={onFetchMore}
                 bucketId={`${rowIndex}-${algo.id}`}
                 noToolbar={i !== 0}
+                isFirst={i === 0}
                 bridge={algo.id === 'ocl-ciel-bridge'}
                 scispacy={algo.id === 'ocl-scispacy-loinc'}
                 collapsed={collapsed}

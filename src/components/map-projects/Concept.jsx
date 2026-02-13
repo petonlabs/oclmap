@@ -159,10 +159,16 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
 }
 
 
-const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, sx, onCardClick, id,  ...rest}) => {
+const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, lastChild, sx, onCardClick, id,  ...rest}) => {
   const props = {
     selected: isSelectedToShow,
-    sx: {padding: '4px', borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)', alignItems: 'flex-start', ...sx}
+    sx: {
+      padding: '4px',
+      borderTop: firstChild ? undefined : '1px solid rgba(0, 0, 0, 0.1)',
+      borderBottom: lastChild ? '1px solid rgba(0, 0, 0, 0.1)' : undefined,
+      alignItems: 'flex-start',
+      ...sx
+    }
   }
 
   let item = <Item {...rest} />
@@ -177,7 +183,7 @@ const ConceptItem = ({_id, notClickable, isSelectedToShow, firstChild, sx, onCar
 }
 
 
-const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst, asTarget, conceptCache}) => {
+const Concept = ({_id, firstChild, lastChild, concept, setShowHighlights, isShown, onCardClick, onMap, isSelectedForMap, noScore, repoVersion, isAIRecommended, AIRecommendedCandidateId, sx, notClickable, noSynonymPrefix, locales, showAlgo, candidatesScore, algoScoreFirst, asTarget, conceptCache}) => {
   const bridge = concept?.search_meta?.algorithm === 'ocl-ciel-bridge'
   const scispacy = concept?.search_meta?.algorithm === 'ocl-scispacy-loinc'
   const id = concept?.version_url || concept?.url || concept?.id
@@ -203,6 +209,7 @@ const Concept = ({_id, firstChild, concept, setShowHighlights, isShown, onCardCl
     _id: _id,
     notClickable: notClickable,
     firstChild: firstChild,
+    lastChild: lastChild,
     isSelectedToShow: isSelectedToShow,
     sx: sx,
     onCardClick: onCardClick,
