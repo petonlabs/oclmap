@@ -11,6 +11,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import CircularProgress from '@mui/material/CircularProgress'
 import DownloadIcon from '@mui/icons-material/Download';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { copyToClipboard } from '../../common/utils'
@@ -35,7 +36,7 @@ const IkonButton = ({title, icon, onClick, color, disabled, id}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure}) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const downloadOpen = Boolean(anchorEl);
@@ -45,6 +46,12 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
   return (
     <span style={{textAlign: 'right'}}>
       <div>
+        <IkonButton
+          color={configure ? 'primary' : 'secondary'}
+          onClick={() => setConfigure(!configure)}
+          title={t('map_project.configure_mapping_project_tooltip')}
+          icon={<SettingsIcon />}
+        />
         <IkonButton
           color={isProjectsLogOpen ? 'primary' : 'secondary'}
           onClick={onProjectLogsClick}

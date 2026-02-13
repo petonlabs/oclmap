@@ -36,7 +36,6 @@ import { DataGrid } from '@mui/x-data-grid';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import DoneIcon from '@mui/icons-material/Done';
 import CloseIcon from '@mui/icons-material/Close';
-import SettingsIcon from '@mui/icons-material/Settings';
 import AutoMatchIcon from '@mui/icons-material/MotionPhotosAutoOutlined';
 import ClearIcon from '@mui/icons-material/Clear';
 import AssistantIcon from '@mui/icons-material/Assistant';
@@ -1148,9 +1147,9 @@ const MapProject = () => {
         setLoadingMatches(false)
         setEndMatchingAt(moment())
       }
+      if(!abortRef.current)
+        projectLog({action: 'auto_match_finished', extras: {sub_actions: subActions}})
     }, 1000)
-    if(!abortRef.current)
-      projectLog({action: 'auto_match_finished', extras: {sub_actions: subActions}})
   };
 
   React.useEffect(() => {
@@ -2450,11 +2449,6 @@ const MapProject = () => {
                         {name}
                       </span>
                   }
-                  <Tooltip title={t('map_project.configure_mapping_project_tooltip')}>
-                    <IconButton color={configure ? 'primary' : 'secondary'} onClick={() => setConfigure(!configure)} sx={{textTransform: 'none', margin: '5px 5px 5px 0'}}>
-                      <SettingsIcon fontSize='inherit' />
-                    </IconButton>
-                  </Tooltip>
                   <Button
                     variant='contained'
                     size='small'
@@ -2542,6 +2536,8 @@ const MapProject = () => {
                   onDownloadImportReport={downloadImportReport}
                   onProjectLogsClick={() => setShowProjectLogs(!showProjectLogs)}
                   isProjectsLogOpen={showProjectLogs}
+                  configure={configure}
+                  setConfigure={setConfigure}
                 />
             }
           </div>

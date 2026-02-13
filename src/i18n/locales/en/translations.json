@@ -334,7 +334,9 @@
     "search_highlight": "Search Highlight",
     "search_results": "Search Results",
     "search_score": "Search Score",
-    "search_raw_score": "Search Raw Score"
+    "search_raw_score": "Search Raw Score",
+    "list_view": "List View",
+    "table_view": "Table View"
   },
   "url_registry": {
     "url_registry": "Canonical URL registry",
@@ -418,8 +420,8 @@
     "saving": "Saving...",
     "successfully_saved": "Successfully Saved.",
     "save_this_project": "Save this project",
-    "download_this_project_as_csv": "Download this project as CSV",
-    "delete_this_project": "Delete this project",
+    "download_this_project_as_csv": "Download",
+    "delete_this_project": "Delete mapping project",
     "last_saved": "last saved {{time}}",
     "successfully_deleted": "Successfully Deleted.",
     "delete_map_project": "Delete Map Project",
@@ -528,8 +530,8 @@
     "transform_to_extensional_tooltip_2": "Uncheck this box to instruct OCL to create fewer references that can represent multiple concepts and mappings (i.e. 'intentional' or 'one-to-many' references). See this <0>YouTube video</0> for details.",
     "sort_by_raw_algo_score": "Raw Algorithm Score",
     "sort_by_unified_score": "Unified Score",
-    "project_logs": "Project Logs",
-    "project_logs_tooltip": "View project logs",
+    "project_logs": "Project History",
+    "project_logs_tooltip": "Project History",
     "saved_to_collection": "Saved to collection",
     "bridge_terminology_search": "Bridge terminology search<0>Premium</0>",
     "bridge_terminology_search_description": "Include mappings in the <0>CIEL Interface Terminology</0> to identify additional high quality candidates. Only available for compatible target repositories and matching algorithms.",
@@ -549,7 +551,7 @@
     "lookup_configuration_url": "Repository URL",
     "lookup_configuration_token": "Token",
     "lookup_configuration_description": "Configure a Source/CodeSystem for lookup operation to fetch candidates definitions.",
-    "refresh_candidates_tooltip": "This will wipe out existing candidates AND existing AI Assistant recommendations (though everything is maintained in the log history)",
+    "refresh_candidates_tooltip": "Refresh Candidates -- this will wipe out existing candidates AND existing AI Assistant recommendations (though everything is maintained in the log history)",
     "group_candidates": "Group By",
     "sort_candidates": "Sort"
   },

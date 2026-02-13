@@ -4,7 +4,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
@@ -98,9 +97,9 @@ const Sort = ({ selected, onSort }) => {
   return (
     <>
       <Tooltip title={t('map_project.sort_candidates')}>
-        <IconButton onClick={onSortClick}>
+        <Button onClick={onSortClick}>
         <SortIcon />
-        </IconButton>
+        </Button>
         </Tooltip>
       <Menu
       anchorEl={anchorEl}
@@ -138,9 +137,9 @@ const Group = ({ selected, onGroup }) => {
   return (
     <>
       <Tooltip title={t('map_project.group_candidates')}>
-      <IconButton onClick={onGroupClick}>
+      <Button onClick={onGroupClick}>
         <GroupIcon />
-      </IconButton>
+      </Button>
         </Tooltip>
 
       <Menu
@@ -402,9 +401,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
               <ButtonGroup color='info.dark' variant='outlined' size='small'>
                     <Tooltip title={t('map_project.refresh_candidates_tooltip')}>
                       <span>
-                        <IconButton onClick={onRefreshClick} disabled={!areAlgoRun}>
+                        <Button onClick={onRefreshClick} disabled={!areAlgoRun}>
                         <RefreshIcon />
-                      </IconButton>
+                      </Button>
                         </span>
                     </Tooltip>
                 <Group onGroup={onGroup} selected={groupBy} />
@@ -437,14 +436,14 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
         <Alert
           severity={alert?.severity || 'error'}
           action={
-            <IconButton
+            <Button
               aria-label="close"
               color="inherit"
               size="small"
               onClick={() => setAlert(false)}
             >
               <CloseIcon fontSize="inherit" />
-            </IconButton>
+            </Button>
           }
           sx={{ mb: 2 }}
         >
@@ -501,11 +500,11 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                 noToolbar={false}
                 onDisplayChange={setDisplay}
                 toolbarControl={
-                  <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+                  <Button color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
                     <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
                       <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
                     </Badge>
-                  </IconButton>
+                  </Button>
                 }
                 alignToolbarLeft
                 rightControl={getRightControls()}
@@ -594,11 +593,11 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                       {
                         onDisplayChange: setDisplay,
                         toolbarControl: (
-                          <IconButton color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
+                          <Button color={(isEmpty(appliedFacets) && !openFilters) ? undefined : 'primary'} sx={{minWidth: 'auto'}} onClick={() => setOpenFilters(!openFilters)} disabled={isEmpty(facets)}>
                             <Badge badgeContent={flatten(values(appliedFacets).map(v => values(v))).length} color='primary'>
                               <FilterListIcon sx={{color: (isEmpty(appliedFacets) && !openFilters) ? '#000': 'primary'}} />
                             </Badge>
-                          </IconButton>
+                          </Button>
                         ),
                         alignToolbarLeft: true,
                         rightControl: getRightControls(),
