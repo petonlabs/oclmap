@@ -1649,6 +1649,8 @@ const MapProject = () => {
         const res = {...response?.data, search_meta: {...matched.search_meta}, repo: {...matched.repo}}
         setConceptCache({...conceptCache, [url]: res})
       })
+    setConfigure(false)
+    setShowProjectLogs(false)
     setRow(csvRow)
     setSearchStr(getRowNameValue(csvRow) || '')
 
@@ -2580,7 +2582,14 @@ const MapProject = () => {
                   onImport={isEmpty(mapSelected) ? false : () => setOpenImportToCollection(true)}
                   importResponse={imports[0]}
                   onDownloadImportReport={downloadImportReport}
-                  onProjectLogsClick={() => setShowProjectLogs(!showProjectLogs)}
+                  onProjectLogsClick={() => {
+                    const newValue = !showProjectLogs
+                    if(newValue) {
+                      setConfigure(false)
+                      onCloseDecisions()
+                    }
+                    setShowProjectLogs(newValue)
+                  }}
                   isProjectsLogOpen={showProjectLogs}
                   configure={configure}
                   setConfigure={setConfigure}
@@ -3043,7 +3052,8 @@ const MapProject = () => {
                 score={parseFloat(showHighlights?.search_meta?.search_normalized_score || 0).toFixed(2)}
                 raw_score={parseFloat(showHighlights?.search_meta?.search_score || 0).toFixed(2)}
               />
-            </> : <ProjectLogs open={showProjectLogs} onClose={() => setShowProjectLogs(false) } logs={projectLogs} />
+            </> :
+              <ProjectLogs open={showProjectLogs} onClose={() => setShowProjectLogs(false) } logs={projectLogs} />
           )
         }
     </Paper>
