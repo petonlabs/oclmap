@@ -2737,7 +2737,7 @@ const MapProject = () => {
                   {alert.message}
                 </Alert>
               </Collapse>
-              <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 260px)' : 'calc(100vh - 250px)' }}>
+              <div style={{ width: '100%', height: project?.id ? 'calc(100vh - 263px)' : 'calc(100vh - 250px)' }}>
                 <DataGrid
                   onFilterModelChange={(model) => setFilterModel(model)}
                   filterModel={filterModel}

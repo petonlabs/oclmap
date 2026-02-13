@@ -12,6 +12,8 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button'
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import CommentIcon from '@mui/icons-material/Message';
 import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
@@ -26,6 +28,22 @@ import RerankIcon from '@mui/icons-material/LowPriority';
 import map from 'lodash/map'
 import startCase from 'lodash/startCase'
 import orderBy from 'lodash/orderBy'
+
+
+const CommentLog = ({ log }) => {
+  return (
+    <Card variant='outlined' sx={{width: '100%'}}>
+      <CardContent sx={{padding: 0}}>
+        <Typography component='h6' sx={{backgroundColor: '#f6f8fa', padding: '4px 4px 4px 16px', margin: 0, borderBottom: '1px solid #d0d7de', fontSize: '14px'}}>
+          <b>{log.user}</b> <span style={{color: '#59636e'}}>{moment(log.created_at).fromNow()}</span>
+        </Typography>
+        <div className='col-xs-12' style={{padding: '16px'}}>
+          {log.description}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 
 const Discuss = ({ logs, onAdd }) => {
@@ -101,7 +119,7 @@ const Discuss = ({ logs, onAdd }) => {
 
   return (
     <>
-      <div className='col-xs-12 padding-0' style={{maxHeight: 'calc(100vh - 560px)', overflow: 'auto'}}>
+      <div className='col-xs-12 padding-0' style={{maxHeight: 'calc(100vh - 576px)', overflow: 'auto'}}>
       <Timeline
         sx={{
           padding: '4px 16px',
@@ -113,47 +131,56 @@ const Discuss = ({ logs, onAdd }) => {
         }}
       >
         {
-          map(orderBy(logs, log => moment(log.created_at), ['desc']), (log, index) => {
+          map(orderBy(logs, log => moment(log.created_at), ['asc']), (log, index) => {
             const dotColor = getDotColor(log)
+            const isComment = log.action === 'commented'
+            const sx = isComment ? {display: 'inline-block'} : {}
             return (
-              <TimelineItem key={log.created_at.toString()}>
-                <TimelineSeparator>
-                  <Tooltip title={startCase(log.action)}>
-                    <TimelineDot color={dotColor} variant="outlined">
-                      {getIcon(log, dotColor)}
-                    </TimelineDot>
-                  </Tooltip>
+              <TimelineItem key={log.created_at.toString()} sx={sx}>
+                <TimelineSeparator sx={isComment ? {alignItems: 'flex-start'} : {}}>
+                  {
+                    isComment ?
+                      <CommentLog log={log} /> :
+                    <Tooltip title={startCase(log.action)}>
+                      <TimelineDot color={dotColor} variant="outlined">
+                        {getIcon(log, dotColor)}
+                      </TimelineDot>
+                    </Tooltip>
+                  }
                   {
                     index !== (logs.length - 1) &&
-                      <TimelineConnector />
+                      <TimelineConnector sx={isComment ? {height: '15px', marginLeft: '16px'} : {}} />
                   }
                 </TimelineSeparator>
-                <TimelineContent>
-                  <Typography component="span" sx={{fontSize: '14px'}}>
-                    {getTitle(log)}
-                  </Typography>
-                  {
-                    log.action === 'AIRecommendation' && log?.extras?.model?.id &&
-                      <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
-                        {log.extras.model.name}
+                {
+                !isComment &&
+                    <TimelineContent>
+                      <Typography component="span" sx={{fontSize: '14px'}}>
+                        {getTitle(log)}
                       </Typography>
-                  }
-                  {
-                    log?.extras?.algorithm &&
+                      {
+                        log.action === 'AIRecommendation' && log?.extras?.model?.id &&
+                          <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
+                            {log.extras.model.name}
+                          </Typography>
+                      }
+                      {
+                        log?.extras?.algorithm &&
+                          <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
+                            {t('map_project.algorithm')}: {log.extras.algorithm}
+                          </Typography>
+                      }
                       <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
-                        {t('map_project.algorithm')}: {log.extras.algorithm}
+                        {log.user} at {moment(log.created_at).format('ll LTS')}
                       </Typography>
-                  }
-                  <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
-                    {log.user} at {moment(log.created_at).format('ll LTS')}
-                  </Typography>
-                </TimelineContent>
+                    </TimelineContent>
+                }
               </TimelineItem>
             )
           })
         }
-    </Timeline>
-    </div>
+      </Timeline>
+      </div>
       <div className='col-xs-12' style={{padding: '4px 16px'}}>
         <TextField
           autoFocus
@@ -174,9 +201,11 @@ const Discuss = ({ logs, onAdd }) => {
             }
           }}
         />
-        <Button onClick={onClick} sx={{textTransform: 'none', marginTop: '8px'}} variant='outlined' color='primary'>
-          {t('map_project.comment')}
-        </Button>
+    <div className='col-xs-12 padding-0' style={{textAlign: 'right'}}>
+          <Button onClick={onClick} sx={{textTransform: 'none', marginTop: '8px'}} variant='outlined' color='primary' size='small'>
+            {t('map_project.comment')}
+          </Button>
+        </div>
       </div>
     </>
   )
