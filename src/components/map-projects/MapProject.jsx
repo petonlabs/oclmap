@@ -843,7 +843,7 @@ const MapProject = () => {
     service.then(response => {
       setIsSaving(false)
       if(response?.data?.id) {
-        projectLog({action: isUpdate ? 'Updated' : 'Created'})
+        projectLog({action: isUpdate ? 'Updated' : 'Created', extras: isUpdate ? undefined : {project: response.data}})
         setConfigure(false)
         setProject(response.data)
         if(response.data.url)
@@ -3053,7 +3053,7 @@ const MapProject = () => {
                 raw_score={parseFloat(showHighlights?.search_meta?.search_score || 0).toFixed(2)}
               />
             </> :
-              <ProjectLogs open={showProjectLogs} onClose={() => setShowProjectLogs(false) } logs={projectLogs} />
+              <ProjectLogs open={showProjectLogs} onClose={() => setShowProjectLogs(false) } logs={projectLogs} project={project} />
           )
         }
     </Paper>

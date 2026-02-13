@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, Trans } from 'react-i18next'
 
 import Timeline  from '@mui/lab/Timeline';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
@@ -27,7 +27,7 @@ import { toV3URL } from '../../common/utils'
 import CloseIconButton from '../common/CloseIconButton';
 
 
-const ProjectLogs = ({onClose, logs}) => {
+const ProjectLogs = ({onClose, logs, project}) => {
   const { t } = useTranslation()
 
   const getIconAndColor = log => {
@@ -82,6 +82,19 @@ const ProjectLogs = ({onClose, logs}) => {
                 null
                }
              </span>
+    }
+    if(log?.action?.toLowerCase() === 'created') {
+      return <Trans
+               i18nKey="map_project.created_by_log"
+               components={[
+                 <strong key={0} />,
+                 <strong key={1} />,
+               ]}
+               values={{
+                 created_by: project.created_by,
+                 owner: `${project.owner_type}:${project.owner}`,
+               }}
+             />
     }
 
     if(log.description)
