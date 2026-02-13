@@ -4,11 +4,13 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
+import IconButton from '@mui/material/IconButton'
+import CloseIcon from '@mui/icons-material/Close'
 import Dialog from '../common/Dialog'
 import DialogTitle from '../common/DialogTitle'
 import APIService from '../../services/APIService'
 import { OperationsContext } from '../app/LayoutContext';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 
 
 const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
@@ -28,18 +30,31 @@ const MapProjectDeleteConfirmDialog = ({ project, open, onClose }) => {
   }
 
   return (
-    <Dialog open={open} onClose={() => onClose()}>
-      <DialogTitle onClose={() => onClose()}>
-        {t('map_project.delete_map_project')} - {project.name}
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <span>{t('map_project.delete_map_project')}</span>
+        <IconButton color='secondary' onClick={onClose}><CloseIcon /></IconButton>
       </DialogTitle>
-      <DialogContent sx={{paddingTop: '20px !important'}}>
+      <DialogContent sx={{padding: 0, paddingTop: '20px !important'}}>
         {t('map_project.delete_map_project_warning')}
         <br/>
         <br/>
-        {t('map_project.delete_map_project_confirm', {name: project.name})}
+        <Trans
+          i18nKey='map_project.delete_map_project_confirm'
+          components={[
+            <b key={0}>{project.name}</b>
+          ]}
+          values={{name: project.name}}
+        />
         <br/>
         <br/>
-        {t('map_project.delete_map_project_type_to_confirm', {name: project.name})}
+        <Trans
+          i18nKey='map_project.delete_map_project_type_to_confirm'
+          components={[
+            <b key={0}>{project.name}</b>
+          ]}
+          values={{name: project.name}}
+        />
         <br/>
         <br/>
 
