@@ -60,7 +60,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           icon={<TimelineIcon />}
         />
         <IkonButton
-          color='primary'
+          color='secondary'
           onClick={onSave}
           title={t('map_project.save_this_project')}
           disabled={!owner || !file?.name || isSaving}
