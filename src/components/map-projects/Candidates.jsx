@@ -160,7 +160,7 @@ const Group = ({ selected, onGroup }) => {
 }
 
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, bridge, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache, byAlgorithm}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
   const isCollapsed = collapsed.includes(bucketId)
   const onCollapseToggle = () => {
@@ -200,7 +200,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
     return cols
   }
   const count = candidates.length
-  const showHeader = count > 0
+  const showHeader = byAlgorithm || count > 0
   return (
     <ul>
       <SearchResults
@@ -227,7 +227,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
               <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
               {
               showHeader &&
-                  <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', cursor: 'pointer', alignItems: 'center'}} onClick={onCollapseToggle}>
+                  <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', cursor: 'pointer', alignItems: 'center', opacity: count === 0 ? 0.5 : 1}} onClick={count === 0 ? undefined : onCollapseToggle}>
                     <span style={{display: 'flex', alignItems: 'center'}}>
                     {
                       isCollapsed ?
@@ -243,7 +243,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
           ) :
             (
               showHeader &&
-                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined, cursor: 'pointer', alignItems: 'center'}} onClick={onCollapseToggle}>
+                <ListSubheader sx={{lineHeight: '28px', padding: '2px 8px', background: bgColor || 'rgb(229, 229, 229)', display: 'inline-flex', justifyContent: 'space-between', width: '100%', color: '#000', fontSize: '12px', borderBottom: (bridge || scispacy) ? `1px solid ${PRIMARY_COLORS.main}` : undefined, cursor: 'pointer', alignItems: 'center', opacity: count === 0 ? 0.5 : 1}} onClick={count === 0 ? undefined : onCollapseToggle}>
                   <span style={{display: 'flex', alignItems: 'center'}}>
                   {
                     isCollapsed ?
@@ -358,9 +358,31 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     const order = byScore ? 'desc' : 'asc'
     if(groupBy === 'algorithm') {
       let byAlgoCandidates = []
-      forEach(orderBy(algosSelected, 'order'), algo => {
-        byAlgoCandidates.push({ algo: algo, candidates: orderBy(flatten(map(filter(candidates[algo.id], candidate => candidate?.row?.__index === rowIndex), 'results') || []), sortBy, order) })
-      })
+      const sortedAlgos = orderBy(
+        algosSelected.map(algo => {
+          const results = flatten(
+            map(
+              filter(candidates[algo.id] || [], c => c?.row?.__index === rowIndex),
+              'results'
+            )
+          ) || [];
+
+          return {
+            algo,
+            results,
+            hasCandidates: results.length > 0,
+          };
+        }),
+        ['hasCandidates', 'algo.order'],
+        ['desc', 'asc']
+      );
+      forEach(sortedAlgos, ({ algo, results }) => {
+        byAlgoCandidates.push({
+          algo,
+          candidates: orderBy(results, sortBy, order),
+        });
+      });
+
       return {
         byAlgoCandidates
       }
@@ -577,6 +599,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
                         <li key={i}>
               <CandidateList
                 {...props}
+                byAlgorithm
                 candidates={result.candidates || []}
                 header={algo.name ? `${algo.name} (${algo.id})` : algo.id}
                 onFetchMore={onFetchMore}

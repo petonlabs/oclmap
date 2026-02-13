@@ -218,7 +218,7 @@ const MapProject = () => {
   const [permissionDenied, setPermissionDenied] = React.useState(false)
 
   const rowStageRef = React.useRef([]);
-  const [rowStage, _setRowStage] = React.useState({})  // {'0': {'algo1': -2, -1, 0, 1, 'rerank': -2, -1, 0, 1}} --> -2: failed, -1: not run yet, 0: running, 1: done
+  const [, _setRowStage] = React.useState({})  // {'0': {'algo1': -2, -1, 0, 1, 'rerank': -2, -1, 0, 1}} --> -2: failed, -1: not run yet, 0: running, 1: done
   const setRowStage = React.useCallback((updater) => {
     _setRowStage(prev => {
       const next = typeof updater === "function" ? updater(prev) : updater;
@@ -354,7 +354,6 @@ const MapProject = () => {
       let _allCandidates = {}
       let _cache = {}
       forEach((response?.data?.candidates || []), candidate => {
-        let algo = get(candidate.results, '0.search_meta.algorithm')
         forEach(candidate.results, concept => {
           if(concept?.url && concept?.id && concept.display_name && concept.owner)
             _cache[concept.url] = concept
@@ -363,8 +362,23 @@ const MapProject = () => {
               _cache[mapping.target_code.url] = mapping.target_code
           })
         })
-        _rowStage[candidate.row.__index] = {..._rowStage[candidate.row.__index], [algo]: 1}
-        _allCandidates[algo] = [...(_allCandidates[algo] || []), candidate]
+        let algo = candidate.algorithm || get(candidate.results, '0.search_meta.algorithm')
+        if(algo) {
+          _rowStage[candidate.row.__index] = {..._rowStage[candidate.row.__index], [algo]: 1}
+          if(has(_allCandidates, algo)) {
+            let _index = findIndex(_allCandidates[algo], c => c.row.__index === candidate.row.__index)
+            if(_index > -1) {
+              _allCandidates[algo][_index].results = [...(_allCandidates[algo][_index].results || []), ...(candidate.results || [])]
+              _allCandidates[algo][_index].filter = {...(_allCandidates[algo][_index].filter || {}), ...(candidate.filter || {})}
+              _allCandidates[algo][_index].map_config = [...(_allCandidates[algo][_index].map_config || []), ...(candidate.map_config || [])]
+            } else {
+              _allCandidates[algo] = [...(_allCandidates[algo] || []), candidate]
+            }
+          }
+          else {
+            _allCandidates[algo] = [candidate]
+          }
+        }
       })
       setConceptCache(_cache)
       setAllCandidates(_allCandidates)
@@ -784,23 +798,26 @@ const MapProject = () => {
     let _getCandidates = (_candidates, returnAll) => {
       let __candidates = []
       forEach(_candidates, ___candidates => {
-        if(___candidates?.results?.length) {
-          let results = returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)
-          results = map(results, result => getConcept(result))
-          results.forEach(result => {
-            forEach(result.mappings, (mapping, index) => {
-              const target = getConceptFromMapping(mapping, false)
-              if(target?.id)
-                result.mappings[index] = ({...mapping, target_concept: target})
-            })
+        let results = (returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)) || []
+        results = map(results, result => {
+          let concept = getConcept(result)
+          return omit(concept, '_source')
+        })
+        results.forEach(result => {
+          forEach(result.mappings, (mapping, index) => {
+            const target = getConceptFromMapping(mapping, false)
+            if(target?.id)
+              result.mappings[index] = ({...mapping, target_concept: omit(target, '_source')})
           })
-          __candidates.push({...___candidates, results: results})
-        }
-
+        })
+        __candidates.push({...___candidates, results: results})
       })
       return __candidates
     }
-    const candidates = flatten(map(allCandidates, (_candidates, _algo) => _getCandidates(_candidates, _algo.includes('scispacy'))))
+    const candidates = flatten(map(allCandidates, (_candidates, _algo) => {
+      let results = _getCandidates(_candidates, _algo.includes('scispacy'))
+      return results.map(result => ({...result, algorithm: _algo}))
+    }))
     const formData = new FormData();
     formData.append('file', f);
     formData.append('candidates', JSON.stringify(candidates))
@@ -1061,9 +1078,16 @@ const MapProject = () => {
             ...extraParams
           }
         );
-        forEach(rowBatch, __row => markAlgo(__row.__index, algo.id, 1))
+        forEach(rowBatch, __row => {
+          markAlgo(__row.__index, algo.id, 1)
+          log({action: 'algo_finished', extras: {algo: algo.id}}, __row.__index)
+        })
         return response.data || [];
       } catch {
+        forEach(rowBatch, __row => {
+          markAlgo(__row.__index, algo.id, -2)
+          log({action: 'algo_failed', extras: {algo: algo.id}}, __row.__index)
+        })
         return [];
       }
     };
@@ -1092,11 +1116,25 @@ const MapProject = () => {
           const promise = processBatch(_repo, rowBatch, algo).then((data) => {
             if(!isMultiAlgo)
               setStateViews(data, _repo)
-            forEach(data, concept => {
+            if(!data || !data.length) {
               setAllCandidates(prev => {
-                return {...prev, [algo.id]: [...reject(prev[algo.id], c => c.row.__index === concept.row.__index), concept]}
+                const newCandidates = {...prev}
+                forEach(rowBatch, row => {
+                  let _index = findIndex(newCandidates[algo.id], c => c.row.__index === row.__index)
+                  if(_index > -1)
+                    newCandidates[algo.id][_index].results = []
+                  else
+                    newCandidates[algo.id] = [...newCandidates[algo.id], {row: prepareRow(row), results: []}]
+                })
+                return newCandidates
               })
-            })
+            } else {
+              forEach(data, concept => {
+                setAllCandidates(prev => {
+                  return {...prev, [algo.id]: [...reject(prev[algo.id], c => c.row.__index === concept.row.__index), concept]}
+                })
+              })
+            }
             lookupCandidates(algo.id, flatten(map(data, 'results')))
             setMatchedConcepts(prev => [...prev, ...data]);
             activeRequests.delete(promise); // Remove from active set after completion
@@ -1860,6 +1898,8 @@ const MapProject = () => {
   }
 
   const fetchAllCandidatesForRow = (algoId, _row, offset=0, _retired, scrollToBottom, _filters, forceReload=false) => {
+    if(loadingMatches)
+      return
     setAlert(false)
     if(isAnyValidColumn()) {
       let algoDef
@@ -1872,11 +1912,11 @@ const MapProject = () => {
         return
       let __row = isEmpty(_row) ? row : _row
 
-      const existingCandidates = find(allCandidates[algoId], c => c.row.__index === __row.__index)?.results
+      const existingCandidates = find(allCandidates[algoId], c => c.row.__index === __row.__index)
 
-      if(!forceReload && offset === 0 && !_retired && existingCandidates?.length> 0) {
+      if(!forceReload && offset === 0 && !_retired && (existingCandidates?.length > 0 || !isEmpty(existingCandidates?.row))) {
         markAlgo(__row.__index, algoId, 1)
-        setTimeout(() => highlightTexts(existingCandidates, null, false), 100)
+        setTimeout(() => highlightTexts((existingCandidates?.results || []), null, false), 100)
         const nextAlgo = getNextAlgoDef(algoId)
         if(nextAlgo?.id && (offset === 0 || nextAlgo.type !== 'ocl-scispacy')) {
           markAlgo(__row.__index, nextAlgo.id, 0)
@@ -1891,9 +1931,9 @@ const MapProject = () => {
       setIsLoadingInDecisionView(true)
       const onResponse = (response, payload) => {
         if(response?.detail) {
+          markAlgo(__row.__index, algoId, -2)
           log({action: 'algo_failed', extras: {algo: algoId}}, __row.__index)
           setAlert({message: response.detail, severity: 'error'})
-          markAlgo(__row.__index, algoId, -2)
           return
         }
         log({action: 'algo_finished', extras: {algo: algoId}}, __row.__index)
@@ -1903,7 +1943,7 @@ const MapProject = () => {
           if(offset === 0) {
             const newCandidates = {...prev}
             const results = algoId === 'ocl-scispacy-loinc' ? [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}] : data
-              newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
+            newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
             lookupCandidates(algoId, get(results, '0.results'))
             return newCandidates
           } else {
@@ -1975,10 +2015,8 @@ const MapProject = () => {
         return response
       })
     } catch (err) {
-      setRowStage(prev => ({
-        ...prev,
-        [__row.__index]: { ...prev[__row.__index], 'ocl-scispacy-loinc': -2 }
-      }));
+      markAlgo(__row.__index, 'ocl-scispacy-loinc', -2)
+      log({action: 'algo_failed', extras: {algo: 'ocl-scispacy-loinc'}}, __row.__index)
       throw err;
     } finally {
       setIsLoadingInDecisionView(false);
@@ -2012,6 +2050,7 @@ const MapProject = () => {
           setTimeout(() => setAutoMatched([index]), 1000)
         return response
       } catch (e) {
+        log({action: 'rerank_failed'}, index)
         markAlgo(index, 'rerank', -2); // optional: failed state
         return null;
       }
@@ -2063,6 +2102,8 @@ const MapProject = () => {
           callback(candidates, payload)
       },
       (response, errorMsg) => {
+        markAlgo(__row.__index, 'ocl-ciel-bridge', -2)
+        log({action: 'algo_failed', extras: {algo: 'ocl-ciel-bridge'}}, __row.__index)
         setAlert({message: response?.detail || errorMsg, severity: 'error'})
         setIsLoadingInDecisionView(false)
       }

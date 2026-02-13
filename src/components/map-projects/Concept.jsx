@@ -82,7 +82,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
             <span>
               {
                 !bridgeChild &&
-                  <span className='searchable'>{`${concept.source || concept?.repo?.short_code || concept?.repo?.id || concept?.search_meta?.source}:${concept.id}`}</span>
+                  <span className='searchable'>{`${concept?.source || concept?.repo?.short_code || concept?.repo?.id || concept?.search_meta?.source}:${concept?.id}`}</span>
               }
               {
               !bridgeChild &&
@@ -94,7 +94,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
                           <span style={{margin: '0 5px'}}>&rarr;</span>
                         </span>
                     }
-                    {concept.display_name}
+                    {concept?.display_name}
                   </span>
               }
               {
@@ -114,7 +114,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
               }
             </span>
             {
-              concept.retired &&
+              concept?.retired &&
                 <Retired size='small' style={{margin: '0 12px'}} />
             }
           </span>
@@ -125,7 +125,7 @@ const Item = ({concept, setShowHighlights, onMap, isSelectedForMap, noScore, rep
               <ConceptSummaryProperties concept={concept} repoVersion={repoVersion} />
             </div>
             {
-              showAlgo && concept.search_meta.algorithm ?
+              showAlgo && concept?.search_meta?.algorithm ?
                 <div className='col-xs-12 padding-0' style={{marginTop: '4px'}}>
                   <Chip size='small' label={concept.search_meta.algorithm} variant='outlined' color='warning' />
               </div> : null
