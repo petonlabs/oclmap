@@ -7,6 +7,7 @@ import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import Tooltip from '@mui/material/Tooltip'
 import Chip from '@mui/material/Chip'
+import Box from '@mui/material/Box'
 import AssistantIcon from '@mui/icons-material/Assistant';
 import isNumber from 'lodash/isNumber'
 import isNaN from 'lodash/isNaN'
@@ -65,7 +66,16 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
           primary={
             <Chip
               size={size || 'medium'}
-              icon={<ConceptIcon fontSize='small' selected sx={{fill: bucketColor}} />}
+              icon={
+                <Box sx={{
+                       border: '1px solid',
+                       borderColor: '#FFF',
+                       borderRadius: '50%',
+                       display: 'inline-flex',
+                     }}>
+                  <ConceptIcon fontSize='small' selected sx={{fill: bucketColor, fontSize: '1rem'}} />
+                </Box>
+              }
               label={
                 <span style={{display: 'flex', alignItems: 'center'}}>
                   <span>{algoScoreFirst ? algoScore : rerankScore}</span>
