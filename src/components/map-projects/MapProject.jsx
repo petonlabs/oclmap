@@ -73,6 +73,7 @@ import isArray from 'lodash/isArray'
 import isBoolean from 'lodash/isBoolean'
 import isNumber from 'lodash/isNumber'
 import times from 'lodash/times'
+import some from 'lodash/some'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -1922,8 +1923,12 @@ const MapProject = () => {
           markAlgo(__row.__index, nextAlgo.id, 0)
           fetchAllCandidatesForRow(nextAlgo.id, __row, offset, _retired, scrollToBottom, _filters, forceReload)
         } else {
-          markAlgo(__row.__index, 'rerank', -1)
-          setTimeout(() => rerank(__row.__index), 1000)
+          if(![0, 1].includes(rowStageRef.current[__row.__index]) && some(getAllCandidatesForRow(__row.__index), r => !isNumber(r.search_meta.search_rerank_score))) {
+            markAlgo(__row.__index, 'rerank', -1)
+            setTimeout(() => rerank(__row.__index), 1000)
+          } else {
+            markAlgo(__row.__index, 'rerank', 1)
+          }
         }
         return
       }
