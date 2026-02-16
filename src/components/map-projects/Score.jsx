@@ -73,7 +73,7 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
                        borderRadius: '50%',
                        display: 'inline-flex',
                      }}>
-                  <ConceptIcon fontSize='small' selected sx={{fill: bucketColor, fontSize: '1rem'}} />
+                  <ConceptIcon fontSize='small' selected sx={{fill: bucketColor || 'rgba(0, 0, 0, 0.5)', fontSize: '1rem'}} />
                 </Box>
               }
               label={
