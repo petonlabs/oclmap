@@ -384,7 +384,7 @@
     "target_repository": "Target Repository",
     "target_repository_description": "Select the repository that you want to map your input data to.",
     "repository": "Repository",
-    "filter_name_locales": "Filter Name Locales",
+    "filter_name_locales": "Global Locale Filter",
     "loading_name_locales": "Loading Name Locales...",
     "filter_name_locales_helper": "Note: Restricting candidates to specific languages limits cross-lingual matching capabilities, but may improve the accuracy of results for certain datasets, especially if the input data is in the same language as a target repository's default language.",
     "default_filter": "Default Filter",
