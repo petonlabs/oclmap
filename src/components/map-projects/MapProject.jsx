@@ -1925,7 +1925,7 @@ const MapProject = () => {
           markAlgo(__row.__index, nextAlgo.id, 0)
           fetchAllCandidatesForRow(nextAlgo.id, __row, offset, _retired, scrollToBottom, _filters, forceReload)
         } else {
-          if(![0, 1].includes(rowStageRef.current[__row.__index]) && some(getAllCandidatesForRow(__row.__index), r => !isNumber(r.search_meta.search_rerank_score))) {
+          if(![0, 1].includes(get(rowStageRef.current, `${__row.__index}.rerank`)) && some(getAllCandidatesForRow(__row.__index), r => !isNumber(r.search_meta.search_rerank_score))) {
             markAlgo(__row.__index, 'rerank', -1)
             setTimeout(() => rerank(__row.__index), 1000)
           } else {
