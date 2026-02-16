@@ -142,19 +142,19 @@ const Discuss = ({ logs, onAdd }) => {
                     isComment ?
                       <CommentLog log={log} /> :
                     <Tooltip title={startCase(log.action)}>
-                      <TimelineDot color={dotColor} variant="outlined">
+                    <TimelineDot color={dotColor} variant="outlined" sx={{margin: 0}}>
                         {getIcon(log, dotColor)}
                       </TimelineDot>
                     </Tooltip>
                   }
                   {
                     index !== (logs.length - 1) &&
-                      <TimelineConnector sx={isComment ? {height: '15px', marginLeft: '16px'} : {}} />
+                      <TimelineConnector sx={isComment ? {height: '30px', marginLeft: '15px'} : {}} />
                   }
                 </TimelineSeparator>
                 {
                 !isComment &&
-                    <TimelineContent>
+                    <TimelineContent sx={{padding: '0 16px', margin: '-2px 0 0 0'}}>
                       <Typography component="span" sx={{fontSize: '14px'}}>
                         {getTitle(log)}
                       </Typography>

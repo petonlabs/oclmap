@@ -128,7 +128,7 @@ const ProjectLogs = ({onClose, logs, project}) => {
                 <TimelineItem key={index}>
                   <TimelineSeparator>
                     <Tooltip title={startCase(log.action)}>
-                      <TimelineDot color={color} variant="outlined">
+                      <TimelineDot color={color} variant="outlined" sx={{margin: 0}}>
                         {icon}
                       </TimelineDot>
                     </Tooltip>
@@ -137,7 +137,7 @@ const ProjectLogs = ({onClose, logs, project}) => {
                         <TimelineConnector />
                     }
                   </TimelineSeparator>
-                  <TimelineContent>
+                  <TimelineContent sx={{padding: '0 16px', margin: '-2px 0 0 0'}}>
                     <Typography component="span" sx={{fontSize: '14px'}}>
                       {getTitle(log)}
                     </Typography>
