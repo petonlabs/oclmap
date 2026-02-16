@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip'
 import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
+import Divider from '@mui/material/Divider';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import CircularProgress from '@mui/material/CircularProgress'
 import DownloadIcon from '@mui/icons-material/Download';
@@ -14,6 +15,7 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import JSONIcon from '@mui/icons-material/DataObject';
 import { copyToClipboard } from '../../common/utils'
 import RepoIcon from '../repos/RepoIcon'
 
@@ -36,7 +38,7 @@ const IkonButton = ({title, icon, onClick, color, disabled, id}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure, isStaff}) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const downloadOpen = Boolean(anchorEl);
@@ -115,7 +117,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           </div>
       }
 
-    <Menu
+      <Menu
         id="download-menu"
         anchorEl={anchorEl}
         open={downloadOpen}
@@ -127,22 +129,26 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           },
         }}
       >
-          <MenuItem onClick={() => {setAnchorEl(null); onDownload();}}>
-            <ListItemIcon>
+        <MenuItem onClick={() => {setAnchorEl(null); onDownload('csv');}}>
+          <ListItemIcon>
             <i className="fa-solid fa-file-csv" style={{fontSize: '1.25rem'}}></i>
-            </ListItemIcon>
+          </ListItemIcon>
           <ListItemText>{t('common.download_csv')}</ListItemText>
-          </MenuItem>
-          {
-            onImport &&
-            <MenuItem onClick={() => {setAnchorEl(null); onImport();}} disabled={isRunningImport}>
-            <ListItemIcon>
+        </MenuItem>
+        <MenuItem onClick={() => {setAnchorEl(null); onDownload('candidates_metadata');}} disabled={!isStaff}>
+          <ListItemIcon>
+            <JSONIcon sx={{fontSize: '1.25rem'}} />
+          </ListItemIcon>
+          <ListItemText>{t('map_project.candidates_metadata')}</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => {setAnchorEl(null); onImport();}} disabled={!onImport || isRunningImport}>
+          <ListItemIcon>
             <RepoIcon noTooltip />
-            </ListItemIcon>
+          </ListItemIcon>
           <ListItemText>{t('map_project.save_to_collection')}</ListItemText>
           {isRunningImport ? <CircularProgress sx={{marginLeft: '16px'}} size={20} /> : null}
-          </MenuItem>
-          }
+        </MenuItem>
       </Menu>
     </span>
 

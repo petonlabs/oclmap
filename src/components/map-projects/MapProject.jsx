@@ -74,6 +74,7 @@ import isBoolean from 'lodash/isBoolean'
 import isNumber from 'lodash/isNumber'
 import times from 'lodash/times'
 import some from 'lodash/some'
+import pick from 'lodash/pick'
 
 import { OperationsContext } from '../app/LayoutContext';
 
@@ -234,6 +235,7 @@ const MapProject = () => {
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
+  const isStaff = user?.is_staff
   const CANDIDATES_LIMIT = 15
   const canBridge = bridgeRef?.current?.canBridge()
   const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
@@ -1538,10 +1540,29 @@ const MapProject = () => {
     return 'unmapped'
   }
 
-  const onDownloadClick = () => {
-    const workbook = getWorkbook()
-    XLSX.writeFile(workbook, `${name || t('map_project.matched')}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
-    projectLog({action: 'Downloaded'})
+  const onDownloadClick = option => {
+    let log = false
+    if(option === 'csv') {
+      const workbook = getWorkbook()
+      XLSX.writeFile(workbook, `${name || t('map_project.matched')}.${moment().format('YYYYMMDDHHmmss')}.csv`, { compression: true });
+      log = true
+    } else if (option === 'candidates_metadata') {
+      let projectData = {
+        project: getProjectMetadata(),
+        rows: map(rows, _row => {
+          const _rowData = prepareRow(_row)
+          return {
+            row: _rowData,
+            metadata: _rowData.metadata,
+            candidates: getAllCandidatesForRow(_row.__index),
+          }
+        })
+      }
+      downloadObject(JSON.stringify(projectData, undefined, 2), 'application/json', `${name}.candidates_metadata.json`)
+      log = true
+    }
+    if(log)
+      projectLog({action: 'downloaded', extras: {option: option}})
   }
 
   const getFileObjectFromRows = name => {
@@ -2311,6 +2332,26 @@ const MapProject = () => {
     })
   }
 
+
+  const getProjectMetadata = () => {
+    let cols = filter(map(columns, col => ({...col, hidden: AIAssistantColumns[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
+      return !has(col, 'hidden') || col['hidden'] === false && col?.label
+    })
+    cols = compact(map(cols, col => {
+      if(['id', 'description', 'mapping: list', 'mapping: code', 'concept_class', 'class', 'datatype', 'name', 'synonyms'].includes(col.label.toLowerCase()) || col.label.toLowerCase().startsWith('property:'))
+        return col.label
+    }))
+    return {
+      ...pick(project, ['include_retired', 'owner', 'owner_type', 'owner_url', 'url']),
+      name: name,
+      description: description,
+      filters: filters,
+      fields_mapped: cols,
+      score_configuration: candidatesScore,
+      target_repo: repo
+    }
+  }
+
   const fetchRecommendation = _row => {
     if(!AI_ASSISTANT_API_URL) {
       console.error('AI ASSISTANT is not enabled for you.')
@@ -2327,23 +2368,8 @@ const MapProject = () => {
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
       let rowData = prepareRow(__row, true, true)
-      let cols = filter(map(columns, col => ({...col, hidden: AIAssistantColumns[col.dataKey] === false, width: columnWidth[col.dataKey] || undefined})), col => {
-        return !has(col, 'hidden') || col['hidden'] === false && col?.label
-      })
-      cols = compact(map(cols, col => {
-        if(['id', 'description', 'mapping: list', 'mapping: code', 'concept_class', 'class', 'datatype', 'name', 'synonyms'].includes(col.label.toLowerCase()) || col.label.toLowerCase().startsWith('property:'))
-          return col.label
-      }))
       const payload = {
-        project: {
-          ...project,
-          name: name,
-          description: description,
-          filters: filters,
-          fields_mapped: cols,
-          score_configuration: candidatesScore,
-          target_repo: repo
-        },
+        project: getProjectMetadata(),
         row: rowData.row,
         metadata: rowData.metadata,
         candidates: _candidates,
@@ -2572,6 +2598,7 @@ const MapProject = () => {
             {
               rows?.length > 0 && !loadingMatches &&
                 <Controls
+                  isStaff={isStaff}
                   project={project}
                   onDownload={onDownloadClick}
                   onSave={onSave}

@@ -554,7 +554,9 @@
     "refresh_candidates_tooltip": "Refresh Candidates -- this will wipe out existing candidates AND existing AI Assistant recommendations (though everything is maintained in the log history)",
     "group_candidates": "Group By",
     "sort_candidates": "Sort",
-    "created_by_log": "<0>{{created_by}}</0> created mapping project in the <1>{{owner}}</1> workspace"
+    "created_by_log": "<0>{{created_by}}</0> created mapping project in the <1>{{owner}}</1> workspace",
+    "candidates_metadata": "Candidates Metadata",
+    "full_project_export": "Full Project Export"
   },
   "app": {
     "web_version": "Web Version",
