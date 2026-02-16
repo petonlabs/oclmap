@@ -263,7 +263,7 @@ export default function MultiAlgoSelector({
                   </Tooltip>
                 </Box>
 
-                <Tooltip title="Remove">
+                <Tooltip title={t('common.remove')}>
                   <IconButton
                     onClick={() => removeSelected(sel.__key)}
                     color='error'
@@ -330,7 +330,7 @@ export default function MultiAlgoSelector({
                           <TextField
                             fullWidth
                             required
-                            label="API URL"
+                            label={t('map_project.api_url')}
                             value={sel.url || ""}
                             onChange={(e) => updateSelected(sel.__key, { url: e.target.value })}
                             placeholder="https://example.com/match"
@@ -338,7 +338,7 @@ export default function MultiAlgoSelector({
                           <TextField
                             fullWidth
                             type='password'
-                            label="API Token"
+                            label={t('map_project.api_token')}
                             value={sel.token || ""}
                             onChange={(e) => updateSelected(sel.__key, { token: e.target.value })}
                             placeholder="••••••••"
@@ -346,7 +346,7 @@ export default function MultiAlgoSelector({
 
                           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                             <TextField
-                              label="Batch Size"
+                              label={t('map_project.batch_size')}
                               sx={{width: '50%'}}
                               type="number"
                               value={sel.batch_size ?? algo.batch_size ?? 10}
@@ -359,7 +359,7 @@ export default function MultiAlgoSelector({
                             />
 
                             <TextField
-                              label="Concurrent Requests"
+                              label={t('map_project.concurrent_requests')}
                               sx={{width: '50%'}}
                               type="number"
                               value={sel.concurrent_requests ?? algo.concurrent_requests ?? 1}
@@ -393,14 +393,14 @@ export default function MultiAlgoSelector({
                           helperText={errors[sel.__key]?.id ? t('map_project.algo_conflicting_id') : ''}
                         />
                         <TextField
-                          label="Batch Size"
+                          label={t('map_project.batch_size')}
                           sx={{width: '50%'}}
                           type="number"
                           value={sel.batch_size ?? algo.batch_size ?? 10}
                           onChange={(e) => updateSelected(sel.__key, { batch_size: clampInt(e.target.value, 1, 1000) })}
                         />
                         <TextField
-                          label="Concurrent Requests"
+                          label={t('map_project.concurrent_requests')}
                           sx={{width: '50%'}}
                           type="number"
                           value={sel.concurrent_requests ?? algo.concurrent_requests ?? 1}
@@ -410,7 +410,7 @@ export default function MultiAlgoSelector({
                             })
                           }
                         />
-                        <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' disabled={algo.provider === 'ocl'} checked={sel.lookup_required || false} />} label="Lookup Required" onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
+                        <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' disabled={algo.provider === 'ocl'} checked={sel.lookup_required || false} />} label={t('map_project.lookup_required')} onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
                       </Stack>
                     )}
                   </Stack>
@@ -439,7 +439,7 @@ export default function MultiAlgoSelector({
               <Select
                 displayEmpty
                 value=""
-                renderValue={(v) => (v ? v : "Select an algorithm")}
+                renderValue={(v) => (v ? v : t('map_project.select_an_algo'))}
                 MenuProps={{PaperProps: {style: {maxWidth: '350px'}}}}
               >
                 {
