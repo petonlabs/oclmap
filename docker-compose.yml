@@ -22,3 +22,4 @@ services:
       - BRIDGE_MATCH_URL
       - AI_ASSISTANT_API_URL
       - SCISPACY_LOINC_API_URL
+      - OCL_ONLINE_API_URL
