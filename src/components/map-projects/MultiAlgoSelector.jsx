@@ -24,11 +24,16 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import MatchingIcon from '@mui/icons-material/DeviceHub';
 import countBy from 'lodash/countBy'
 import omit from 'lodash/omit'
 import filter from 'lodash/filter'
 import find from 'lodash/find'
 import isString from 'lodash/isString'
+import orderBy from 'lodash/orderBy'
+
+
+import ConceptIcon from '../concepts/ConceptIcon'
 
 /**
  * MultiAlgoSelector (MUI5)
@@ -101,13 +106,32 @@ export default function MultiAlgoSelector({
     });
     return set;
   }, [value, algosById]);
-
   const addableOptions = useMemo(() => {
-    const sorted = [...(algos || [])].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
-    return sorted.filter((a) => {
-      if (!a.allow_multiple && a.type && selectedTypes.has(a.type)) return false;
+    //let sorted = [...(algos || [])].sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
+    let _algos = algos.map(a => {
+      if(a.type === 'ocl-semantic' && (find(value, {type: 'ocl-search'}) || !repo?.match_algorithms?.includes('llm')))
+        a.disabled = true
+      if(a.type === 'ocl-search' && find(value, {type: 'ocl-semantic'}))
+        a.disabled = true
+      return a
+    })
+
+    let sorted = _algos.filter((a) => {
+      if (!a.allow_multiple && a.type && selectedTypes.has(a.type))
+        return false;
       return true;
     });
+    const isEnabled = (a) => !a.disabled;
+    const isDisabled = (a) => !!a.disabled;
+    const isOcl = (a) => a.provider === 'ocl';
+    const notOcl = (a) => a.provider !== 'ocl';
+
+    return [
+      ...orderBy(sorted.filter((a) => isOcl(a) && isEnabled(a)), 'name'),
+      ...orderBy(sorted.filter((a) => notOcl(a) && isEnabled(a)), 'name'),
+      ...orderBy(sorted.filter((a) => isOcl(a) && isDisabled(a)), 'name'),
+      ...orderBy(sorted.filter((a) => notOcl(a) && isDisabled(a)), 'name'),
+    ];
   }, [algos, selectedIds, selectedTypes]);
 
   const canAddMore = addableOptions.length > 0 && value.length < maxAlgos;
@@ -182,12 +206,18 @@ export default function MultiAlgoSelector({
 
   const renderAlgoIcon = (algo) => {
     if (algo?.getIcon) return algo.getIcon({sx: ({fontSize: '1.5rem', color: 'primary.main'})});
-    // fallback: a small "tune" icon; swap with your own per-type icons if you want
-    return (
-      <Box sx={{ display: "grid", placeItems: "center", width: 34, height: 34 }}>
-      <TuneRoundedIcon sx={{fontSize: '1.5rem'}} />
-      </Box>
-    );
+    if(algo.type === 'ocl-search' && algo.provider === 'ocl')
+      return <MatchingIcon sx={{fontSize: '1.5rem', color: 'primary.main'}} />
+    if(algo.type === 'ocl-semantic' && algo.provider === 'ocl')
+      return <MatchingIcon sx={{fontSize: '1.5rem', color: 'primary.main'}} />
+    if(algo.type === 'ocl-ciel-bridge' && algo.provider === 'ocl')
+      return <i className="fa-solid fa-bridge" style={{fontSize: '1.5rem', color: 'primary.main'}} />
+    if(algo.type === 'ocl-scispacy' && algo.provider === 'ocl')
+      return <img src="https://allenai.github.io/scispacy/scispacy-logo-square.png" style={{objectFit: 'cover', width: '28px', height: '28px'}} />
+    if(algo.type === 'custom')
+      return <i className="fa-brands fa-connectdevelop" style={{fontSize: '1.5rem', color: 'secondary.main'}} />
+    return <TuneRoundedIcon sx={{fontSize: '1.5rem', color: 'warning.main'}} />
+
   };
   return (
     <Box sx={{ width: "100%" }}>
@@ -444,15 +474,24 @@ export default function MultiAlgoSelector({
               >
                 {
                   addableOptions.map((a, index) => {
-                    let isDisabled = a.disabled || (a.type === 'ocl-semantic' && find(value, {type: 'ocl-search'})) || (a.type === 'ocl-search' && find(value, {type: 'ocl-semantic'}))
-                    if(a.type === 'ocl-semantic' && !repo?.match_algorithms?.includes('llm') && !isDisabled)
-                      isDisabled = true
                   return (
-                    <ListItemButton id={a.id} key={index} value={a.id} disabled={isDisabled} onClick={() => addAlgo(a.id)}>
+                    <ListItemButton id={a.id} key={index} value={a.id} disabled={a.disabled} onClick={() => addAlgo(a.id)}>
                       <ListItemIcon sx={{minWidth: 'auto', marginRight: '16px'}}>
                         {renderAlgoIcon(a)}
                       </ListItemIcon>
                       <ListItemText primary={a.name} secondary={a.description} />
+                      {
+                        a.provider === 'ocl' &&
+                          <Tooltip title="OCL's own match algorithm">
+                        <span>
+                          <ConceptIcon selected />
+                        </span>
+                        </Tooltip>
+                      }
+                    {
+                      a.provider === 'external' &&
+                        <i className="fa-solid fa-square-arrow-up-right" style={{fontSize: '1.25rem'}} />
+                    }
                     </ListItemButton>
                   )
                   })

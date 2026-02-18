@@ -1,7 +1,7 @@
 /*eslint no-process-env: 0*/
 
 import React from 'react'
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import moment from 'moment'
 import Split from 'react-split';
@@ -234,6 +234,7 @@ const MapProject = () => {
   /*eslint no-undef: 0*/
   const AI_ASSISTANT_API_URL = window.AI_ASSISTANT_API_URL || process.env.AI_ASSISTANT_API_URL
   const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
+  const OCL_ONLINE_API_URL = window.OCL_ONLINE_API_URL || process.env.OCL_ONLINE_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
   const isStaff = user?.is_staff
   const CANDIDATES_LIMIT = 15
@@ -243,16 +244,39 @@ const MapProject = () => {
   const scispacyEnabled = find(algosSelected, {type: 'ocl-scispacy'})
   const bridgeEnabled = find(algosSelected, {type: 'ocl-ciel-bridge'})
 
-
-  // algos - computed based on current language
-  const baseAlgos = React.useMemo(() => useAlgos(t, toggles, canBridge, canScispacy, Trans), [t, toggles?.SEMANTIC_SEARCH_TOGGLE, canBridge, canScispacy])
-
-  const [algos, setAlgos] = React.useState(baseAlgos)
+  const baseAlgos = useAlgos(t, toggles)
+  const [apiAlgos, setApiAlgos] = React.useState([]);
 
   React.useEffect(() => {
-    setAlgos(baseAlgos)
-  }, [baseAlgos])
+    if (!OCL_ONLINE_API_URL) return;
 
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const service = APIService.new();
+        service.URL = OCL_ONLINE_API_URL;
+        service.appendToUrl('/match-algorithms/');
+
+        const response = await service.get();
+        setApiAlgos(response?.data?.results || []);
+      } catch {
+        // pass
+      }
+    })();
+
+    return () => controller.abort();
+  }, [OCL_ONLINE_API_URL]);
+
+  const algos = React.useMemo(() => {
+    const keyOf = (a) => `${a.id}::${a.type}`;
+
+    const map = new Map();
+    for (const a of baseAlgos || []) map.set(keyOf(a), a);
+    for (const a of apiAlgos || []) map.set(keyOf(a), a); // API overrides
+
+    return Array.from(map.values());
+  }, [baseAlgos, apiAlgos]);
 
   const [targetSourcesFromRows, setTargetSourcesFromRows] = React.useState({}) //{dataKey: [source1_original_name, source2_original_name]}
 
@@ -920,13 +944,12 @@ const MapProject = () => {
   }
 
   const updateAlgosByRepoVersion = version => {
-    const newAlgos = [...algos]
     const isLLMAlgoAllowed = version?.match_algorithms?.includes('llm')
-    const index = newAlgos.findIndex(algo => algo.type === 'ocl-semantic')
-    newAlgos[index].disabled = !isLLMAlgoAllowed
-    setAlgos(newAlgos)
-    if(find(algosSelected, {type: 'ocl-semantic'}) && !isLLMAlgoAllowed) {
-      setAlgosSelected(reject(algosSelected, {type: 'ocl-semantic'}))
+    const index = algos.findIndex(algo => algo.type === 'ocl-semantic')
+    if(index > -1) {
+      if(find(algosSelected, {type: 'ocl-semantic'}) && !isLLMAlgoAllowed) {
+        setAlgosSelected(reject(algosSelected, {type: 'ocl-semantic'}))
+      }
     }
   }
 
@@ -2035,9 +2058,9 @@ const MapProject = () => {
 
     const payload = {rows: [{label: inputRow.name, itemid: __row.__index}]}
     const service = APIService.new()
+    service.URL = SCISPACY_API_URL
     try {
-      service.URL = SCISPACY_API_URL
-      service.appendToUrl('/$match-scispacy-loinc/').post(payload, "a4cabbaabef41cf6fa3816d230f3a6a51bbe8f40").then(response => {
+      service.appendToUrl('/$match-scispacy-loinc/').post(payload).then(response => {
         if(callback)
           callback(response, payload)
         return response

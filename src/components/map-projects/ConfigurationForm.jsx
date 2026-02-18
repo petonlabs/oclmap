@@ -46,10 +46,21 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 
-const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algosSelected, setAlgosSelected, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, candidatesScore, onScoreChange, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, setAIAssistantColumns, AIAssistantColumns, inAIAssistantGroup, lookupConfig, setLookupConfig }) => {
+const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, name, setName, description, setDescription, repo, onRepoChange, repoVersion, setRepoVersion, versions, mappedSources, targetSourcesFromRows, algosSelected, setAlgosSelected, sx, algos, validColumns, columns, isValidColumnValue, updateColumn, configure, setConfigure, columnVisibilityModel, setColumnVisibilityModel, onSave, isSaving, candidatesScore, onScoreChange, includeDefaultFilter, setIncludeDefaultFilter, filters, setFilters, locales, isLoadingLocales, setAIAssistantColumns, AIAssistantColumns, inAIAssistantGroup, lookupConfig, setLookupConfig, canBridge, canScispacy }) => {
   const { t } = useTranslation();
   const isLLMAlgoNotAllowed = !repoVersion?.match_algorithms?.includes('llm')
   const appliedLocales = filters?.locale ? filters?.locale?.split(',') : []
+  const getAlgos = () => {
+    return algos.map(algo => {
+      if(algo.type === 'ocl-semantic')
+        algo.disabled = Boolean(isLLMAlgoNotAllowed)
+      else if(algo.type === 'ocl-ciel-bridge')
+        algo.disabled = !canBridge
+      else if(algo.type === 'ocl-scispacy')
+        algo.disabled = !canScispacy
+      return algo
+    })
+  }
 
   return (
     <div className='col-xs-12' style={{padding: '8px 0', ...sx}}>
@@ -206,7 +217,7 @@ const ConfigurationForm = ({ project, handleFileUpload, file, owner, setOwner, n
         {t('map_project.matching_algorithm_description')}
       </FormHelperText>
       <MultiAlgoSelector
-        algos={algos}
+        algos={getAlgos()}
         value={algosSelected}
         onChange={setAlgosSelected}
         repo={repoVersion}

@@ -1,9 +1,7 @@
 import React from 'react'
-import orderBy from 'lodash/orderBy'
 import MatchingIcon from '@mui/icons-material/DeviceHub';
-import { toV3URL } from '../../common/utils'
 
-export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
+export const useAlgos = (t, toggles) => {
   const algos = [
     {
       'id': 'ocl-semantic',
@@ -12,7 +10,6 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       'description': t('map_project.algorithm_llm_description'),
       'type': 'ocl-semantic',
       'provider': 'ocl',
-      'order': 0,
       'batch_size': 10,
       'concurrent_requests': 2,
       'query_params': {
@@ -29,81 +26,12 @@ export const useAlgos = (t, toggles, canBridge, canScispacy, Trans) => {
       'description': t('map_project.algorithm_es_description'),
       'type': 'ocl-search',
       'provider': 'ocl',
-      'order': 1,
       'batch_size': 50,
       'concurrent_requests': 2,
       'disabled': false,
       'allow_multiple': false,
       'lookup_required': false
     },
-    {
-      'id': 'custom',
-      'getIcon': (props) => <i className="fa-solid fa-square-arrow-up-right" style={props.sx} />,
-      'name': t('map_project.ocl_custom_algorithm'),
-      'type': 'custom',
-      'description': t('map_project.algorithm_custom_description'),
-      'provider': 'external',
-      'batch_size': 1,
-      'order': 5,
-      'url': undefined,
-      'token': undefined,
-      'concurrent_requests': 1,
-      'disabled': false,
-      'allow_multiple': true,
-      'lookup_required': true
-    },
-    {
-      'id': 'ocl-ciel-bridge',
-      'getIcon': (props) => <i className="fa-solid fa-bridge" style={props.sx} />,
-      'name': (
-        <Trans
-          i18nKey='map_project.bridge_terminology_search'
-          components={[
-            <sup key="1"/>
-          ]}
-        />
-      ),
-      'description': (
-        <Trans
-          i18nKey='map_project.bridge_terminology_search_description'
-          components={[
-            <a key="0" href={`${toV3URL('/orgs/CIEL/sources/CIEL/')}`} target="_blank" rel="noreferrer noopener"/>
-          ]}
-        />
-      ),
-      'type': 'ocl-ciel-bridge',
-      'provider': 'ocl',
-      'batch_size': 10,
-      'order': 2,
-      'concurrent_requests': 2,
-      'target_repo_url': '/orgs/CIEL/sources/CIEL/',
-      'query_params': {
-        'semantic': true
-      },
-      'disabled': !canBridge,
-      'allow_multiple': true,
-      'lookup_required': true
-    },
-    {
-      'id': 'ocl-scispacy-loinc',
-      'getIcon': (props) => <img src="https://allenai.github.io/scispacy/scispacy-logo-square.png" style={{objectFit: 'cover', width: '28px', height: '28px', ...props.sx}}/>,
-      'name': (
-        <Trans
-          i18nKey='map_project.scispacy_loinc_search'
-          components={[
-            <sup key="1"/>
-          ]}
-        />
-      ),
-      'type': 'ocl-scispacy',
-      'provider': 'ocl',
-      'order': 3,
-      'batch_size': 2,
-      'concurrent_requests': 1,
-      'disabled': !canScispacy,
-      'allow_multiple': false,
-      'lookup_required': true
-    }
   ]
-  return orderBy(algos, 'order')
+  return algos
 }
