@@ -77,7 +77,7 @@ class APIService {
     return axios(request)
       .then(response => response || null)
       .catch(error => {
-        if(error?.response?.status === 401) {
+        if(error?.response?.status === 401 && error?.response?.config?.url?.startsWith(getAPIURL())) {
           logoutUser(true)
         } else {
           if(raw)
