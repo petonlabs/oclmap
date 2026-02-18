@@ -33,7 +33,7 @@ const Score = ({concept, setShowHighlights, sx, isAIRecommended, candidatesScore
     else if (percentile >= availableScore)
       qualityBucket = 'available'
     else
-      qualityBucket = 'low'
+      qualityBucket = 'low_ranked'
   }
   let bucketColor = qualityBucket ? SCORES_COLOR[qualityBucket] : false
 
