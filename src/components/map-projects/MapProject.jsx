@@ -2075,13 +2075,14 @@ const MapProject = () => {
   const rerank = async (_index, isBulk=false) => {
     const index = isNumber(_index) ? _index : rowIndex
     if(isNumber(index) && (isBulk || isReadyForRerank(index))) {
+      const candidates = getAllCandidatesForRow(index) || []
+      const query = get(prepareRow(rows[index]), 'name')
+      if(!candidates.length || !query)
+        return
       markAlgo(index, 'rerank', 0)
       const service = APIService.concepts().appendToUrl('$rerank/')
       try {
-        const response = await service.post({
-          q: get(prepareRow(rows[index]), 'name'),
-          rows: getAllCandidatesForRow(index),
-        });
+        const response = await service.post({q: query, rows: candidates,});
         log({action: 'rerank_finished'}, index)
         markAlgo(index, 'rerank', 1)
 
