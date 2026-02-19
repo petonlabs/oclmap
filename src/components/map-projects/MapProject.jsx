@@ -1041,17 +1041,19 @@ const MapProject = () => {
         }
         setMatchTypes(prev => prev.very_high + 1)
         setRowStatuses(prev => {
+          let newStatuses = {...prev}
           let _concept = {...conceptToMap, repo: {...repo, version: repoVersion?.id || repo.version, version_url: repoVersion?.version_url || repo.version_url}}
           setMapSelected(_prev => {
             _prev[index] = _concept
             return _prev
           })
           const mapType = get(conceptToMap, 'search_meta.map_type') || 'SAME-AS'
-          prev.readyForReview = uniq([...prev.readyForReview, index])
-          setDecisions(prev => ({...prev, [index]: 'map'}))
-          setMapTypes(prev => ({...prev, [index]: mapType}))
+          newStatuses.readyForReview = uniq([...newStatuses.readyForReview, index])
+          setDecisions(_prev => ({..._prev, [index]: 'map'}))
+          setMapTypes(_prev => ({..._prev, [index]: mapType}))
           log({action: 'auto-matched', extras: {repoVersion: repoVersion?.version_url || repo.version_url, name: getConceptLabel(_concept), map_type: mapType, algorithm: _concept.search_meta?.algorithm}}, index)
-          return prev
+          newStatuses.unmapped = without(newStatuses.unmapped, index)
+          return newStatuses
         })
       } else {
         setMapSelected(prev => omit(prev, index))
@@ -1183,12 +1185,8 @@ const MapProject = () => {
 
     projectLog({action: 'auto_match_started', extras: {sub_actions: subActions}})
 
-    setRowStatuses(prev => {
-      prev.unmapped = []
-      if(!autoMatchUnmappedOnly)
-        prev.readyForReview = []
-      return prev
-    })
+    if(!autoMatchUnmappedOnly)
+      setRowStatuses(prev => ({...prev, readyForReview: []}))
 
     setTimeout(async () => {
       let nextAlgo = {...getFirstAlgoDef()}
