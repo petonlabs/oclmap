@@ -1875,8 +1875,6 @@ const MapProject = () => {
   }
 
   const selectedAlgoIds = map(algosSelected, 'id')
-  const computedAlgoIds = keys(allCandidatesRef.current)
-
   const ensureRow = (prev, rowId, selectedAlgoIds, needsRerank) => {
     const base = prev[rowId] ?? {};
     const next = { ...base };
