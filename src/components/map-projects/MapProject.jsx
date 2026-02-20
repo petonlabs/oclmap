@@ -2160,7 +2160,7 @@ const MapProject = () => {
 
   const lookupCandidates = (algoId, candidates) => {
     const algo = algoId ? getAlgoDef(algoId) : null
-    if(algo?.lookup_required && lookupConfig?.url && candidates && isArray(candidates) && candidates.length) {
+    if(algo?.lookup_required && (lookupConfig?.url || repoVersion.url) && candidates && isArray(candidates) && candidates.length) {
       candidates.forEach(concept => {
         if(algo.type === 'ocl-ciel-bridge') {
           forEach(concept.mappings, mapping => {
@@ -2187,10 +2187,15 @@ const MapProject = () => {
   const lookupCode = (code) => {
     if (getKeyFromCache(code))
       return
-    if(code && lookupConfig?.url) {
-      const service = APIService.new()
-      service.URL = lookupConfig.url
-      service.appendToUrl(`concepts/${code}/`).get(lookupConfig.token).then(response => {
+    if(code && (lookupConfig?.url || repoVersion?.version_url)) {
+      let service = APIService.new()
+      if(lookupConfig?.url) {
+        service.URL = lookupConfig.url
+      } else {
+        service.overrideURL(repoVersion.version_url)
+      }
+
+      service.appendToUrl(`concepts/${code}/`).get(lookupConfig?.token).then(response => {
         if(response?.data?.url)
           setConceptCache(prev => ({...prev, [response.data.url]: response.data}))
       })
