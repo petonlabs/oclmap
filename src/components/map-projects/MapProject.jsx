@@ -1203,9 +1203,10 @@ const MapProject = () => {
       for (const row of rows) {
         await rerank(row.__index, true)
       }
-      if(inAIAssistantGroup && autoRunAIAnalysis)
-        setTimeout(() => runBulkAIAnalysis(rows), 1000)
-      else {
+      if(inAIAssistantGroup && autoRunAIAnalysis) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        await runBulkAIAnalysis(rows)
+      } else {
         setLoadingMatches(false)
         setEndMatchingAt(moment())
       }
