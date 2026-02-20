@@ -1175,6 +1175,29 @@ const MapProject = () => {
       }
     };
 
+    const processRerankWithConcurrency = async (_rows, maxConcurrent = 2) => {
+      const queue = _rows.slice();
+      const activeRequests = new Set();
+
+      while (queue.length > 0 || activeRequests.size > 0) {
+        while (queue.length > 0 && activeRequests.size < maxConcurrent) {
+          if (abortRef.current) {
+            setLoadingMatches(false)
+            return
+          }
+
+          const row = queue.shift();
+          const promise = rerank(row.__index, true)
+            .catch(() => null)
+            .finally(() => activeRequests.delete(promise));
+          activeRequests.add(promise);
+        }
+
+        if(activeRequests.size > 0)
+          await Promise.race(activeRequests);
+      }
+    };
+
     let subActions = [...map(algosSelected, algo => algo.name || algo.id)]
     if(!isMultiAlgo)
       subActions.push('reranker')
@@ -1200,9 +1223,7 @@ const MapProject = () => {
         nextAlgo = getNextAlgoDef(nextAlgo.id)
       }
 
-      for (const row of rows) {
-        await rerank(row.__index, true)
-      }
+      await processRerankWithConcurrency(rows, 2)
       if(inAIAssistantGroup && autoRunAIAnalysis) {
         await new Promise(resolve => setTimeout(resolve, 1000))
         await runBulkAIAnalysis(rows)
