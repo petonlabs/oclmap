@@ -2385,10 +2385,10 @@ const MapProject = () => {
       __row = _row
       __index = _row.__index
     }
-    let _candidates = flatten(map(filter(computedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
+    let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
     let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
-    if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && _candidates?.length > 0) {
+    if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
       let rowData = prepareRow(__row, true, true)
       const payload = {
         project: getProjectMetadata(),
