@@ -1121,14 +1121,10 @@ const MapProject = () => {
     };
 
     // Function to handle concurrency
-    const processWithConcurrency = async (_repo, algo) => {
+    const processWithConcurrency = async (_repo, algo, _rows) => {
       const CHUNK_SIZE = algo.batch_size || 10 // Number of rows per batch
       const MAX_CONCURRENT_REQUESTS = algo.concurrent_requests || 1; // Number of parallel API requests allowed
-      if(autoMatchUnmappedOnly)
-        rows = filter(rows, row => rowStatuses.unmapped.includes(row.__index))
-      else
-        rows = filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
-      const rowChunks = chunk(rows, CHUNK_SIZE);
+      const rowChunks = chunk(_rows, CHUNK_SIZE);
 
       const queue = rowChunks.slice(); // Copy of all chunks to be processed
       const activeRequests = new Set();
@@ -1212,21 +1208,27 @@ const MapProject = () => {
       setRowStatuses(prev => ({...prev, readyForReview: []}))
 
     setTimeout(async () => {
+      const rowsToProcess = autoMatchUnmappedOnly
+        ? filter(rows, row => rowStatuses.unmapped.includes(row.__index))
+        : filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
+
       let nextAlgo = {...getFirstAlgoDef()}
+      const algoPromises = []
       while(nextAlgo?.id) {
         if(['custom', 'ocl-search', 'ocl-semantic'].includes(nextAlgo.type))
-          await processWithConcurrency(repo, nextAlgo);
+          algoPromises.push(processWithConcurrency(repo, nextAlgo, rowsToProcess));
         else if(nextAlgo.type === 'ocl-ciel-bridge' && canBridge)
-          await fetchBulkBridgeCandidates(rows, nextAlgo)
+          algoPromises.push(fetchBulkBridgeCandidates(rowsToProcess, nextAlgo))
         else if(nextAlgo.type === 'ocl-scispacy' && canScispacy)
-          await fetchBulkScispacyCandidates(rows, nextAlgo)
+          algoPromises.push(fetchBulkScispacyCandidates(rowsToProcess, nextAlgo))
         nextAlgo = getNextAlgoDef(nextAlgo.id)
       }
+      await Promise.all(algoPromises)
 
-      await processRerankWithConcurrency(rows, 2)
+      await processRerankWithConcurrency(rowsToProcess, 2)
       if(inAIAssistantGroup && autoRunAIAnalysis) {
         await new Promise(resolve => setTimeout(resolve, 1000))
-        await runBulkAIAnalysis(rows)
+        await runBulkAIAnalysis(rowsToProcess)
       } else {
         setLoadingMatches(false)
         setEndMatchingAt(moment())
