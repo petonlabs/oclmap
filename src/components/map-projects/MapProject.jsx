@@ -1226,7 +1226,7 @@ const MapProject = () => {
 
       await fetchRecommendation(_rows[index]); // wait for completion
       if(index !== _rows.length -1)
-        await new Promise(resolve => setTimeout(resolve, 10000)); // 10s delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
     }
     const now = moment()
     setBulkAIAnalysisEndedAt(now)
