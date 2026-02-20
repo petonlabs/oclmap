@@ -2378,10 +2378,10 @@ const MapProject = () => {
     }
   }
 
-  const fetchRecommendation = _row => {
+  const fetchRecommendation = async (_row) => {
     if(!AI_ASSISTANT_API_URL) {
       console.error('AI ASSISTANT is not enabled for you.')
-      return
+      return false
     }
     let __row = row;
     let __index = rowIndex;
@@ -2392,7 +2392,7 @@ const MapProject = () => {
     let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
     let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
-    if(isNumber(__index) && repoVersion && project.url && !analysis[rowIndex] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
+    if(isNumber(__index) && repoVersion && project.url && !analysis[__index] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
       let rowData = prepareRow(__row, true, true)
       const payload = {
         project: getProjectMetadata(),
@@ -2405,18 +2405,27 @@ const MapProject = () => {
       }
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
-      service.appendToUrl('/match/$recommend/').post(payload).then(response => {
+      try {
+        const response = await service.appendToUrl('/match/$recommend/').post(payload)
         let timestamp = moment().toDate()
         if(response?.detail) {
           log({created_at: timestamp, action: 'AIRecommendation', description: response.detail, extras: {error: response.detail, model: find(AIModels, {id: AIModel})}})
           setAlert({message: response.detail, severity: 'error'})
-          return
+          return false
         }
 
         log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
         setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel, timestamp: timestamp, user: user.username || user.id}}))
-      })
+        return true
+      } catch (err) {
+        const errorMessage = err?.detail || err?.response?.data?.detail || err?.message || t('unknown_error')
+        let timestamp = moment().toDate()
+        log({created_at: timestamp, action: 'AIRecommendation', description: errorMessage, extras: {error: errorMessage, model: find(AIModels, {id: AIModel})}}, __index)
+        setAlert({message: errorMessage, severity: 'error'})
+        return false
+      }
     }
+    return false
   }
 
   const getRowNameValue = _row => get(_row, find(columns, {label: 'Name'})?.dataKey)
