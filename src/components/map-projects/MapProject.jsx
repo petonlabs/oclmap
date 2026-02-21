@@ -417,6 +417,7 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setCandidatesScore(response.data?.score_configuration)
       setLookupConfig(response.data?.lookup_config)
+      setAnalysis(response.data?.analysis)
       setProject(response.data)
       setConfigure(false)
     })
@@ -848,6 +849,7 @@ const MapProject = () => {
     const formData = new FormData();
     formData.append('file', f);
     formData.append('candidates', JSON.stringify(candidates))
+    formData.append('analysis', JSON.stringify(analysis))
     formData.append('matches', JSON.stringify(selected))
     formData.append('name', name || f.name)
     formData.append('description', description)
