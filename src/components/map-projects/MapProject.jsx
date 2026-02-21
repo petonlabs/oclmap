@@ -417,7 +417,7 @@ const MapProject = () => {
       setRetired(Boolean(response.data?.include_retired))
       setCandidatesScore(response.data?.score_configuration)
       setLookupConfig(response.data?.lookup_config)
-      setAnalysis(response.data?.analysis)
+      setAnalysis(response.data?.analysis || {})
       setProject(response.data)
       setConfigure(false)
     })
