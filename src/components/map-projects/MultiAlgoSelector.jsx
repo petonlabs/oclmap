@@ -187,7 +187,7 @@ export default function MultiAlgoSelector({
       name = `${name}-1`
     }
     const defaults = {
-      ...omit(algo, ['getIcon', 'disabled', 'description']),
+      ...omit(algo, ['getIcon', 'disabled', 'description', 'url']),
       id: id,
       name: name,
       batch_size: algo.batch_size ?? 10,
@@ -421,6 +421,7 @@ export default function MultiAlgoSelector({
                           onChange={(e) => updateSelected(sel.__key, { id: e.target.value || '' })}
                           error={Boolean(errors[sel.__key]?.id)}
                           helperText={errors[sel.__key]?.id ? t('map_project.algo_conflicting_id') : ''}
+                          disabled={algo.provider === 'ocl'}
                         />
                         <TextField
                           label={t('map_project.batch_size')}
