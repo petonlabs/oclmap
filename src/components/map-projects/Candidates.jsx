@@ -312,7 +312,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
 
   const byScore = sortBy.includes('score')
   const noCandidatesFound = !isLoading && !isNoneLoaded && allCandidates.length === 0
-  const algoScoreFirst = groupBy === 'algorithm' || sortBy === 'search_meta.search_score'
+  const algoScoreFirst = sortBy === 'search_meta.search_score'
   let props = {
     rowIndex: rowIndex,
     onMap: onMap,
@@ -335,7 +335,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   const onSort = option => {
     if(option === sortBy || option === 'search_meta.search_normalized_score') {
       setSortBy('search_meta.search_normalized_score')
-      setGroupBy('quality')
     } else if(option === 'search_meta.search_score') {
       setSortBy(option)
       setGroupBy('algorithm')
@@ -356,7 +355,6 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     if(!option || option === 'quality')
       setSortBy('search_meta.search_normalized_score')
   }
-
   const getCandidates = () => {
     const order = byScore ? 'desc' : 'asc'
     if(groupBy === 'algorithm') {
