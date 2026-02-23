@@ -568,7 +568,8 @@
     "all_rows": "All Rows",
     "out_of": "out of",
     "retrieve_candidates": "Retrieve Candidates",
-    "retrieve_candidates_helper_text": "Your project is configured to use the following match algorithms:"
+    "retrieve_candidates_helper_text": "Your project is configured to use the following match algorithms:",
+    "all_candidates": "All Candidates"
   },
   "app": {
     "web_version": "Web Version",

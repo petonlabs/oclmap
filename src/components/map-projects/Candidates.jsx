@@ -446,12 +446,12 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
           }
         </span>
       )
-
   }
 
   React.useEffect(() => {
     setOpenAIAnalysis(isEmpty(analysis) ? false : (openAIAnalysis !== false))
   }, [rowIndex])
+
 
   return (
     <div className='col-xs-12 padding-0'>
@@ -516,9 +516,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
               <CandidateList
                 {...props}
                 candidates={recommended}
-                header={!byScore ? t('map_project.available_candidates') : t('map_project.recommended_candidates')}
+                header={t('map_project.recommended_candidates')}
                 onFetchMore={onFetchMore}
-                bgColor={!byScore ? SCORES_COLOR.available : SCORES_COLOR.recommended}
+                bgColor={SCORES_COLOR.recommended}
                 bucketId={`${rowIndex}-recommended`}
                 noToolbar={false}
                 onDisplayChange={setDisplay}
@@ -549,9 +549,9 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
               <CandidateList
                 {...props}
                 candidates={available}
-                header={t('map_project.available_candidates')}
+                header={byScore ? t('map_project.available_candidates') : t('map_project.all_candidates')}
                 onFetchMore={onFetchMore}
-                bgColor={SCORES_COLOR.available}
+                bgColor={byScore ? SCORES_COLOR.available : undefined}
                 bucketId={`${rowIndex}-available`}
                 noToolbar
                 showAlgo
