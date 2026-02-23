@@ -73,7 +73,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
               <RepoChip repo={repoVersion} hideType sx={{marginLeft: '16px'}} />
           }
         </div>
-        <FormControl sx={{marginTop: '12px'}}>
+        <FormControl sx={{marginTop: '16px'}}>
           <FormLabel id="automatch-rows">{`${t('map_project.selected_rows')}: ${selectedRows.toLocaleString()} ${t('map_project.out_of')} ${totalRows.toLocaleString()}` }</FormLabel>
           <RadioGroup
             row
@@ -102,7 +102,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
           inAIAssistantGroup &&
             <>
               <FormControlLabel
-                sx={{marginTop: '12px', width: '100%'}}
+                sx={{marginTop: '16px', width: '100%'}}
                 control={
                   <Checkbox
                     checked={autoRunAIAnalysis}
