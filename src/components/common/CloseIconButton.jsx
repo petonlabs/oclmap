@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 
 const CloseIconButton = props => (
-  <IconButton {...props}>
+  <IconButton color='info.dark' {...props}>
     <CloseIcon fontSize='inherit'/>
   </IconButton>
 )
