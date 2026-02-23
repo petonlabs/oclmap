@@ -62,6 +62,15 @@ const v5Theme = createTheme(theme, {
         }
       }
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          "&:hover": {
+            backgroundColor: 'rgba(94, 92, 113, 0.2)'
+          }
+        }
+      }
+    },
     MuiButton: {
       variants: [
         {
