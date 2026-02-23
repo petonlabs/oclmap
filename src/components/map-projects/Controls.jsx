@@ -78,7 +78,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
         {
           project?.id &&
             <IkonButton
-              color='error'
+              color='secondary'
               disabled={isSaving}
               onClick={onDelete}
               title={t('map_project.delete_this_project')}
