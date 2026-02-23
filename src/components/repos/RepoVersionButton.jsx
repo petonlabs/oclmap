@@ -2,6 +2,7 @@ import React from 'react';
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import DotSeparator from '../common/DotSeparator'
+import { toV3URL } from '../../common/utils'
 
 const RepoVersionButton = ({icon, repo, repoType, version, repoLabelStyle, versionStyle, href, vertical, size, sx}) => {
   const verticalStyle = version && vertical ? {flexDirection: 'column', alignItems: 'baseline', textAlign: 'left'} : {}
@@ -27,9 +28,11 @@ const RepoVersionButton = ({icon, repo, repoType, version, repoLabelStyle, versi
         ...sx
       }}
       startIcon={icon}
-      href={href ? '#' + href : undefined}
+      href={href ? toV3URL(href) : undefined}
       component="button"
       size={size}
+      target='_blank'
+      rel='noreferrer noopener'
     >
       <span className='repo-button-group' style={{display: 'flex', alignItems: 'center', ...verticalStyle}}>
         <span style={{display: 'flex', alignItems: 'center'}}>

@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '@mui/material/Button'
 import OwnerIcon from './OwnerIcon'
 import OwnerTooltip from './OwnerTooltip'
+import { toV3URL } from '../../common/utils'
 
 const Owner = ({owner, ownerType, ownerURL, noIcons, sx, ...rest}) => {
   const iconProps = {color: 'secondary', style: {marginRight: '8px', width: '0.8em'}}
@@ -26,8 +27,10 @@ const Owner = ({owner, ownerType, ownerURL, noIcons, sx, ...rest}) => {
         ...sx
       }}
       startIcon={!noIcons && <OwnerIcon noTooltip ownerType={ownerType} {...iconProps} />}
-      href={ownerURL ? '#' + ownerURL : undefined}
+      href={ownerURL ? toV3URL(ownerURL) : undefined}
       component="button"
+      target='_blank'
+      rel='noreferrer noopener'
       {...rest}
     >
       <span className='owner-button-label'>{owner}</span>

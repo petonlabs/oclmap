@@ -322,7 +322,7 @@ const MapProject = () => {
         return
       }
       setFilters(response.data?.filters || {})
-      if(response.data.url) {
+      if(response.data?.url) {
         APIService.new().overrideURL(response.data.url).appendToUrl('logs/').get().then(response => {
           setLogs(response.data.logs?.row_logs || [])
           setProjectLogs(response.data.logs?.project_logs || [])
@@ -2879,7 +2879,7 @@ const MapProject = () => {
               AIModels,
               AIModel,
               setAIModel,
-              repo,
+              repoVersion,
               inAIAssistantGroup
             }}
           />

@@ -3,6 +3,7 @@ import Chip from '@mui/material/Chip'
 import Skeleton from '@mui/material/Skeleton'
 import { Avatar as MuiAvatar } from '@mui/material'
 import { PRIMARY_COLORS } from '../../common/colors'
+import { toV3URL } from '../../common/utils'
 
 const PRIMARY_STYLE = {
   backgroundColor: `${PRIMARY_COLORS['95']} !important`,
@@ -114,12 +115,22 @@ const Avatar = ({ entity, icon }) => {
     </MuiAvatar>
 }
 
-const Label = ({ entity, hideType }) => {
+const Label = ({ entity, hideType, isVersion }) => {
   return (
     <span style={{display: 'flex', alignItems: 'center'}} className='entity-label'>
       <span className='entity-id'>
         <b>{entity?.short_code || entity?.id || entity?.username}</b>
       </span>
+      {
+        isVersion &&
+          <React.Fragment>
+            <span className='divider-span' />
+            <span className='entity-type'>
+              {entity.version || entity.id}
+            </span>
+          </React.Fragment>
+
+      }
       {
         (entity?.type?.includes('Concept') && entity?.display_name) &&
           <span className='entity-name' style={{marginLeft: '4px'}}>
@@ -140,13 +151,13 @@ const Label = ({ entity, hideType }) => {
 }
 
 
-const BaseEntityChip = ({ entity, icon, hideType, primary, size, sx, noLink, ...rest }) => {
+const BaseEntityChip = ({ entity, icon, hideType, primary, size, sx, noLink, isVersion, ...rest }) => {
   const sizeStyle = ENTITY_CHIP_SIZE_MAP[size || 'medium'] || ENTITY_CHIP_SIZE_MAP.medium
   const baseStyle = primary ? PRIMARY_STYLE : SECONDARY_STYLE
   return (
     <Chip
       avatar={<Avatar entity={entity} icon={icon} />}
-      label={<Label entity={entity} hideType={hideType} />}
+      label={<Label entity={entity} hideType={hideType} isVersion={isVersion} />}
       variant='outlined'
       sx={{
         borderRadius: '4px',
@@ -161,8 +172,10 @@ const BaseEntityChip = ({ entity, icon, hideType, primary, size, sx, noLink, ...
       onClick={noLink ? undefined : event => {
         event.stopPropagation()
       }}
-      href={noLink ? undefined : '#' + (entity?.version_url || entity?.url)}
+      href={noLink ? undefined : '#' + (toV3URL(entity?.version_url || entity?.url))}
       component='a'
+      target='_blank'
+      rel='noreferrer noopener'
       {...rest}
     />
   )

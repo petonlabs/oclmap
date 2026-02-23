@@ -6,21 +6,27 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
 import Checkbox from '@mui/material/Checkbox';
 import FormHelperText from '@mui/material/FormHelperText';
 import Button from '@mui/material/Button';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import FormLabel from '@mui/material/FormLabel';
+
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 
 import CloseIconButton from '../common/CloseIconButton'
+import RepoChip from '../repos/RepoVersionChip'
 import AIAssistantButton from './AIAssistantButton'
 
 
-const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnmappedOnly, rowStatuses, autoRunAIAnalysis, setAutoRunAIAnalysis, AIModels, AIModel, setAIModel, repo, onSubmit, inAIAssistantGroup}) => {
+const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnmappedOnly, rowStatuses, autoRunAIAnalysis, setAutoRunAIAnalysis, AIModels, AIModel, setAIModel, repoVersion, onSubmit, inAIAssistantGroup}) => {
   const { t } = useTranslation()
 
   const getHelperTextForAutoMatchUnmapped = () => {
     if (autoMatchUnmappedOnly) {
-      const count = rowStatuses.readyForReview.length;
+      const count = rowStatuses.unmapped.length;
       if (count > 0) {
         return t('map_project.auto_match_unmapped_only_note', {count: count.toLocaleString()});
       }
@@ -28,7 +34,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
     }
     const approvedCount = rowStatuses.reviewed.length;
     const proposedCount = rowStatuses.readyForReview.length;
-    if (approvedCount > 0 && proposedCount > 0) {
+    if (approvedCount > 0 || proposedCount > 0) {
       return t('map_project.auto_match_note', {
         approvedCount: approvedCount.toLocaleString(),
         proposedCount: proposedCount.toLocaleString()
@@ -36,6 +42,8 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
     }
     return t('map_project.auto_match_note_no_counts');
   };
+
+  const isDisabled = !repoVersion?.version_url
 
   return (
     <Dialog
@@ -55,8 +63,34 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
         <span>{t('map_project.auto_match')}</span>
         <CloseIconButton onClick={onClose} />
       </DialogTitle>
-      <DialogContent sx={{paddingTop: '12px !important'}}>
-        <FormControlLabel sx={{marginTop: '12px', width: '100%'}} control={<Checkbox checked={autoMatchUnmappedOnly} onChange={event => setAutoMatchUnmappedOnly(event.target.checked)} />} label={t('map_project.unmapped_only')} />
+      <DialogContent>
+        <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', fontSize: '1rem'}}>
+          {t('map_project.target_repository')}
+          {
+            repoVersion?.id &&
+              <RepoChip repo={repoVersion} hideType sx={{marginLeft: '16px'}} />
+          }
+        </div>
+        <FormControl sx={{marginTop: '12px'}}>
+          <FormLabel id="automatch-rows">{t('map_project.input_dataset')}</FormLabel>
+          <RadioGroup
+            row
+            aria-labelledby="automatch-rows"
+            name="automatch-rows"
+            onChange={() => setAutoMatchUnmappedOnly(!autoMatchUnmappedOnly)}
+          >
+            <FormControlLabel
+              value="unmapped"
+              control={<Radio checked={autoMatchUnmappedOnly} />}
+              label={t('map_project.unmapped_only') + ` (${rowStatuses.unmapped.length.toLocaleString()})`}
+            />
+            <FormControlLabel
+              value="all"
+              control={<Radio checked={!autoMatchUnmappedOnly} />}
+              label={t('map_project.all_rows') + ` (${(rowStatuses.unmapped.length + rowStatuses.readyForReview.length).toLocaleString()})`}
+            />
+          </RadioGroup>
+        </FormControl>
         <FormHelperText sx={{marginTop: '-4px'}}>
           {
             getHelperTextForAutoMatchUnmapped()
@@ -66,7 +100,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
           inAIAssistantGroup &&
             <>
               <FormControlLabel
-                sx={{marginTop: '0px', width: '100%'}}
+                sx={{marginTop: '12px', width: '100%'}}
                 control={
                   <Checkbox
                     checked={autoRunAIAnalysis}
@@ -102,7 +136,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
           size='small'
           sx={{textTransform: 'none', marginLeft: '12px'}}
           endIcon={<DoubleArrowIcon />}
-          disabled={!repo?.url}
+          disabled={isDisabled}
           onClick={onSubmit}
         >
           {t('common.submit')}
