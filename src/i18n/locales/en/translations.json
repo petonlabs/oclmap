@@ -556,7 +556,7 @@
     "lookup_configuration_url": "Repository URL",
     "lookup_configuration_token": "Token",
     "lookup_configuration_description": "Configure a Source/CodeSystem for lookup operation to fetch candidates definitions.",
-    "refresh_candidates_tooltip": "Refresh Candidates -- this will wipe out existing candidates AND existing AI Assistant recommendations (though everything is maintained in the log history)",
+    "refresh_candidates_tooltip": "Refresh Candidates",
     "group_candidates": "Group By",
     "sort_candidates": "Sort",
     "created_by_log": "<0>{{created_by}}</0> created mapping project in the <1>{{owner}}</1> workspace",

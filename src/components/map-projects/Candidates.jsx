@@ -4,7 +4,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Collapse from '@mui/material/Collapse';
-import ButtonGroup from '@mui/material/ButtonGroup';
+import IconButton from '@mui/material/IconButton'
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import Menu from '@mui/material/Menu';
@@ -98,9 +98,9 @@ const Sort = ({ selected, onSort }) => {
   return (
     <>
       <Tooltip title={t('map_project.sort_candidates')}>
-        <Button onClick={onSortClick}>
+        <IconButton color='secondary' onClick={onSortClick} sx={{margin: '0 4px'}}>
         <SortIcon />
-        </Button>
+        </IconButton>
         </Tooltip>
       <Menu
       anchorEl={anchorEl}
@@ -138,9 +138,9 @@ const Group = ({ selected, onGroup }) => {
   return (
     <>
       <Tooltip title={t('map_project.group_candidates')}>
-      <Button onClick={onGroupClick}>
+        <IconButton color='secondary' onClick={onGroupClick} sx={{margin: '0 4px'}}>
         <GroupIcon />
-      </Button>
+      </IconButton>
         </Tooltip>
 
       <Menu
@@ -423,17 +423,17 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
           }
           {
             !noCandidatesFound &&
-              <ButtonGroup color='info.dark' variant='outlined' size='small'>
-                    <Tooltip title={t('map_project.refresh_candidates_tooltip')}>
-                      <span>
-                        <Button onClick={onRefreshClick} disabled={!areAlgoRun}>
-                        <RefreshIcon />
-                      </Button>
-                        </span>
-                    </Tooltip>
+              <>
+                <Tooltip title={t('map_project.refresh_candidates_tooltip')}>
+                  <span>
+                    <IconButton color='secondary' onClick={onRefreshClick} disabled={!areAlgoRun} size='small' sx={{margin: '0 4px'}}>
+                      <RefreshIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
                 <Group onGroup={onGroup} selected={groupBy} />
                 <Sort onSort={onSort} selected={sortBy} />
-              </ButtonGroup>
+              </>
           }
           {
             inAIAssistantGroup &&
