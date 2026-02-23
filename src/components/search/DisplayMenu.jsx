@@ -13,7 +13,7 @@ const DisplayMenu = ({onSelect, selected, disabled, sx}) => {
     <ButtonGroup color='info.dark' variant='outlined' size='small' disabled={disabled} sx={sx}>
       <Tooltip title={t('search.list_view')}>
         <Button onClick={() => onSelect('card')} color={selected === 'card' ? 'primary' : 'info.dark'}>
-          <CardIcon color='info.dark' />
+          <CardIcon color='info.dark' sx={{fontSize: '1.25rem'}} />
         </Button>
       </Tooltip>
       <Tooltip title={t('search.table_view')}>
