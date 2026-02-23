@@ -2194,7 +2194,12 @@ const MapProject = () => {
 
   const findConceptByIdOrURLFromCache = (id) => {
     let key = getKeyFromCache(id)
-    return key ? conceptCache[key] : false
+    let _cached = key ? conceptCache[key] : false
+    if(!_cached?.id && keys(_cached).length) {
+      delete conceptCache[key]
+      return false
+    }
+    return _cached
   }
 
   const getKeyFromCache = id => {
@@ -2318,7 +2323,7 @@ const MapProject = () => {
 
   const isConfigureInSplitView = configure && file?.name
   const columnsForTable = getColumnsForTable()
-  let targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex]) : false
+  let targetConcept = mapSelected[rowIndex] ? getConcept(mapSelected[rowIndex], true) : false
   const targetConceptFromCandidate = (!isEmpty(allCandidatesRef.current) && isNumber(rowIndex) && targetConcept?.url) ? find(getAllCandidatesForRow(rowIndex), {url: targetConcept.url}) : false
   if(targetConceptFromCandidate)
     targetConcept.search_meta = targetConceptFromCandidate.search_meta
