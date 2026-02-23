@@ -23,6 +23,8 @@ import AIAssistantButton from './AIAssistantButton'
 
 const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnmappedOnly, rowStatuses, autoRunAIAnalysis, setAutoRunAIAnalysis, AIModels, AIModel, setAIModel, repoVersion, onSubmit, inAIAssistantGroup}) => {
   const { t } = useTranslation()
+  const selectedRows = autoMatchUnmappedOnly ? rowStatuses.unmapped.length : (rowStatuses.unmapped.length + rowStatuses.readyForReview.length)
+  const totalRows = rowStatuses.unmapped.length + rowStatuses.readyForReview.length + rowStatuses.reviewed.length
 
   const getHelperTextForAutoMatchUnmapped = () => {
     if (autoMatchUnmappedOnly) {
@@ -43,7 +45,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
     return t('map_project.auto_match_note_no_counts');
   };
 
-  const isDisabled = !repoVersion?.version_url
+  const isDisabled = !repoVersion?.version_url && selectedRows > 0
 
   return (
     <Dialog
@@ -72,7 +74,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
           }
         </div>
         <FormControl sx={{marginTop: '12px'}}>
-          <FormLabel id="automatch-rows">{t('map_project.input_dataset')}</FormLabel>
+          <FormLabel id="automatch-rows">{`${t('map_project.selected_rows')}: ${selectedRows.toLocaleString()} ${t('map_project.out_of')} ${totalRows.toLocaleString()}` }</FormLabel>
           <RadioGroup
             row
             aria-labelledby="automatch-rows"
@@ -82,12 +84,12 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
             <FormControlLabel
               value="unmapped"
               control={<Radio checked={autoMatchUnmappedOnly} />}
-              label={t('map_project.unmapped_only') + ` (${rowStatuses.unmapped.length.toLocaleString()})`}
+              label={t('map_project.unmapped_only')}
             />
             <FormControlLabel
               value="all"
               control={<Radio checked={!autoMatchUnmappedOnly} />}
-              label={t('map_project.all_rows') + ` (${(rowStatuses.unmapped.length + rowStatuses.readyForReview.length).toLocaleString()})`}
+              label={t('map_project.all_rows')}
             />
           </RadioGroup>
         </FormControl>
