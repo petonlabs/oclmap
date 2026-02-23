@@ -13,16 +13,20 @@ import Button from '@mui/material/Button';
 import RadioGroup from '@mui/material/RadioGroup';
 import Radio from '@mui/material/Radio';
 import FormLabel from '@mui/material/FormLabel';
+import Chip from '@mui/material/Chip'
 
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
+
+import map from 'lodash/map'
 
 import CloseIconButton from '../common/CloseIconButton'
 import RepoChip from '../repos/RepoVersionChip'
 import AIAssistantButton from './AIAssistantButton'
 
 
-const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnmappedOnly, rowStatuses, autoRunAIAnalysis, setAutoRunAIAnalysis, AIModels, AIModel, setAIModel, repoVersion, onSubmit, inAIAssistantGroup}) => {
+const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnmappedOnly, rowStatuses, autoRunAIAnalysis, setAutoRunAIAnalysis, AIModels, AIModel, setAIModel, repoVersion, onSubmit, inAIAssistantGroup, algosSelected}) => {
   const { t } = useTranslation()
+  const [algos, setAlgos] = React.useState(true)
   const selectedRows = autoMatchUnmappedOnly ? rowStatuses.unmapped.length : (rowStatuses.unmapped.length + rowStatuses.readyForReview.length)
   const totalRows = rowStatuses.unmapped.length + rowStatuses.readyForReview.length + rowStatuses.reviewed.length
 
@@ -45,7 +49,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
     return t('map_project.auto_match_note_no_counts');
   };
 
-  const isDisabled = !repoVersion?.version_url && selectedRows > 0
+  const isDisabled = !repoVersion?.version_url || selectedRows === 0 || (!algos && !autoRunAIAnalysis)
 
   return (
     <Dialog
@@ -98,6 +102,23 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
             getHelperTextForAutoMatchUnmapped()
           }
         </FormHelperText>
+
+        <FormControl sx={{marginTop: '16px'}}>
+          <FormControlLabel control={<Checkbox checked={algos} onChange={() => setAlgos(!algos)} />} label={t('map_project.retrieve_candidates')} />
+          <FormLabel id="algorithms">
+            {t('map_project.retrieve_candidates_helper_text')}
+          </FormLabel>
+          <div className='col-xs-12 padding-0'>
+            {
+              algosSelected.map(algo => {
+                return (
+                  <Chip variant='outlined' size='small' color='warning' label={algo.id} key={algo.id} sx={{margin: '4px'}} />
+                )
+              })
+            }
+          </div>
+        </FormControl>
+
         {
           inAIAssistantGroup &&
             <>
@@ -139,7 +160,7 @@ const AutoMatchDialog = ({open, onClose, autoMatchUnmappedOnly, setAutoMatchUnma
           sx={{textTransform: 'none', marginLeft: '12px'}}
           endIcon={<DoubleArrowIcon />}
           disabled={isDisabled}
-          onClick={onSubmit}
+          onClick={event => onSubmit(event, algos ? map(algosSelected, val => val?.id) : [])}
         >
           {t('common.submit')}
         </Button>

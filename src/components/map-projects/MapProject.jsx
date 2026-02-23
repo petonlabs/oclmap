@@ -1062,7 +1062,7 @@ const MapProject = () => {
   }
 
 
-  const getRowsResults = async (rows) => {
+  const getRowsResults = async (rows, selectedAlgos) => {
     abortRef.current = false;
 
     // Function to process a single batch
@@ -1190,10 +1190,9 @@ const MapProject = () => {
           await Promise.race(activeRequests);
       }
     };
-
-    let subActions = [...map(algosSelected, algo => algo.name || algo.id)]
-    if(!isMultiAlgo)
-      subActions.push('reranker')
+    let _selectedAlgos = filter(algosSelected, algo => selectedAlgos.includes(algo.id))
+    let subActions = [...map(_selectedAlgos, algo => algo.name || algo.id)]
+    subActions.push('reranker')
     if(autoMatchUnmappedOnly)
       subActions.push('unmatched_only')
     if(inAIAssistantGroup && autoRunAIAnalysis)
@@ -1209,24 +1208,23 @@ const MapProject = () => {
         ? filter(rows, row => rowStatuses.unmapped.includes(row.__index))
         : filter(rows, row => !rowStatuses.reviewed.includes(row.__index))
 
-      let nextAlgo = {...getFirstAlgoDef()}
       const algoPromises = []
-      while(nextAlgo?.id) {
-        if(['custom', 'ocl-search', 'ocl-semantic'].includes(nextAlgo.type))
-          algoPromises.push(processWithConcurrency(repo, nextAlgo, rowsToProcess));
-        else if(nextAlgo.type === 'ocl-ciel-bridge' && canBridge)
-          algoPromises.push(fetchBulkBridgeCandidates(rowsToProcess, nextAlgo))
-        else if(nextAlgo.type === 'ocl-scispacy' && canScispacy)
-          algoPromises.push(fetchBulkScispacyCandidates(rowsToProcess, nextAlgo))
-        nextAlgo = getNextAlgoDef(nextAlgo.id)
-      }
+      forEach(_selectedAlgos, algo => {
+        if(['custom', 'ocl-search', 'ocl-semantic'].includes(algo.type))
+          algoPromises.push(processWithConcurrency(repo, algo, rowsToProcess));
+        else if(algo.type === 'ocl-ciel-bridge' && canBridge)
+          algoPromises.push(fetchBulkBridgeCandidates(rowsToProcess, algo))
+        else if(algo.type === 'ocl-scispacy' && canScispacy)
+          algoPromises.push(fetchBulkScispacyCandidates(rowsToProcess, algo))
+      })
       await Promise.all(algoPromises)
-
-      await processRerankWithConcurrency(rowsToProcess, 2)
+      if(_selectedAlgos.length)
+        await processRerankWithConcurrency(rowsToProcess, 2)
       if(inAIAssistantGroup && autoRunAIAnalysis) {
         await new Promise(resolve => setTimeout(resolve, 1000))
         await runBulkAIAnalysis(rowsToProcess)
       } else {
+        setIsLoadingInDecisionView(false)
         setLoadingMatches(false)
         setEndMatchingAt(moment())
       }
@@ -1416,7 +1414,7 @@ const MapProject = () => {
     setMatchDialog(true)
   }
 
-  const onGetCandidatesSubmit = event => {
+  const onGetCandidatesSubmit = (event, selectedAlgos) => {
     event.stopPropagation()
     event.preventDefault()
     setAlert(false)
@@ -1429,7 +1427,7 @@ const MapProject = () => {
       setScispacyCandidatesStartedAt(null)
       setScispacyCandidatesEndedAt(null)
       setLoadingMatches(true)
-      getRowsResults(data)
+      getRowsResults(data, selectedAlgos)
     } else {
       setAlert({message: t('map_project.no_valid_columns_for_matching')})
       setTimeout(() => setAlert(false), 10000)
@@ -2880,7 +2878,8 @@ const MapProject = () => {
               AIModel,
               setAIModel,
               repoVersion,
-              inAIAssistantGroup
+              inAIAssistantGroup,
+              algosSelected
             }}
           />
       </Paper>

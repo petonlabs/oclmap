@@ -549,6 +549,7 @@
     "ocl_scispacy_loinc_algorithm": "OCL ScispaCy LOINC Algorithm",
     "ocl_custom_algorithm": "OCL Custom Algorithm",
     "algorithm": "Algorithm",
+    "algorithms": "Algorithms",
     "column_send_to_ai_assistant": "Send to AI Assistant",
     "algo_conflicting_id": "Conflicting ID",
     "algo_conflicting_name": "Conflicting Name",
@@ -565,7 +566,9 @@
     "select_an_algo": "Select an algorithm",
     "selected_rows": "Selected Rows",
     "all_rows": "All Rows",
-    "out_of": "out of"
+    "out_of": "out of",
+    "retrieve_candidates": "Retrieve Candidates",
+    "retrieve_candidates_helper_text": "Your project is configured to use the following match algorithms:"
   },
   "app": {
     "web_version": "Web Version",
