@@ -1629,7 +1629,13 @@ const MapProject = () => {
   }
 
   const getWorkbook = () => {
-    const worksheet = XLSX.utils.json_to_sheet(getRowsForDownload());
+    const rowsForDownload = getRowsForDownload()
+    const headers = getDownloadHeaders()
+    const aoa = [
+      headers,
+      ...map(rowsForDownload, _row => map(headers, key => _row[key]))
+    ]
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, t('map_project.dates'));
     return workbook
@@ -1637,9 +1643,63 @@ const MapProject = () => {
 
   const twoDigit = n => String(n).padStart(2, '0')
 
+  const getDownloadHeaders = () => {
+    const sourceHeaders = filter(Object.keys(get(data, '0', {})), key => {
+      if(key === '__index')
+        return false
+      // Exclude prior export/system columns so they don't pollute leading source order.
+      if(key.startsWith('__') && key.endsWith('__'))
+        return false
+      if(key.startsWith('__status_') || key.startsWith('__result_') || key.startsWith('__map_') || key.startsWith('__oclai_'))
+        return false
+      return true
+    })
+    const allStages = uniq(flatten(map(data, _row => keys(rowStageRef.current[_row.__index] || {}))))
+    const retrievalStages = filter(allStages, stage => !['rerank', 'recommend'].includes(stage)).sort()
+    const statusHeaders = [
+      ...map(retrievalStages, stage => `__status_retrieval:${stage}__`),
+      ...(allStages.includes('rerank') ? ['__status_rerank__'] : []),
+      ...(allStages.includes('recommend') ? ['__status_recommend__'] : [])
+    ]
+
+    const candidateHeaders = []
+    forEach(keys(allCandidatesRef.current).sort(), algoId => {
+      let algoKey = algoId.replaceAll('-', '').replaceAll(' ', '').replaceAll('_', '').toLowerCase()
+      forEach(times(CANDIDATES_LIMIT, i => i + 1), i => {
+        candidateHeaders.push(`__result_${algoKey}_${twoDigit(i)}__`)
+      })
+    })
+
+    return uniq([
+      ...sourceHeaders,
+      '__row_map_status__',
+      '__row_decision__',
+      ...statusHeaders,
+      '__map_repo_url__',
+      '__map_repo_id__',
+      '__map_concept_id__',
+      '__map_concept_name__',
+      '__map_concept_url__',
+      '__map_type__',
+      '__map_unified_score__',
+      '__map_raw_score__',
+      '__map_algorithm__',
+      '__oclai_assessment__',
+      '__oclai_confidence_score__',
+      '__oclai_rec_concept_id__',
+      '__oclai_rec_concept_name__',
+      '__oclai_alt_concepts__',
+      '__oclai_oos_suggestions__',
+      '__oclai_rationale__',
+      ...candidateHeaders,
+      '__proposed__'
+    ])
+  }
+
   const getRowCandidatesForDownload = index => {
     let candidates = {};
-    forEach(allCandidatesRef.current, (_candidates, algoId) => {
+    forEach(keys(allCandidatesRef.current).sort(), algoId => {
+      const _candidates = allCandidatesRef.current[algoId]
       let algoKey = algoId.replaceAll('-', '').replaceAll(' ', '').replaceAll('_', '').toLowerCase()
       let __candidates = orderBy(find(_candidates, c => c.row?.__index === index)?.results || [], 'search_meta.search_normalized_score', 'desc')
       __candidates = times(CANDIDATES_LIMIT, i => __candidates[i])
@@ -1661,6 +1721,7 @@ const MapProject = () => {
   }
 
   const getRowsForDownload = () => {
+    const headers = getDownloadHeaders()
     return map(data, row => {
       const index = row.__index
       const rowState = getStateFromIndex(index)
@@ -1679,7 +1740,8 @@ const MapProject = () => {
         }).join('\n\n\n')
       }
       let rowAlgoStatuses = {}
-      forEach(rowStageRef.current[index], (status, stage) => {
+      forEach(keys(rowStageRef.current[index] || {}).sort(), stage => {
+        const status = rowStageRef.current[index][stage]
         let key = ['rerank', 'recommend'].includes(stage) ? `__status_${stage}__` : `__status_retrieval:${stage}__`
         rowAlgoStatuses[key] = ROW_STAGES[status.toString()]
       })
@@ -1709,7 +1771,11 @@ const MapProject = () => {
       }
       newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__', '__row_status__', '__map_score__', '__oclai_match_quality__', '__match_type__'].includes(key)))
       delete newRow.__index
-      return newRow
+      const orderedRow = {}
+      forEach(headers, key => {
+        orderedRow[key] = has(newRow, key) ? newRow[key] : null
+      })
+      return orderedRow
     })
   }
 
