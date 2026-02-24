@@ -84,7 +84,7 @@ import ConceptHome from '../concepts/ConceptHome'
 import DraggablePaperComponent from '../common/DraggablePaperComponent'
 import LoaderDialog from '../common/LoaderDialog'
 import Error403 from '../errors/Error403'
-import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS } from './constants'
+import { HEADERS, SEMANTIC_SEARCH_HEADERS, ROW_STATES, VIEWS, DECISION_TABS, ROW_STAGES } from './constants'
 import MapProjectDeleteConfirmDialog from './MapProjectDeleteConfirmDialog';
 import ConfigurationForm from './ConfigurationForm'
 import Controls from './Controls'
@@ -631,8 +631,11 @@ const MapProject = () => {
       '__map_concept_url__',
       '__map_type__',
       '__map_score__',
+      '__map_unified_score__',
+      '__map_raw_score__',
       '__Match Type__',
       '__oclai_match_quality__',
+      '__oclai_assessment__',
       '__oclai_confidence_score__',
       '__oclai_rec_concept_id__',
       '__oclai_rec_concept_name__',
@@ -641,6 +644,7 @@ const MapProject = () => {
       '__oclai_rationale__',
       '__row_decision__',
       '__row_status__',
+      '__row_map_status__',
       '__proposed__',
       '__map_repo_id__',
       '__map_repo_url__',
@@ -674,15 +678,19 @@ const MapProject = () => {
           id: data['__Concept ID__'] || data['__map_concept_id__'],
           display_name: data['__Concept Name__'] || data['__map_concept_name__'],
           url: data['__Concept URL__'] || data['__map_concept_url__'],
-          search_meta: {search_normalized_score: data['__Match Score__'] || data['__map_score__'],
-                        match_type: snakeCase(data['__Match Type__'] || data['__match_type__']), algorithm: data['__map_algorithm__']},
+          search_meta: {
+            search_normalized_score: data['__Match Score__'] || data['__map_score__'] || data['__map_unified_score__'],
+            search_score: data['__map_raw_score__'],
+            match_type: snakeCase(data['__Match Type__'] || data['__match_type__']),
+            algorithm: data['__map_algorithm__']
+          },
           repo: repo
         }
         if(concept?.id) {
           _mapSelected[index] = concept
           _repo = repo
         }
-        let rowStateLabel = data['__State__'] || data['__row_status__']
+        let rowStateLabel = data['__State__'] || data['__row_status__'] || data['__row_map_status__']
         let state = keys(pickBy(VIEWS, info => info.label === rowStateLabel))[0]
         _states[state] = _states[state] || []
         _states[state].push(index)
@@ -1666,30 +1674,37 @@ const MapProject = () => {
           return [`Suggested: ${sugg.suggested_concept}`, `Rationale: ${sugg.rationale}`].join('\n')
         }).join('\n\n\n')
       }
+      let rowAlgoStatuses = {}
+      forEach(rowStageRef.current[index], (status, stage) => {
+        let key = ['rerank', 'recommend'].includes(stage) ? `__status_${stage}__` : `__status_retrieval:${stage}__`
+        rowAlgoStatuses[key] = ROW_STAGES[status.toString()]
+      })
       let newRow = {
         ...row,
+        '__row_map_status__': rowStateLabel,
+        '__row_decision__': decisions[index] || 'None',
+        ...rowAlgoStatuses,
+        '__map_repo_url__': _repo?.version_url || _repo?.url,
+        '__map_repo_id__': _repo?.short_code || _repo?.id,
         '__map_concept_id__': concept?.id,
         '__map_concept_name__': concept?.display_name,
         '__map_concept_url__': concept?.url,
         '__map_type__': mapTypes[index],
-        '__map_score__': concept?.search_meta?.search_normalized_score,
+        '__map_unified_score__': concept?.search_meta?.search_normalized_score,
+        '__map_raw_score__': concept?.search_meta?.search_score,
         '__map_algorithm__': concept?.search_meta?.algorithm,
         '__match_type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
-        '__oclai_match_quality__': get(aiRecommendation, 'recommendation') || null,
+        '__oclai_assessment__': get(aiRecommendation, 'recommendation') || null,
         '__oclai_confidence_score__': aiScore || null,
         '__oclai_rec_concept_id__': aiCandidateID || null,
         '__oclai_rec_concept_name__': get(aiCandidate, 'name') || null,
         '__oclai_alt_concepts__': map(get(aiRecommendation, 'alternative_candidates', []), 'concept_id').join('\n') || null,
         '__oclai_oos_suggestions__': getOutOfScopeSuggestions() || null,
         '__oclai_rationale__': get(aiRecommendation, 'rationale') || null,
-        '__row_decision__': decisions[index] || 'None',
-        '__row_status__': rowStateLabel,
-        '__proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
-        '__map_repo_id__': _repo?.short_code || _repo?.id,
-        '__map_repo_url__': _repo?.version_url || _repo?.url,
         ...candidates,
+        '__proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
       }
-      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__'].includes(key)))
+      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__', '__row_status__', '__map_score__', '__oclai_match_quality__'].includes(key)))
       delete newRow.__index
       return newRow
     })
@@ -1902,6 +1917,7 @@ const MapProject = () => {
       if (!Number.isFinite(next[id])) next[id] = -1;
     });
     if (needsRerank && !has(next, 'rerank')) next.rerank = -1;
+    if (!has(next, 'recommend')) next.recommend = -1;
 
     return next;
   };
@@ -2402,16 +2418,18 @@ const MapProject = () => {
   }
 
   const fetchRecommendation = async (_row) => {
-    if(!AI_ASSISTANT_API_URL) {
-      console.error('AI ASSISTANT is not enabled for you.')
-      return false
-    }
     let __row = row;
     let __index = rowIndex;
     if(isNumber(_row?.__index)){
       __row = _row
       __index = _row.__index
     }
+    if(!AI_ASSISTANT_API_URL) {
+      markAlgo(__index, 'recommend', -3)
+      console.error('AI ASSISTANT is not enabled for you.')
+      return false
+    }
+    markAlgo(__index, 'recommend', 0)
     let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
     let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
@@ -2432,15 +2450,18 @@ const MapProject = () => {
         const response = await service.appendToUrl('/match/$recommend/').post(payload)
         let timestamp = moment().toDate()
         if(response?.detail) {
+          markAlgo(__index, 'recommend', -2)
           log({created_at: timestamp, action: 'AIRecommendation', description: response.detail, extras: {error: response.detail, model: find(AIModels, {id: AIModel})}})
           setAlert({message: response.detail, severity: 'error'})
           return false
         }
 
+        markAlgo(__index, 'recommend', 1)
         log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
         setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel, timestamp: timestamp, user: user.username || user.id}}))
         return true
       } catch (err) {
+        markAlgo(__index, 'recommend', -2)
         const errorMessage = err?.detail || err?.response?.data?.detail || err?.message || t('unknown_error')
         let timestamp = moment().toDate()
         log({created_at: timestamp, action: 'AIRecommendation', description: errorMessage, extras: {error: errorMessage, model: find(AIModels, {id: AIModel})}}, __index)

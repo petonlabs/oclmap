@@ -95,3 +95,11 @@ export const SCORES_COLOR = {
 export const SEMANTIC_BATCH_SIZE = 10
 export const ES_BATCH_SIZE = 50
 export const CANDIDATES_LIMIT = 30
+
+export const ROW_STAGES = {
+  '-3': 'na',
+  '-2': 'failed',
+  '-1': 'not_started',
+  '0': 'in_progress',
+  '1': 'completed'
+}
