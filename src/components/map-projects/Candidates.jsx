@@ -40,6 +40,7 @@ import compact from 'lodash/compact'
 import every from 'lodash/every'
 import times from 'lodash/times'
 import filter from 'lodash/filter'
+import omit from 'lodash/omit'
 
 import { highlightTexts } from '../../common/utils';
 import { PRIMARY_COLORS } from '../../common/colors'
@@ -307,7 +308,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   const isNoneLoaded = every(rawResults, r => r === null)
   const canFetchMore = allCandidates?.length > 0
   let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
-  const areAlgoRun = uniq(values(rowStage)).length === 1 && values(rowStage)[0] === 1
+  const algoStagesValue = values(omit(rowStage, 'recommend'))
+  const areAlgoRun = uniq(algoStagesValue).length === 1 && algoStagesValue[0] === 1
   const { label } = getRowProgressLabel(rowStage, algosSelected);
 
   const byScore = sortBy.includes('score')
