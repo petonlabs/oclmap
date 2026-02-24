@@ -376,6 +376,8 @@ const MapProject = () => {
       let _cache = {}
       forEach((response?.data?.candidates || []), candidate => {
         forEach(candidate.results, concept => {
+          if(!_rowStage[candidate.row.__index]?.rerank)
+            _rowStage[candidate.row.__index] = {...(_rowStage[candidate.row.__index] || {}), rerank: isNumber(concept?.search_meta?.search_rerank_score) ? 1 : -1}
           if(concept?.url && concept?.id && concept.display_name && concept.owner)
             _cache[concept.url] = concept
           forEach(concept?.mappings, mapping => {
@@ -383,6 +385,10 @@ const MapProject = () => {
               _cache[mapping.target_code.url] = mapping.target_code
           })
         })
+        if(!_rowStage[candidate.row.__index]?.recommend)
+          _rowStage[candidate.row.__index] = {...(_rowStage[candidate.row.__index] || {}), recommend: isEmpty(response.data.analysis[candidate.row.__index]) ? -1 : 1}
+        if(!get(_rowStage[candidate.row.__index]?.recommend))
+          _rowStage[candidate.row.__index] = {...(_rowStage[candidate.row.__index] || {}), recommend: isEmpty(response.data.analysis[candidate.row.__index]) ? -1 : 1}
         let algo = candidate.algorithm || get(candidate.results, '0.search_meta.algorithm')
         if(algo) {
           _rowStage[candidate.row.__index] = {..._rowStage[candidate.row.__index], [algo]: 1}
