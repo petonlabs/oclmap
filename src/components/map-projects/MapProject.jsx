@@ -680,7 +680,6 @@ const MapProject = () => {
           search_meta: {
             search_normalized_score: data['__Match Score__'] || data['__map_score__'] || data['__map_unified_score__'],
             search_score: data['__map_raw_score__'],
-            match_type: snakeCase(data['__Match Type__'] || data['__match_type__']),
             algorithm: data['__map_algorithm__']
           },
           repo: repo
@@ -1692,7 +1691,6 @@ const MapProject = () => {
         '__map_unified_score__': concept?.search_meta?.search_normalized_score,
         '__map_raw_score__': concept?.search_meta?.search_score,
         '__map_algorithm__': concept?.search_meta?.algorithm,
-        '__match_type__': concept?.search_meta?.match_type ? startCase(concept.search_meta.match_type) : null,
         '__oclai_assessment__': get(aiRecommendation, 'recommendation') || null,
         '__oclai_confidence_score__': aiScore || null,
         '__oclai_rec_concept_id__': aiCandidateID || null,
@@ -1703,7 +1701,7 @@ const MapProject = () => {
         ...candidates,
         '__proposed__': isEmpty(proposed[index]) ? null : JSON.stringify(proposed[index]),
       }
-      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__', '__row_status__', '__map_score__', '__oclai_match_quality__'].includes(key)))
+      newRow = omitBy(newRow, (val, key) => key.startsWith('__') && key.endsWith('__') && (key.includes('_Top_') || key.startsWith('__candidates_') || ['__Concept ID__', '__Concept URL__', '__Match Score__', '__Match Type__', '__Decision__', '__Note__', '__State__', '__Proposed__', '__Repo Version__', '__Repo ID__', '__Repo URL__', '__Map Type__', '__Concept Name__', '__AI Recommendation__', '__AI Recommendation Candidate__', '__AI Recommendation Candidate Name__', '__AI Recommendation Score__', '__AI Recommendation Rationale__', '__AI Recommendation Alternative Candidates__', '__AI Recommendation Out Of Scope Suggestions__', '__row_status__', '__map_score__', '__oclai_match_quality__', '__match_type__'].includes(key)))
       delete newRow.__index
       return newRow
     })
