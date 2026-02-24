@@ -1646,7 +1646,7 @@ const MapProject = () => {
             (
               isBridge ?
                 bridgeRef.current?.getCandidateLabelForDownload(candidate) :
-                compact([`${candidate.id}:${candidate.display_name}`, `Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n')
+                compact([`${candidate.id}:${candidate.display_name}`, `Unified Score: ${candidate?.search_meta?.search_normalized_score}`, `Raw Score: ${candidate?.search_meta?.search_score}`]).join('\n')
             ) :
             null
         }
