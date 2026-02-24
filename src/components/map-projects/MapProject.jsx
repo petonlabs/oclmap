@@ -241,7 +241,6 @@ const MapProject = () => {
 
   const baseAlgos = useAlgos(t, toggles)
   const [apiAlgos, setApiAlgos] = React.useState([]);
-
   React.useEffect(() => {
     if (!OCL_ONLINE_API_URL) return;
 
@@ -1684,7 +1683,7 @@ const MapProject = () => {
         '__row_map_status__': rowStateLabel,
         '__row_decision__': decisions[index] || 'None',
         ...rowAlgoStatuses,
-        '__map_repo_url__': _repo?.version_url || _repo?.url,
+        '__map_repo_url__': _repo?.version_url || repoVersion?.version_url || _repo?.url || repo?.version_url || repo?.url,
         '__map_repo_id__': _repo?.short_code || _repo?.id,
         '__map_concept_id__': concept?.id,
         '__map_concept_name__': concept?.display_name,
