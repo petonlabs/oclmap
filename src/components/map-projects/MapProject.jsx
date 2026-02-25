@@ -835,15 +835,9 @@ const MapProject = () => {
       forEach(_candidates, ___candidates => {
         let results = (returnAll ? ___candidates.results : ___candidates.results.slice(0, CANDIDATES_LIMIT)) || []
         results = map(results, result => {
-          let concept = getConcept(result)
-          return omit(concept, '_source')
-        })
-        results.forEach(result => {
-          forEach(result.mappings, (mapping, index) => {
-            const target = getConceptFromMapping(mapping, false)
-            if(target?.id)
-              result.mappings[index] = ({...mapping, target_concept: omit(target, '_source')})
-          })
+          const concept = omit(getConcept(result), '_source')
+          const mappings = map((result?.mappings || []), m => omit(m, 'target_concept'))
+          return { ...concept, mappings }
         })
         __candidates.push({...___candidates, results: results})
       })
@@ -2395,12 +2389,6 @@ const MapProject = () => {
       cached.source = concept.source
     return returnSelf ? (cached || concept) : cached
   }
-
-  const getConceptFromMapping = (mapping, returnSelf=true) => {
-    let cached = (mapping?.cascade_target_concept_code) ? findConceptByIdOrURLFromCache(mapping?.cascade_target_concept_code) : false
-    return returnSelf ? (cached || mapping) : cached
-  }
-
 
   const onProposedUpdate = proposedState => setProposed(prev => ({...prev, [rowIndex]: {...proposedState}}))
 
