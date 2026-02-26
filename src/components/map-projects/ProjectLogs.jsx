@@ -91,8 +91,8 @@ const ProjectLogs = ({onClose, logs, project}) => {
                  <strong key={1} />,
                ]}
                values={{
-                 created_by: project.created_by,
-                 owner: `${project.owner_type}:${project.owner}`,
+                 created_by: project.created_by || '',
+                 owner: project.owner ? `${project.owner_type}:${project.owner}` : '',
                }}
              />
     }
