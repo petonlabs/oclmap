@@ -1274,7 +1274,7 @@ const MapProject = () => {
         setAllCandidates(prev => {
           const newCandidates = {...prev}
           const results = (isArray(response) ? response : response?.data)
-          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == index), ...(results || [])]
+          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index === index), ...(results || [])]
           lookupCandidates(algo.id, results)
           return newCandidates
         })
@@ -1304,12 +1304,12 @@ const MapProject = () => {
         setAllCandidates(prev => {
           const newCandidates = {...prev}
           const results = [{row: _rows[index], results: fromScispacyResultsToConcepts(get(response.data, index) || [])}]
-          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index == _index), ...(results || [])]
+          newCandidates[algo.id] = [...reject(prev[algo.id], c => c.row.__index === _index), ...(results || [])]
           lookupCandidates(algo.id, results)
           return newCandidates
         })
       })); // wait for completion
-      await new Promise(resolve => setTimeout(resolve, 6000)); // 1s delay
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
     }
     const now = moment()
     setScispacyCandidatesEndedAt(now)
@@ -1879,9 +1879,9 @@ const MapProject = () => {
   const isSelectedForMap = (concept, index) => {
     const selected = mapSelected[index || rowIndex]
     return (
-      (selected?.url == concept.url && selected?.url) ||
+      (selected?.url === concept.url && selected?.url) ||
         (
-          (selected?.id == concept.id && selected?.id) &&
+          (selected?.id === concept.id && selected?.id) &&
             (
               selected.repo?.url === concept.repo?.url ||
                 selected.search_meta?.algorithm === concept?.search_meta?.algorithm
@@ -1953,7 +1953,8 @@ const MapProject = () => {
         logged = true
     }
 
-    setRowStatuses(prev => {
+    setRowStatuses(_prev => {
+      let prev = {..._prev}
       prev.reviewed = without(prev.reviewed, rowIndex)
       if(newValue && newValue !== 'rejected') { // map or exclude or propose
         prev.readyForReview = uniq([...prev.readyForReview, rowIndex])
@@ -2086,7 +2087,7 @@ const MapProject = () => {
           if(offset === 0) {
             const newCandidates = {...prev}
             const results = algoId === 'ocl-scispacy-loinc' ? [{row: __row, results: fromScispacyResultsToConcepts(get(response.data, __row.__index) || [])}] : data
-            newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index == __row.__index), ...(results || [])]
+            newCandidates[algoId] = [...reject(prev[algoId], c => c.row.__index === __row.__index), ...(results || [])]
             lookupCandidates(algoId, get(results, '0.results'))
             return newCandidates
           } else {
@@ -2333,7 +2334,7 @@ const MapProject = () => {
       if(el)
         el.scrollTo({ top: 0, behavior: 'smooth' });
 
-      if(!page || page == 1)
+      if(!page || page === 1)
         getFacets()
       if(items.length > 0)
         setTimeout(() => highlightTexts(items, null, false), 100)
@@ -2831,9 +2832,9 @@ const MapProject = () => {
                       {
                         ['map', 'exclude', 'none', 'propose'].map(_decision => {
                           const isApplied = decisionFilters.includes(_decision)
-                          const isExclude = _decision == 'exclude'
-                          const isNone = _decision == 'none'
-                          const isPropose = _decision == 'propose'
+                          const isExclude = _decision === 'exclude'
+                          const isNone = _decision === 'none'
+                          const isPropose = _decision === 'propose'
                           const count = filter(keys(pickBy(decisions, value => isNone ? !value : value === _decision)), index => rowStatuses[selectedRowStatus].includes(parseInt(index))).length
                           return (
                             <Chip
