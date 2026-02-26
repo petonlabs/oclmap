@@ -2891,6 +2891,7 @@ const MapProject = () => {
                   onCellClick={doubleClickCallback}
                   sx={{
                     borderRadius: '0 0 10px 10px',
+                    borderBottom: 'none',
                     '.MuiDataGrid-columnHeader': {
                       borderRadius: 0,
                       borderTopLeftRadius: '0 !important',

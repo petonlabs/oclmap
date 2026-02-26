@@ -650,7 +650,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
         </List>
         {
           onFetchMore && canFetchMore &&
-            <div className='col-xs-12' style={{textAlign: 'right', marginTop: '4px'}}>
+            <div className='col-xs-12 padding-0' style={{textAlign: 'right', marginTop: '8px'}}>
               <Button disabled={isLoading} size='small' variant='text' sx={{textTransform: 'none'}} onClick={onFetchMore}>
                 {isLoading ? t('map_project.fetching') : t('map_project.fetch_more')}
               </Button>
