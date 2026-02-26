@@ -2490,7 +2490,7 @@ const MapProject = () => {
     let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
     let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
-    if(isNumber(__index) && repoVersion && project.url && !analysis[__index] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
+    if(isNumber(__index) && repoVersion && project?.url && !analysis[__index] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
       markAlgo(__index, 'recommend', 0)
       let rowData = prepareRow(__row, true, true)
       const payload = {
