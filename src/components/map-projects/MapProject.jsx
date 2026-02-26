@@ -1697,7 +1697,7 @@ const MapProject = () => {
       __candidates = times(CANDIDATES_LIMIT, i => __candidates[i])
       forEach(__candidates, (candidate, i) => {
         if(candidate?.id) {
-          const isBridge = algoId === 'ocl-ciel-briddge'
+          const isBridge = algoId === 'ocl-ciel-bridge'
           candidates[`__result_${algoKey}_${twoDigit(i + 1)}__`] = candidate?.id ?
             (
               isBridge ?
