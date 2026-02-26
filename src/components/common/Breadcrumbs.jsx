@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next'
+import Tooltip from '@mui/material/Tooltip'
 import RepoIcon from '../repos/RepoIcon';
 import ConceptIcon from '../concepts/ConceptIcon';
 import MappingIcon from '../mappings/MappingIcon';
@@ -7,8 +9,10 @@ import RepoVersionButton from '../repos/RepoVersionButton'
 import RepoTooltip from '../repos/RepoTooltip'
 import Box from '@mui/material/Box';
 import OwnerButton from './OwnerButton'
+import { copyToClipboard } from '../../common/utils'
 
 const Breadcrumbs = ({owner, ownerType, repo, repoVersion, repoURL, concept, mapping, noIcons, color, fontSize, size, ownerURL, nested}) => {
+  const { t } = useTranslation()
   const iconProps = {color: 'secondary', style: {marginRight: '8px', width: '0.8em'}}
   const hideParents = Boolean((concept?.id || mapping?.id) && nested)
   return (
@@ -91,15 +95,18 @@ const Breadcrumbs = ({owner, ownerType, repo, repoVersion, repoURL, concept, map
                   color={concept.retired? 'error': 'primary'}
                 />
             }
-            <span className='searchable' style={{
-              maxWidth: hideParents ? 'calc(100% - 125px)' : '125px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              fontSize: '14px',
-              whiteSpace: 'nowrap',
-            }}>
-              {concept.id}
-            </span>
+            <Tooltip title={t('common.click_to_copy')}>
+              <span className='searchable' style={{
+                maxWidth: hideParents ? 'calc(100% - 125px)' : '125px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontSize: '14px',
+                whiteSpace: 'nowrap',
+                cursor: 'copy'
+              }} onClick={() => copyToClipboard(concept.id)}>
+                {concept.id}
+              </span>
+            </Tooltip>
           </React.Fragment>
       }
       {
@@ -114,15 +121,18 @@ const Breadcrumbs = ({owner, ownerType, repo, repoVersion, repoURL, concept, map
                   color={mapping.retired? 'error': 'primary'}
                 />
             }
+            <Tooltip title={t('common.click_to_copy')}>
             <span className='searchable' style={{
               maxWidth: hideParents ? 'calc(100% - 125px)' : '125px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               fontSize: '14px',
               whiteSpace: 'nowrap',
-            }}>
+                cursor: 'copy'
+            }} onClick={() => copyToClipboard(mapping.id)}>
               {mapping.id}
             </span>
+            </Tooltip>
           </React.Fragment>
       }
     </Box>
