@@ -99,12 +99,14 @@
     "download_csv": "下載 CSV",
     "advance_settings": "高级设置",
     "sort": "排序",
-    "group": "分组"
+    "group": "分组",
+    "action": "操作"
   },
   "errors": {
-    "404": "很抱歉，未能找到您的页面。",
     "401": "需要登录",
-    "403": "尚未获得访问该页面的权限"
+    "403": "尚未获得访问该页面的权限",
+    "404": "很抱歉，未能找到您的页面。",
+    "network_error": "网络错误"
   },
   "dashboard": {
     "name": "仪表盘",
@@ -254,7 +256,10 @@
     "repo_summary_is_calculating": "正在计算处理存储库摘要数据，请请稍后再回来查看。",
     "no_overview": "所有者尚未为该存储库创建概述页面",
     "suggested_sources": "建议的来源",
-    "collection": "集合"
+    "collection": "集合",
+    "property": "属性",
+    "properties_filters_subheader": "仓库属性",
+    "additional_metadata_filters_subheader": "附加元数据"
   },
   "org": {
     "my": "我的组织机构",
@@ -289,7 +294,6 @@
     "last_name": "姓氏",
     "company": "公司",
     "email_address": "电子邮件地址",
-    "location": "位置",
     "profile_update_success": "已成功更新个人资料",
     "profile_update_failure": "更新个人资料时出现错误。",
     "copy_api_token": "复制 API 令牌",
@@ -329,7 +333,9 @@
     "search_highlight": "搜索亮点",
     "search_results": "搜索结果",
     "search_score": "搜索评分",
-    "search_raw_score": "原始搜索评分"
+    "search_raw_score": "原始搜索评分",
+    "list_view": "列表视图",
+    "table_view": "表格视图"
   },
   "url_registry": {
     "url_registry": "规范型 URL 注册库",
@@ -534,7 +540,36 @@
     "group_by_match_quality": "匹配质量",
     "ocl_semantic_algorithm": "OCL 语义算法",
     "algorithm": "算法",
-    "column_send_to_ai_assistant": "发送给 AI 助手"
+    "column_send_to_ai_assistant": "发送给 AI 助手",
+    "concurrent_requests": "并发请求",
+    "api_url": "API URL",
+    "api_token": "API 令牌",
+    "lookup_required": "需要查找",
+    "select_an_algorithm": "选择算法",
+    "ocl_search_algorithm": "OCL 搜索算法",
+    "ocl_ciel_bridge_algorithm": "OCL CIEL Bridge 术语",
+    "ocl_scispacy_loinc_algorithm": "OCL ScispaCy LOINC 算法",
+    "ocl_custom_algorithm": "OCL 自定义算法",
+    "algorithms": "算法",
+    "algo_conflicting_id": "冲突 ID",
+    "algo_conflicting_name": "冲突名称",
+    "lookup_configuration": "查找配置",
+    "lookup_configuration_url": "仓库 URL",
+    "lookup_configuration_token": "令牌",
+    "lookup_configuration_description": "配置用于查找操作的源/代码系统，以获取候选项定义。",
+    "refresh_candidates_tooltip": "刷新候选项",
+    "group_candidates": "分组依据",
+    "sort_candidates": "排序",
+    "created_by_log": "<0>{{created_by}}</0> 在 <1>{{owner}}</1> 工作区创建了映射项目",
+    "candidates_metadata": "候选项元数据",
+    "full_project_export": "完整项目导出",
+    "select_an_algo": "选择算法",
+    "selected_rows": "已选行",
+    "all_rows": "所有行",
+    "out_of": "共",
+    "retrieve_candidates": "获取候选项",
+    "retrieve_candidates_helper_text": "你的项目已配置为使用以下匹配算法：",
+    "all_candidates": "所有候选项"
   },
   "app": {
     "web_version": "Web 版本",
