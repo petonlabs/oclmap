@@ -1255,6 +1255,7 @@ const MapProject = () => {
     setBulkAIAnalysisEndedAt(now)
     setEndMatchingAt(now)
     setLoadingMatches(false)
+    setIsLoadingInDecisionView(false)
   }
 
   const fetchBulkBridgeCandidates = async (_rows, algo) => {
