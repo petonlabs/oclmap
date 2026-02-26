@@ -1249,9 +1249,7 @@ const MapProject = () => {
     for (let index = 0; index < _rows.length; index++) {
       if (abortRef.current) break;
 
-      await fetchRecommendation(_rows[index]); // wait for completion
-      if(index !== _rows.length -1)
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      await fetchRecommendation(_rows[index]);
     }
     const now = moment()
     setBulkAIAnalysisEndedAt(now)
@@ -2486,11 +2484,11 @@ const MapProject = () => {
       console.error('AI ASSISTANT is not enabled for you.')
       return false
     }
-    markAlgo(__index, 'recommend', 0)
     let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
     let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
     let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
     if(isNumber(__index) && repoVersion && project.url && !analysis[__index] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
+      markAlgo(__index, 'recommend', 0)
       let rowData = prepareRow(__row, true, true)
       const payload = {
         project: getProjectMetadata(),
@@ -2525,6 +2523,8 @@ const MapProject = () => {
         setAlert({message: errorMessage, severity: 'error'})
         return false
       }
+    } else {
+      markAlgo(__index, 'recommend', analysis[__index] ? 1 : -3)
     }
     return false
   }
