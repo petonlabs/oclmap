@@ -42,13 +42,13 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
   return (
     <>
     <Card variant='outlined' sx={sx}>
-      <CardContent sx={{padding: '8px !important'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-6px'}}>
+      <CardContent sx={{padding: '4px !important'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '-4px'}}>
     <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0 }} component='span'>
     {t('map_project.ocl_ai_candidates_analysis')}
     </Typography>
-    <IconButton onClick={onClose} size='small' color='secondary'>
-    <CloseIcon fontSize='small' />
+    <IconButton onClick={onClose} size='small' color='secondary' sx={{padding: '4px'}}>
+      <CloseIcon sx={{fontSize: '1rem'}} />
     </IconButton>
     </div>
     {
@@ -68,7 +68,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
             isAdminUser() &&
               <Tooltip title={t('map_project.view_raw_json')} placement='right'>
                 <span>
-                  <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: 0, marginLeft: '4px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
+                  <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: '4px', marginLeft: '4px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>
                     <DataObjectIcon fontSize='inherit' />
                   </IconButton>
                 </span>
