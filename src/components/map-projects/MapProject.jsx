@@ -1151,7 +1151,7 @@ const MapProject = () => {
                   if(_index > -1)
                     newCandidates[algo.id][_index].results = []
                   else
-                    newCandidates[algo.id] = [...newCandidates[algo.id], {row: prepareRow(row), results: []}]
+                    newCandidates[algo.id] = [...(newCandidates[algo.id] || []), {row: prepareRow(row), results: []}]
                 })
                 return newCandidates
               })
