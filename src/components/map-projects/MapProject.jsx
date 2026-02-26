@@ -1279,7 +1279,7 @@ const MapProject = () => {
           return newCandidates
         })
       })); // wait for completion
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+      await new Promise(resolve => setTimeout(resolve, 200)); // 1s delay
     }
     const now = moment()
     setBridgeCandidatesEndedAt(now)
@@ -1309,7 +1309,7 @@ const MapProject = () => {
           return newCandidates
         })
       })); // wait for completion
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1s delay
+      await new Promise(resolve => setTimeout(resolve, 500)); // 1s delay
     }
     const now = moment()
     setScispacyCandidatesEndedAt(now)
