@@ -38,7 +38,7 @@ const IkonButton = ({title, icon, onClick, color, disabled, id}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure, isStaff}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure, isStaff, loadingMatches}) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const downloadOpen = Boolean(anchorEl);
@@ -53,19 +53,19 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           onClick={() => setConfigure(!configure)}
           title={t('map_project.configure_mapping_project_tooltip')}
           icon={<SettingsIcon />}
+          disabled={loadingMatches}
         />
         <IkonButton
           color={isProjectsLogOpen ? 'primary' : 'secondary'}
           onClick={onProjectLogsClick}
           title={t('map_project.project_logs_tooltip')}
-          disabled={!project?.id}
           icon={<TimelineIcon />}
         />
         <IkonButton
           color='secondary'
           onClick={onSave}
           title={t('map_project.save_this_project')}
-          disabled={!owner || !file?.name || isSaving}
+          disabled={!owner || !file?.name || isSaving || loadingMatches}
           icon={<SaveIcon />}
         />
         <IkonButton
@@ -74,12 +74,13 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           onClick={event => setAnchorEl(event.currentTarget)}
           title={t('map_project.download_this_project_as_csv')}
           icon={<DownloadIcon />}
+          disabled={loadingMatches}
         />
         {
           project?.id &&
             <IkonButton
               color='secondary'
-              disabled={isSaving}
+              disabled={isSaving || loadingMatches}
               onClick={onDelete}
               title={t('map_project.delete_this_project')}
               icon={<DeleteIcon />}

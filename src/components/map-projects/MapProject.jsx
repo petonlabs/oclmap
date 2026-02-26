@@ -2716,33 +2716,31 @@ const MapProject = () => {
                   }
                 </span>
             }
-            {
-              rows?.length > 0 && !loadingMatches &&
-                <Controls
-                  isStaff={isStaff}
-                  project={project}
-                  onDownload={onDownloadClick}
-                  onSave={onSave}
-                  onDelete={() => setDeleteProject(true)}
-                  owner={owner}
-                  file={file}
-                  isSaving={isSaving}
-                  onImport={isEmpty(mapSelected) ? false : () => setOpenImportToCollection(true)}
-                  importResponse={imports[0]}
-                  onDownloadImportReport={downloadImportReport}
-                  onProjectLogsClick={() => {
-                    const newValue = !showProjectLogs
-                    if(newValue) {
-                      setConfigure(false)
-                      onCloseDecisions()
-                    }
-                    setShowProjectLogs(newValue)
-                  }}
-                  isProjectsLogOpen={showProjectLogs}
-                  configure={configure}
-                  setConfigure={setConfigure}
-                />
-            }
+              <Controls
+                isStaff={isStaff}
+                project={project}
+                onDownload={onDownloadClick}
+                onSave={onSave}
+                onDelete={() => setDeleteProject(true)}
+                owner={owner}
+                file={file}
+                loadingMatches={loadingMatches}
+                isSaving={isSaving}
+                onImport={isEmpty(mapSelected) ? false : () => setOpenImportToCollection(true)}
+                importResponse={imports[0]}
+                onDownloadImportReport={downloadImportReport}
+                onProjectLogsClick={() => {
+                  const newValue = !showProjectLogs
+                  if(newValue) {
+                    setConfigure(false)
+                    onCloseDecisions()
+                  }
+                  setShowProjectLogs(newValue)
+                }}
+                isProjectsLogOpen={showProjectLogs}
+                configure={configure}
+                setConfigure={setConfigure}
+              />
           </div>
         </Paper>
         {
