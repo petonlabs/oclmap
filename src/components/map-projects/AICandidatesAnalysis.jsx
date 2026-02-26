@@ -104,7 +104,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
           </pre>
         </DialogContent>
       <DialogActions sx={{p: 3}}>
-        <Button onClick={() => setOpenDetails(false)}>Close</Button>
+        <Button onClick={() => setOpenDetails(false)}>{t('common.close')}</Button>
       </DialogActions>
 
       </Dialog>

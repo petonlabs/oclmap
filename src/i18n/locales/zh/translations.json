@@ -100,7 +100,9 @@
     "advance_settings": "高级设置",
     "sort": "排序",
     "group": "分组",
-    "action": "操作"
+    "action": "操作",
+    "remove": "移除",
+    "at": "于"
   },
   "errors": {
     "401": "需要登录",
@@ -569,10 +571,14 @@
     "out_of": "共",
     "retrieve_candidates": "获取候选项",
     "retrieve_candidates_helper_text": "你的项目已配置为使用以下匹配算法：",
-    "all_candidates": "所有候选项"
+    "all_candidates": "所有候选项",
+    "rows": "行",
+    "finished_running": "已完成运行",
+    "finished_reranking": "已完成重新排序"
   },
   "app": {
     "web_version": "Web 版本",
     "api_version": "API 版本"
-  }
+  },
+  "unknown_error": "未知错误"
 }

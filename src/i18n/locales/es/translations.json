@@ -101,7 +101,9 @@
     "custom": "Personalizado",
     "apply": "Aplicar",
     "reset": "Restablecer",
-    "checking_auth": "Verificando autenticación..."
+    "checking_auth": "Verificando autenticación...",
+    "remove": "Eliminar",
+    "at": "a las"
   },
   "errors": {
     "401": "Se requiere iniciar sesión",
@@ -544,7 +546,10 @@
     "out_of": "de",
     "retrieve_candidates": "Recuperar candidatos",
     "retrieve_candidates_helper_text": "Su proyecto está configurado para usar los siguientes algoritmos de coincidencia:",
-    "all_candidates": "Todos los candidatos"
+    "all_candidates": "Todos los candidatos",
+    "rows": "filas",
+    "finished_running": "Ejecución finalizada",
+    "finished_reranking": "Reordenamiento finalizado"
   },
   "app": {
     "web_version": "Versión Web",
@@ -576,5 +581,6 @@
     "resolve_failed_without_entry_global": "{{url}} no coincidió con una entrada en el Registro Global",
     "target_owner": "Propietario de destino",
     "view_canonical_url_registry": "Ver registro de URL canónicas"
-  }
+  },
+  "unknown_error": "Error desconocido"
 }

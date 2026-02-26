@@ -71,9 +71,9 @@ const Discuss = ({ logs, onAdd }) => {
       return <b>{log.description}</b>
     }
     if(log.action === 'algo_finished')
-      return <>Finished running <b>{log.extras.algo}</b></>
+      return <>{t('map_project.finished_running')} <b>{log.extras.algo}</b></>
     if(log.action === 'rerank_finished')
-      return <>Finished <b>Reranking</b></>
+      return <>{t('map_project.finished_reranking')}</>
     return log.description || startCase(log.action)
   }
 
@@ -171,7 +171,7 @@ const Discuss = ({ logs, onAdd }) => {
                           </Typography>
                       }
                       <Typography sx={{fontSize: '12px', color: 'rgba(0, 0, 0, 0.7)'}}>
-                        {log.user} at {moment(log.created_at).format('ll LTS')}
+                        {log.user} {t('common.at')} {moment(log.created_at).format('ll LTS')}
                       </Typography>
                     </TimelineContent>
                 }

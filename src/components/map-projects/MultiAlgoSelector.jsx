@@ -384,7 +384,7 @@ export default function MultiAlgoSelector({
                                 updateSelected(sel.__key, { batch_size: clampInt(e.target.value, 1, 1000) })
                               }
                               InputProps={{
-                                endAdornment: <InputAdornment position="end">rows</InputAdornment>,
+                                endAdornment: <InputAdornment position="end">{t('map_project.rows')}</InputAdornment>,
                               }}
                             />
 
@@ -399,7 +399,7 @@ export default function MultiAlgoSelector({
                                 })
                               }
                             />
-                            <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' checked={sel.lookup_required || false} />} label="Lookup Required" onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
+                            <FormControlLabel sx={{'.MuiTypography-root': {fontSize: '14px'}}} control={<Checkbox size='small' checked={sel.lookup_required || false} />} label={t('map_project.lookup_required')} onChange={e => updateSelected(sel.__key, {lookup_required: e.target.checked})} />
                           </Stack>
 
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
