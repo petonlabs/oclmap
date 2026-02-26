@@ -2981,7 +2981,7 @@ const MapProject = () => {
                 <div className='col-xs-12 padding-0' style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                   <Typography component='span' sx={{fontSize: '20px', color: 'surface.dark', fontWeight: 600}}>
                     {t('map_project.mapping_decisions')}
-                    <Chip sx={{padding: '0 6px', marginLeft: '12px'}} variant='outlined' {...VIEWS[getStateFromIndex(rowIndex)]} label={t('map_project.view_' + getStateFromIndex(rowIndex).toLowerCase())} />
+                    <Chip sx={{padding: '0 6px', marginLeft: '12px'}} size='small' variant='outlined' {...VIEWS[getStateFromIndex(rowIndex)]} label={t('map_project.view_' + getStateFromIndex(rowIndex).toLowerCase())} />
                   </Typography>
                   <CloseIconButton color='secondary' onClick={onCloseDecisions} />
                 </div>

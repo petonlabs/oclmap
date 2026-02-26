@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) => {
   const { t } = useTranslation();
-  let width = '25%'
+  let styles = {margin: '0 2px', width: '100px', padding: '4px'}
   return (
     <div className='col-xs-12 padding-0' style={{display: 'flex', margin: '8px 0', alignItems: 'center'}}>
       <Typography component='span' sx={{color: 'surface.dark', fontWeight: 600, marginRight: '24px', fontSize: '14px'}}>
@@ -14,7 +14,8 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
       </Typography>
       <div style={{display: 'flex', alignItems: 'center', width: 'calc(100% - 80px)'}}>
         <Chip
-          sx={{margin: '0 5px', width: width}}
+          size='small'
+          sx={{...styles, margin: '0 2px 0 0'}}
           label={t('map_project.decision_none')}
           color='secondary'
           variant={!selected || selected === 'none' ? 'contained' : 'outlined'}
@@ -22,7 +23,8 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
           icon={!selected || selected === 'none' ? <CheckIcon fontSize='small' /> : undefined}
         />
         <Chip
-          sx={{margin: '0 5px', width: width}}
+          size='small'
+          sx={styles}
           label={t('map_project.decision_map')}
           color='primary'
           variant={selected === 'map' ? 'contained' : 'outlined'}
@@ -31,7 +33,8 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
           disabled={disabledMap}
         />
         <Chip
-          sx={{margin: '0 5px', width: width}}
+          size='small'
+          sx={styles}
           label={t('map_project.decision_propose')}
           color='warning'
           variant={selected === 'propose' ? 'contained' : 'outlined'}
@@ -40,7 +43,8 @@ const DecisionSelector = ({selected, onChange, disabledMap, disabledPropsed}) =>
           disabled={disabledPropsed}
         />
         <Chip
-          sx={{margin: '0 5px', width: width}}
+          size='small'
+          sx={{...styles, margin: '0 0 0 2px'}}
           label={t('map_project.decision_exclude')}
           color='error'
           variant={selected === 'exclude' ? 'contained' : 'outlined'}
