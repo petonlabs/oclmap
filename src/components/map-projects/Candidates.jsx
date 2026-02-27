@@ -27,7 +27,6 @@ import SortIcon from '@mui/icons-material/Sort';
 import GroupIcon from '@mui/icons-material/Layers';
 
 import find from 'lodash/find'
-import get from 'lodash/get'
 import isEmpty from 'lodash/isEmpty'
 import flatten from 'lodash/flatten'
 import values from 'lodash/values'
@@ -307,7 +306,7 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
   let allCandidates = compact(rawResults)
   const isNoneLoaded = every(rawResults, r => r === null)
   const canFetchMore = allCandidates?.length > 0
-  let AIRecommendedCandidateId = get(analysis, 'primary_candidate.concept_id')
+  let AIRecommendedCandidateId = analysis?.output?.primary_candidate?.concept_id || analysis?.primary_candidate?.concept_id
   const algoStagesValue = values(omit(rowStage, 'recommend'))
   const areAlgoRun = uniq(algoStagesValue).length === 1 && algoStagesValue[0] === 1
   const { label } = getRowProgressLabel(rowStage, algosSelected);

@@ -21,6 +21,7 @@ import get from 'lodash/get'
 const AICandidatesAnalysis = ({ analysis, onClose, sx, isCoreUser }) => {
   const { t } = useTranslation();
   const [openDetails, setOpenDetails] = React.useState(false)
+  let output = analysis?.output || analysis
 
   const getModelName = () => {
     let model = analysis?.model || 'AI Model'
@@ -30,9 +31,9 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx, isCoreUser }) => {
   }
 
   const getRecommendationTitle = () => {
-    let recommendation = analysis?.recommendation
-    if(recommendation && analysis?.primary_candidate?.match_strength){
-      recommendation += ` (${analysis.primary_candidate.match_strength})`
+    let recommendation = output?.recommendation
+    if(recommendation && output?.primary_candidate?.match_strength){
+      recommendation += ` (${output.primary_candidate.match_strength})`
     }
     return recommendation
   }
@@ -55,10 +56,10 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx, isCoreUser }) => {
       <>
       <Typography gutterBottom component='p' sx={{mb: 0, fontSize: 12, marginTop: '-2px'}}>
       {
-        get(analysis, 'recommendation') &&
+        get(output, 'recommendation') &&
           <span style={{fontWeight: 'bold', marginRight: '8px'}}>{getRecommendationTitle()}:</span>
       }
-      {get(analysis, 'rationale.narrative') || get(analysis, 'rationale')}
+      {get(output, 'rationale.narrative') || get(output, 'rationale')}
       </Typography>
         <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0, textAlign: 'right' }}>
           {getModelName()}

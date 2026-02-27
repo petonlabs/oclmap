@@ -1723,7 +1723,7 @@ const MapProject = () => {
       const rowStateLabel = VIEWS[rowState].label
       let concept = mapSelected[index]
       let _repo = concept?.repo
-      const aiRecommendation = get(analysis, index)
+      const aiRecommendation = get(analysis, index)?.output || get(analysis, index)
       const aiCandidate = get(aiRecommendation, 'primary_candidate')
       const aiCandidateID = aiCandidate?.concept_id
       const aiScore = compact([aiCandidate?.confidence_level, aiCandidate?.match_strength]).join(':')
@@ -2521,7 +2521,7 @@ const MapProject = () => {
         }
 
         markAlgo(__index, 'recommend', 1)
-        log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
+        log({created_at: timestamp, action: 'AIRecommendation', description: get(response.data, 'output.rationale') || get(response.data, 'rationale'), extras: {...response.data, model: find(AIModels, {id: AIModel})}}, __index)
         setAnalysis(prev => ({...prev, [__index]: {...response.data, model: AIModel, timestamp: timestamp, user: user.username || user.id}}))
         return true
       } catch (err) {
