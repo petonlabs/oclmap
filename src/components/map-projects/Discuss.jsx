@@ -12,8 +12,6 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button'
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import CommentIcon from '@mui/icons-material/Message';
 import MapIcon from '@mui/icons-material/Link';
 import UnmapIcon from '@mui/icons-material/LinkOff';
@@ -29,21 +27,7 @@ import map from 'lodash/map'
 import startCase from 'lodash/startCase'
 import orderBy from 'lodash/orderBy'
 
-
-const CommentLog = ({ log }) => {
-  return (
-    <Card variant='outlined' sx={{width: '100%'}}>
-      <CardContent sx={{padding: 0}}>
-        <Typography component='h6' sx={{backgroundColor: '#f6f8fa', padding: '4px 4px 4px 16px', margin: 0, borderBottom: '1px solid #d0d7de', fontSize: '14px'}}>
-          <b>{log.user}</b> <span style={{color: '#59636e'}}>{moment(log.created_at).fromNow()}</span>
-        </Typography>
-        <div className='col-xs-12' style={{padding: '16px'}}>
-          {log.description}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+import Comment from './Comment'
 
 
 const Discuss = ({ logs, onAdd }) => {
@@ -140,7 +124,14 @@ const Discuss = ({ logs, onAdd }) => {
                 <TimelineSeparator sx={isComment ? {alignItems: 'flex-start'} : {}}>
                   {
                     isComment ?
-                      <CommentLog log={log} /> :
+                      <Comment
+                        header={
+                          <>
+                            <b>{log.user}</b> <span style={{color: '#59636e'}}>{moment(log.created_at).fromNow()}</span>
+                          </>
+                        }
+                        body={log.description}
+                      /> :
                     <Tooltip title={startCase(log.action)}>
                     <TimelineDot color={dotColor} variant="outlined" sx={{margin: 0}}>
                         {getIcon(log, dotColor)}

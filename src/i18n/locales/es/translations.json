@@ -549,7 +549,13 @@
     "all_candidates": "Todos los candidatos",
     "rows": "filas",
     "finished_running": "Ejecución finalizada",
-    "finished_reranking": "Reordenamiento finalizado"
+    "finished_reranking": "Reordenamiento finalizado",
+    "ocl_ai_assistant": "ocl-ai-assistant",
+    "assessment": "Assessment",
+    "requested_by": "Requested by",
+    "primary": "Primary",
+    "alternates": "Alternates",
+    "model": "Model"
   },
   "app": {
     "web_version": "Versión Web",
