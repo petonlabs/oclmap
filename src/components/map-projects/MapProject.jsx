@@ -160,6 +160,7 @@ const MapProject = () => {
   const [candidatesScore, setCandidatesScore] = React.useState({recommended: 99, available: 70})
   const [filters, setFilters] = React.useState({})
   const [AIModel, setAIModel] = React.useState('')
+  const [promptTemplate, setPromptTemplate] = React.useState(false)
 
   const abortRef = React.useRef(false);
 
@@ -2458,6 +2459,7 @@ const MapProject = () => {
         setAIModel(defaultModel?.id)
         return
       }
+      setPromptTemplate(response.data)
       setAIModel(find(_models, {id: response.data.default_model})?.id || defaultModel?.id)
     })
   }
@@ -2494,25 +2496,22 @@ const MapProject = () => {
       console.error('AI ASSISTANT is not enabled for you.')
       return false
     }
-    let _candidates = flatten(map(filter(selectedAlgoIds, algoId => !['ocl-ciel-bridge', 'ocl-scispacy-loinc'].includes(algoId)), algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
-    let _bridgeCandidates = find(allCandidatesRef.current['ocl-ciel-bridge'], c => c.row?.__index === __index)?.results || []
-    let _scispacyCandidates = find(allCandidatesRef.current['ocl-scispacy-loinc'], c => c.row?.__index === __index)?.results || []
-    if(isNumber(__index) && repoVersion && !analysis[__index] && [..._candidates, ..._bridgeCandidates, ..._scispacyCandidates]?.length > 0) {
+    let _candidates = flatten(map(selectedAlgoIds, algoId => find(allCandidatesRef.current[algoId], c => c.row?.__index === __index)?.results || []))
+    if(isNumber(__index) && repoVersion && !analysis[__index] && _candidates?.length > 0) {
       markAlgo(__index, 'recommend', 0)
       let rowData = prepareRow(__row, true, true)
       const payload = {
-        project: getProjectMetadata(),
-        row: rowData.row,
-        metadata: rowData.metadata,
-        candidates: _candidates,
-        bridgeCandidates: _bridgeCandidates,
-        scispacyCandidates: _scispacyCandidates,
-        model: AIModel,
+        variables: {
+          project: getProjectMetadata(),
+          row: rowData.row,
+          metadata: rowData.metadata,
+          candidates: [..._candidates.map(c => omit(c, '_source'))],
+        }
       }
       const service = APIService.new()
       service.URL = AI_ASSISTANT_API_URL
       try {
-        const response = await service.appendToUrl('/match/$recommend/').post(payload)
+        const response = await service.appendToUrl(`/prompts/${promptTemplate.key}/invoke/`).post(payload)
         let timestamp = moment().toDate()
         if(response?.detail) {
           markAlgo(__index, 'recommend', -2)
