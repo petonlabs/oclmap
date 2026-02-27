@@ -576,11 +576,11 @@
     "finished_running": "已完成运行",
     "finished_reranking": "已完成重新排序",
     "ocl_ai_assistant": "ocl-ai-assistant",
-    "assessment": "Assessment",
-    "requested_by": "Requested by",
-    "primary": "Primary",
-    "alternates": "Alternates",
-    "model": "Model"
+    "assessment": "评估",
+    "requested_by": "请求者",
+    "primary": "主要",
+    "alternates": "备选",
+    "model": "模型"
   },
   "app": {
     "web_version": "Web 版本",

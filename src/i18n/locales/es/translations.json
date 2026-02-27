@@ -551,11 +551,11 @@
     "finished_running": "Ejecución finalizada",
     "finished_reranking": "Reordenamiento finalizado",
     "ocl_ai_assistant": "ocl-ai-assistant",
-    "assessment": "Assessment",
-    "requested_by": "Requested by",
-    "primary": "Primary",
-    "alternates": "Alternates",
-    "model": "Model"
+    "assessment": "Evaluación",
+    "requested_by": "Solicitado por",
+    "primary": "Principal",
+    "alternates": "Alternativas",
+    "model": "Modelo"
   },
   "app": {
     "web_version": "Versión Web",
