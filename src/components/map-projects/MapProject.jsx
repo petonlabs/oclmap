@@ -231,7 +231,7 @@ const MapProject = () => {
   const SCISPACY_API_URL = window.SCISPACY_LOINC_API_URL || process.env.SCISPACY_LOINC_API_URL
   const OCL_ONLINE_API_URL = window.OCL_ONLINE_API_URL || process.env.OCL_ONLINE_API_URL
   const inAIAssistantGroup = Boolean(hasAuthGroup(user, 'mapper_ai_assistant') && AI_ASSISTANT_API_URL)
-  const isStaff = user?.is_staff
+  const isCoreUser = hasAuthGroup(user, 'core_user')
   const CANDIDATES_LIMIT = 15
   const canBridge = bridgeRef?.current?.canBridge()
   const canScispacy = Boolean(canBridge && SCISPACY_API_URL && toggles.SCISPACY_LOINC_TOGGLE === true)
@@ -2717,7 +2717,7 @@ const MapProject = () => {
                 </span>
             }
               <Controls
-                isStaff={isStaff}
+                isCoreUser={isCoreUser}
                 project={project}
                 onDownload={onDownloadClick}
                 onSave={onSave}
@@ -3095,6 +3095,7 @@ const MapProject = () => {
                       inAIAssistantGroup={inAIAssistantGroup}
                       algosSelected={algosSelected}
                       conceptCache={conceptCache}
+                      isCoreUser={isCoreUser}
                     />
                 }
                 {

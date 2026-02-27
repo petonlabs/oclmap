@@ -38,7 +38,7 @@ const IkonButton = ({title, icon, onClick, color, disabled, id}) => {
   )
 }
 
-const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure, isStaff, loadingMatches}) => {
+const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving, onImport, importResponse, onDownloadImportReport, onProjectLogsClick, isProjectsLogOpen, configure, setConfigure, isCoreUser, loadingMatches}) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const downloadOpen = Boolean(anchorEl);
@@ -136,7 +136,7 @@ const Controls = ({project, onDownload, onSave, onDelete, owner, file, isSaving,
           </ListItemIcon>
           <ListItemText>{t('common.download_csv')}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => {setAnchorEl(null); onDownload('candidates_metadata');}} disabled={!isStaff}>
+        <MenuItem onClick={() => {setAnchorEl(null); onDownload('candidates_metadata');}} disabled={!isCoreUser}>
           <ListItemIcon>
             <JSONIcon sx={{fontSize: '1.25rem'}} />
           </ListItemIcon>

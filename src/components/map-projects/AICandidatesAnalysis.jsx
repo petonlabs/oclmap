@@ -17,10 +17,8 @@ import DataObjectIcon from '@mui/icons-material/DataObject';
 
 import get from 'lodash/get'
 
-import { isAdminUser } from '../../common/utils'
 
-
-const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
+const AICandidatesAnalysis = ({ analysis, onClose, sx, isCoreUser }) => {
   const { t } = useTranslation();
   const [openDetails, setOpenDetails] = React.useState(false)
 
@@ -65,7 +63,7 @@ const AICandidatesAnalysis = ({ analysis, onClose, sx }) => {
         <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 13, mb: 0, textAlign: 'right' }}>
           {getModelName()}
           {
-            isAdminUser() &&
+            isCoreUser &&
               <Tooltip title={t('map_project.view_raw_json')} placement='right'>
                 <span>
                   <IconButton color='primary' size='small' disabled={!analysis} sx={{padding: '4px', marginLeft: '4px', marginTop: '-2px'}} onClick={() => setOpenDetails(!openDetails)}>

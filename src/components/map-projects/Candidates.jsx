@@ -184,7 +184,7 @@ const SubHeader = ({count, onClick, isCollapsed, header, indicatorColor, isFirst
 }
 
 
-const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache, byAlgorithm, isFirst}) => {
+const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, bgColor, bucketId, display, onDisplayChange, noToolbar, toolbarControl, repoVersion, alignToolbarLeft, rightControl, analysis, showAnalysis, openAnalysis, onCloseAnalysis, AIRecommendedCandidateId, locales, scispacy, showAlgo, collapsed, onCollapse, candidatesScore, algoScoreFirst, conceptCache, byAlgorithm, isFirst, isCoreUser}) => {
   const results = {total: onFetchMore ? candidates?.length : 1, results: candidates || []}
   const isCollapsed = collapsed.includes(bucketId)
   const onCollapseToggle = () => {
@@ -248,7 +248,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
         subheader={
           (showAnalysis && openAnalysis) ? (
             <div className='col-xs-12 padding-0' style={{display: 'inline-flex', flexDirection: 'column'}}>
-              <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}}/>
+              <AICandidatesAnalysis analysis={analysis} onClose={onCloseAnalysis} sx={{marginBottom: '4px'}} isCoreUser={isCoreUser} />
               {
                 showHeader &&
                   <SubHeader count={count} onClick={onCollapseToggle} isCollapsed={isCollapsed} header={header} indicatorColor={bgColor} isFirst={isFirst} />
@@ -293,7 +293,7 @@ const CandidateList = ({candidates, header, rowIndex, orderBy, order, setShowIte
   )
 }
 
-const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup, algosSelected, conceptCache}) => {
+const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showItem, setShowHighlights, isSelectedForMap, onMap, onFetchMore, isLoading, candidatesScore, repoVersion, analysis, onFetchRecommendation, appliedFacets, setAppliedFacets, filters, facets, columns, defaultFilters, locales, models, selectedModel, onModelChange, onRefreshClick, rowStage, inAIAssistantGroup, algosSelected, conceptCache, isCoreUser}) => {
   const { t } = useTranslation();
   const [sortBy, setSortBy] = React.useState('search_meta.search_normalized_score')
   const [groupBy, setGroupBy] = React.useState('quality')
@@ -331,7 +331,8 @@ const Candidates = ({rowIndex, alert, setAlert, candidates, setShowItem, showIte
     locales: locales,
     candidatesScore: candidatesScore,
     algoScoreFirst: algoScoreFirst,
-    conceptCache: conceptCache
+    conceptCache: conceptCache,
+    isCoreUser: isCoreUser
   }
 
   const onSort = option => {
