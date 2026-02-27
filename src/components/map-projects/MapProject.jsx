@@ -2288,18 +2288,25 @@ const MapProject = () => {
     return find(keys(conceptCache), url => url === id || url.endsWith(`/concepts/${id}/`) || url.endsWith(`/concepts/${encodeURIComponent(id)}/`)) || false
   }
 
+  const getLookupService = () => {
+    let service = APIService.new()
+    if(lookupConfig?.url) {
+      if(lookupConfig.url.startsWith('http'))
+        service.URL = lookupConfig.url
+      else
+        service.overrideURL(lookupConfig.url)
+    } else {
+      service.overrideURL(repoVersion.version_url)
+    }
+    return service.appendToUrl('concepts/')
+  }
+
   const lookupCode = (code) => {
     if (getKeyFromCache(code))
       return
     if(code && (lookupConfig?.url || repoVersion?.version_url)) {
-      let service = APIService.new()
-      if(lookupConfig?.url) {
-        service.URL = lookupConfig.url
-      } else {
-        service.overrideURL(repoVersion.version_url)
-      }
-
-      service.appendToUrl(`concepts/${code}/`).get(lookupConfig?.token).then(response => {
+      let service = getLookupService()
+      service.appendToUrl(`${code}/`).get(lookupConfig?.token).then(response => {
         if(response?.data?.url)
           setConceptCache(prev => ({...prev, [response.data.url]: response.data}))
       })
@@ -2316,7 +2323,7 @@ const MapProject = () => {
     if(!searchStr)
       return
     setIsLoadingInDecisionView(true)
-    APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
+    getLookupService().get(lookupConfig?.token, null, {
       includeSearchMeta: true,
       includeMappings: true,
       mappingBrief: true,
@@ -2344,7 +2351,7 @@ const MapProject = () => {
   }
 
   const getFacets = (firstLoad, rowIndex) => {
-    APIService.new().overrideURL(repoVersion.version_url).appendToUrl('concepts/').get(null, null, {
+    getLookupService().get(lookupConfig?.token, null, {
       q: firstLoad ? '' : searchStr,
       includeRetired: retired,
       facetsOnly: true
